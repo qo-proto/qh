@@ -1,4 +1,4 @@
-module github.com/qotp-protocols/qh
+module github.com/qh-project/qh
 
 go 1.25.1
 
