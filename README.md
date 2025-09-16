@@ -174,7 +174,6 @@ QH/1.0 status codes are the same as HTTP, three-digit integers grouped by catego
 | Status Code | Reason Phrase                   |
 |-------------|---------------------------------|
 | 100         | Continue                        |
-| 101         | Switching Protocols             |
 | 200         | OK                              |
 | 201         | Created                         |
 | 202         | Accepted                        |
@@ -212,7 +211,7 @@ QH/1.0 status codes are the same as HTTP, three-digit integers grouped by catego
 | 502         | Bad Gateway                     |
 | 503         | Service Unavailable             |
 | 504         | Gateway Time-out                |
-| 505         | HTTP Version not supported      |
+| 505         | QH Version not supported        |
 
 ### 5.2 Response Header Fields
 
