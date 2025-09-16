@@ -5,8 +5,8 @@
 
 # QH Protocol
 
-**Request for Comments: QH/1.0**  
-Category: Experimental  
+**Request for Comments: QH/1.0**
+Category: Experimental
 Status: Draft
 
 ---
@@ -272,7 +272,7 @@ The following table defines the order and meaning of request headers.
 | 3     | `Accept-Language` | The preferred language for the response. | `en-US,en;q=0.5`                  |
 | 4     | `Accept-Encoding` | Content-coding the client can process.   | `gzip, deflate, br`               |
 
-![QH Message Format](./images/header.svg)
+![QH Message Format](./docs/images/header.svg)
 
 ### 6.2 Response Headers
 
