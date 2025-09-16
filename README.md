@@ -38,30 +38,30 @@ QH uses a **request/response model**.
 
 ### 4.1 Request
 A request consists of:
+To reduce verbosity, the `Host` is included directly in the start-line, and subsequent header lines contain only the value, omitting the name. The meaning of each header is determined by its order.
 
 ```text
-<Method> <Path> QH/1.0
-<Header-Name>: <Header-Value>
-<Header-Name>: <Header-Value>
+<Method> <Host> <Path> <Version>
+<Header-1-Value>
+...
+
 <Optional Body>
 ```
 
 Example:
 
 ```text
-GET /hello.txt QH/1.0
-Host: example.com
-Accept: text/plain
+1 example.com /hello.txt 1.0
 ```
 
 ### 4.2 Response
 
-A response consists of:
+Similar to requests, the response format is optimized for size. The reason phrase is omitted, and headers consist only of their values, identified by order.
 
 ```text
-QH/1.0 <Status-Code> <Reason-Phrase>
-<Header-Name>: <Header-Value>
-<Header-Name>: <Header-Value>
+<Version> <Status-Code>
+<Header-1-Value>
+...
 
 <Optional Body>
 ```
@@ -69,9 +69,9 @@ QH/1.0 <Status-Code> <Reason-Phrase>
 Example:
 
 ```text
-QH/1.0 200 OK
-Content-Type: text/plain
-Content-Length: 13
+1.0 200
+text/plain
+13
 
 Hello, world!
 ```
@@ -80,16 +80,16 @@ Hello, world!
 
 QH/1.0 defines the following methods:
 
-- `GET` → Retrieve a resource.
-- `POST` → Submit data to the server.
-- `PUT` → Replace a resource.
-- `DELETE` → Remove a resource.
+| QH | HTTP   | Description                |
+|----|--------|----------------------------|
+| 1  | `GET`  | Retrieve a resource.       |
+| 2  | `POST` | Submit data to the server. |
 
 Future extensions MAY define additional methods.
 
 ## 6. Status Codes
 
-QH/1.0 status codes are three-digit integers grouped by category:
+QH/1.0 status codes are the same as HTTP, three-digit integers grouped by category:
 
 - `1xx` Informational — Request received, continuing process.
 - `2xx` Success — Request successfully processed (e.g., `200 OK`).
@@ -99,21 +99,32 @@ QH/1.0 status codes are three-digit integers grouped by category:
 
 ## 7. Headers
 
-Headers are key-value pairs separated by `:`.
+In QH, headers are transmitted as a sequence of values, with their meaning determined by their order in the message. This eliminates the need to send header names, reducing message size.
 
-Examples:
+An empty line still marks the end of the header section. If a header is omitted but a subsequent one is present, an empty line MUST be used as a placeholder.
 
-```text
-Host: example.com
-Content-Type: application/json
-Content-Length: 42
-```
+### 7.1 Request Headers
 
-Header names are case-insensitive.
+The following table defines the order and meaning of request headers.
 
-Header values MAY be free-form text unless otherwise specified.
+| Order | HTTP                      | Description                                            | Example                                      |
+|-------|---------------------------|--------------------------------------------------------|----------------------------------------------|
+| 1     | `Host`                    | The domain name of the server.                         | `developer.mozilla.org`                      |
+| 2     | `Accept`                  | Media types the client can process.                    | `text/html,application/xhtml+xml`            |
+| 3     | `Accept-Language`         | The preferred language for the response.               | `en-US,en;q=0.5`                             |
+| 4     | `Accept-Encoding`         | Content-coding the client can process.                 | `gzip, deflate, br`                          |
 
-An empty line (CRLF CRLF) marks the end of the header section.
+### 7.2 Response Headers
+
+The following table defines the order and meaning of response headers.
+
+| Order | Header                      | Description                                            | Example                                      |
+|-------|-----------------------------|--------------------------------------------------------|----------------------------------------------|
+| 1     | `Access-Control-Allow-Origin` | Specifies which origins can access the resource.       | `*`                                          |
+| 2     | `Content-Encoding`          | The encoding format of the content.                    | `gzip`                                       |
+| 3     | `Content-Type`              | The MIME type of the resource.                         | `text/html; charset=utf-8`                   |
+| 4     | `Date`                      | The date and time at which the message was originated. | `Mon, 18 Jul 2016 16:06:00 GMT`              |
+| 5    | `Set-Cookie`                | Sends a cookie from the server to the user agent.      | `my-key=my value; ...`                       |
 
 ## 8. Transport
 
@@ -142,18 +153,4 @@ Future versions MAY introduce new methods, headers, or binary framing.
 Backward compatibility SHOULD be maintained where possible.
 
 Clients and servers MUST include the protocol version in the request and response start lines.
-
-
-
-packetdiag {
-  colwidth = 32;
-  node_height = 64;
-
-  0-31: Start-Line\n(Request-Line or Status-Line);
-  32-63: Header Field 1:\nHost: www.example.com;
-  64-95: Header Field 2:\nUser-Agent: ...;
-  96-127: Header Field 3:\nAccept: ...;
-  128-159: Header Field N:\n(field-name: value);
-  160-191: CRLF\n(blank line);
-  192-223: Message Body\n(optional);
-}
+![QH Message Format](./images/header.svg)

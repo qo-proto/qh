@@ -1,0 +1,12 @@
+packetdiag {
+  colwidth = 32;
+  node_height = 64;
+
+  0-31: Start-Line\n(Request-Line or Status-Line);
+  32-63: Header Field 1:\nHost: www.example.com;
+  64-95: Header Field 2:\nUser-Agent: ...;
+  96-127: Header Field 3:\nAccept: ...;
+  128-159: Header Field N:\n(field-name: value);
+  160-191: CRLF\n(blank line);
+  192-223: Message Body\n(optional);
+}
