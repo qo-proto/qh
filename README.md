@@ -1,16 +1,18 @@
 1. Clone `https://github.com/tbocek/qotp` locally
 2. Clone `qh` repo and run `go get github.com/tbocek/qotp@v0.0.0`
 
+- see [architecture](./docs/architecture.md) for more details.
 
+# QH Protocol
 
-# QH Protocol  
 **Request for Comments: QH/1.0**  
 Category: Experimental  
-Status: Draft  
+Status: Draft
 
 ---
 
 ## Table of Contents
+
 - [QH Protocol](#qh-protocol)
   - [Table of Contents](#table-of-contents)
   - [1. Introduction](#1-introduction)
@@ -44,35 +46,40 @@ Status: Draft
 
 ---
 
-
 ## 1. Introduction
-The QH Protocol (Quite Ok HTTP Protocol) is a client-server, text-based communication protocol inspired by HTTP. It defines a simple, extensible mechanism for exchanging structured requests and responses over qotp.  
 
-QH is designed to be machine readable.  
+The QH Protocol (Quite Ok HTTP Protocol) is a client-server, text-based communication protocol inspired by HTTP. It defines a simple, extensible mechanism for exchanging structured requests and responses over qotp.
 
-QH uses a **request/response model**.  
-- The client sends a request message to the server.  
-- The server replies with a response message.  
-- Each message is encoded in UTF-8 text unless otherwise specified.  
-- Messages are delimited by a blank line between headers and body.  
+QH is designed to be machine readable.
+
+QH uses a **request/response model**.
+
+- The client sends a request message to the server.
+- The server replies with a response message.
+- Each message is encoded in UTF-8 text unless otherwise specified.
+- Messages are delimited by a blank line between headers and body.
 
 ### 1.1 Purpose
+
 The QH Protocol is an application-level protocol for distributed information systems, inspired by HTTP/1.1. Its primary goal is to provide a much simpler and more compact alternative to HTTP for client-server communication, while retaining the core request/response paradigm.
 
 QH was designed to reduce the verbosity and complexity found in HTTP. It achieves this through a simplified message format, such as using ordered, value-only headers instead of key-value pairs. This makes it suitable for environments where bandwidth is limited or parsing overhead needs to be minimized.
 
 While HTTP is a feature-rich protocol for hypermedia systems, QH focuses on providing a fundamental, extensible mechanism for resource exchange over a secure transport.
+
 ### 1.2 Terminology
-- **Client**: The initiating party that sends a request.  
-- **Server**: The receiving party that processes a request and sends back a response.  
-- **Message**: Either a request or a response, consisting of a start line, headers, and an optional body.  
-- **Header**: A key-value pair providing metadata about a message.  
+
+- **Client**: The initiating party that sends a request.
+- **Server**: The receiving party that processes a request and sends back a response.
+- **Message**: Either a request or a response, consisting of a start line, headers, and an optional body.
+- **Header**: A key-value pair providing metadata about a message.
 
 ---
 
 ## 2. Protocol Parameters
 
 ### 2.1 QH Version
+
 QH uses a `<major>.<minor>` numbering scheme to indicate the protocol version. This policy allows communicating parties to know the message format and capabilities of each other.
 
 - The **`<major>`** number is incremented when a change breaks the fundamental message parsing, such as a change to the overall message structure.
@@ -83,6 +90,7 @@ The protocol version is included in the start-line of every request and response
 A server that receives a request with a major version higher than what it supports SHOULD respond with a `505 (Version Not Supported)` error.
 
 ### 2.2 Media Types
+
 QH uses Internet Media Types (MIME types) to specify the format of a message body. This is communicated via headers like `Content-Type` and `Accept`.
 
 The format is `type/subtype`, optionally followed by parameters.
@@ -92,7 +100,9 @@ media-type = type "/" subtype *( ";" parameter )
 ```
 
 For example: `text/html; charset=utf-8`. The `type`, `subtype`, and parameter names are case-insensitive. Media types are registered with the Internet Assigned Number Authority (IANA).
+
 ### 2.3 Language Tags
+
 QH uses language tags to indicate the natural language of the content, primarily within the `Accept-Language` header. A language tag identifies a natural language spoken or written by humans.
 
 The syntax is composed of a primary tag and optional subtags, separated by a hyphen.
@@ -106,10 +116,15 @@ Tags are case-insensitive. Examples include `en` (English), `en-US` (American En
 ---
 
 ## 3. Message Format
+
 ### 3.1 Message Types
+
 ### 3.2 Message Headers
+
 ### 3.3 Messsage Body
+
 ### 3.4 Messsage Length
+
 ### 3.5 General Header Fields
 
 ---
@@ -120,16 +135,17 @@ Tags are case-insensitive. Examples include `en` (English), `en-US` (American En
 
 QH/1.0 defines the following methods:
 
-| QH | HTTP   | Description                |
-|----|--------|----------------------------|
-| 1  | `GET`  | Retrieve a resource.       |
-| 2  | `POST` | Submit data to the server. |
+| QH  | HTTP   | Description                |
+| --- | ------ | -------------------------- |
+| 1   | `GET`  | Retrieve a resource.       |
+| 2   | `POST` | Submit data to the server. |
 
 Future extensions MAY define additional methods.
 
 ### 4.2 Request Header Fields
 
 ### 4.3 Reqeust Example
+
 A request consists of:
 To reduce verbosity, the `Host` is included directly in the start-line, and subsequent header lines contain only the value, omitting the name. The meaning of each header is determined by its order.
 
@@ -172,7 +188,7 @@ QH/1.0 status codes are the same as HTTP, three-digit integers grouped by catego
 #### 5.1.1 Status Codes List
 
 | Status Code | Reason Phrase                   |
-|-------------|---------------------------------|
+| ----------- | ------------------------------- |
 | 100         | Continue                        |
 | 200         | OK                              |
 | 201         | Created                         |
@@ -216,6 +232,7 @@ QH/1.0 status codes are the same as HTTP, three-digit integers grouped by catego
 ### 5.2 Response Header Fields
 
 ### 5.3 Response Example
+
 Similar to requests, the response format is optimized for size. The reason phrase is omitted, and headers consist only of their values, identified by order.
 
 ```text
@@ -248,13 +265,12 @@ An empty line still marks the end of the header section. If a header is omitted 
 
 The following table defines the order and meaning of request headers.
 
-| Order | HTTP                      | Description                                            | Example                                      |
-|-------|---------------------------|--------------------------------------------------------|----------------------------------------------|
-| 1     | `Host`                    | The domain name of the server.                         | `developer.mozilla.org`                      |
-| 2     | `Accept`                  | Media types the client can process.                    | `text/html,application/xhtml+xml`            |
-| 3     | `Accept-Language`         | The preferred language for the response.               | `en-US,en;q=0.5`                             |
-| 4     | `Accept-Encoding`         | Content-coding the client can process.                 | `gzip, deflate, br`                          |
-
+| Order | HTTP              | Description                              | Example                           |
+| ----- | ----------------- | ---------------------------------------- | --------------------------------- |
+| 1     | `Host`            | The domain name of the server.           | `developer.mozilla.org`           |
+| 2     | `Accept`          | Media types the client can process.      | `text/html,application/xhtml+xml` |
+| 3     | `Accept-Language` | The preferred language for the response. | `en-US,en;q=0.5`                  |
+| 4     | `Accept-Encoding` | Content-coding the client can process.   | `gzip, deflate, br`               |
 
 ![QH Message Format](./images/header.svg)
 
@@ -262,13 +278,13 @@ The following table defines the order and meaning of request headers.
 
 The following table defines the order and meaning of response headers.
 
-| Order | Header                      | Description                                            | Example                                      |
-|-------|-----------------------------|--------------------------------------------------------|----------------------------------------------|
-| 1     | `Access-Control-Allow-Origin` | Specifies which origins can access the resource.       | `*`                                          |
-| 2     | `Content-Encoding`          | The encoding format of the content.                    | `gzip`                                       |
-| 3     | `Content-Type`              | The MIME type of the resource.                         | `text/html; charset=utf-8`                   |
-| 4     | `Date`                      | The date and time at which the message was originated. | `Mon, 18 Jul 2016 16:06:00 GMT`              |
-| 5    | `Set-Cookie`                | Sends a cookie from the server to the user agent.      | `my-key=my value; ...`                       |
+| Order | Header                        | Description                                            | Example                         |
+| ----- | ----------------------------- | ------------------------------------------------------ | ------------------------------- |
+| 1     | `Access-Control-Allow-Origin` | Specifies which origins can access the resource.       | `*`                             |
+| 2     | `Content-Encoding`            | The encoding format of the content.                    | `gzip`                          |
+| 3     | `Content-Type`                | The MIME type of the resource.                         | `text/html; charset=utf-8`      |
+| 4     | `Date`                        | The date and time at which the message was originated. | `Mon, 18 Jul 2016 16:06:00 GMT` |
+| 5     | `Set-Cookie`                  | Sends a cookie from the server to the user agent.      | `my-key=my value; ...`          |
 
 ## 7. Transport
 
