@@ -135,7 +135,7 @@ Tags are case-insensitive. Examples include `en` (English), `en-US` (American En
 
 QH/1.0 defines the following methods:
 
-| QH  | HTTP   | Description                |
+| QH  | Method | Description                |
 | --- | ------ | -------------------------- |
 | 1   | `GET`  | Retrieve a resource.       |
 | 2   | `POST` | Submit data to the server. |
@@ -163,12 +163,11 @@ Example:
 1 example.com /hello.txt 1.0
 ```
 
-HTTP Example:
+QH Example with headers:
 
 ```text
-GET /hello.txt QH/1.0
-Host: example.com
-Accept: text/plain
+1 example.com /hello.txt 1.0
+text/plain
 ```
 
 ---
@@ -265,12 +264,13 @@ An empty line still marks the end of the header section. If a header is omitted 
 
 The following table defines the order and meaning of request headers.
 
-| Order | HTTP              | Description                              | Example                           |
+Note: `Host` is not included as it appears in the start-line of the request, not as a header.
+
+| Order | Header            | Description                              | Example                           |
 | ----- | ----------------- | ---------------------------------------- | --------------------------------- |
-| 1     | `Host`            | The domain name of the server.           | `developer.mozilla.org`           |
-| 2     | `Accept`          | Media types the client can process.      | `text/html,application/xhtml+xml` |
-| 3     | `Accept-Language` | The preferred language for the response. | `en-US,en;q=0.5`                  |
-| 4     | `Accept-Encoding` | Content-coding the client can process.   | `gzip, deflate, br`               |
+| 1     | `Accept`          | Media types the client can process.      | `text/html,application/xhtml+xml` |
+| 2     | `Accept-Language` | The preferred language for the response. | `en-US,en;q=0.5`                  |
+| 3     | `Accept-Encoding` | Content-coding the client can process.   | `gzip, deflate, br`               |
 
 ![QH Message Format](./docs/images/header.svg)
 
