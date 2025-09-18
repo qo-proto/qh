@@ -1,5 +1,0 @@
-- move files from internal into pkg/ (see https://github.com/golang-standards/project-layout)
-- use multiplexing, currently uses a new connection for each request
-- change module name to github url once ready
-- DNS TXT record retrieval
-- todo comments across the codebase
