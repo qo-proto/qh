@@ -20,8 +20,8 @@ Status: Draft
   - [3. Message Format](#3-message-format)
     - [3.1 Message Types](#31-message-types)
     - [3.2 Message Headers](#32-message-headers)
-    - [3.3 Messsage Body](#33-messsage-body)
-    - [3.4 Messsage Length](#34-messsage-length)
+    - [3.3 Message Body](#33-messsage-body)
+    - [3.4 Message Length](#34-messsage-length)
     - [3.5 General Header Fields](#35-general-header-fields)
   - [4. Request](#4-request)
     - [4.1 Methods](#41-methods)
@@ -116,9 +116,9 @@ Tags are case-insensitive. Examples include `en` (English), `en-US` (American En
 
 ### 3.2 Message Headers
 
-### 3.3 Messsage Body
+### 3.3 Message Body
 
-### 3.4 Messsage Length
+### 3.4 Message Length
 
 ### 3.5 General Header Fields
 
