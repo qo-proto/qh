@@ -1,8 +1,8 @@
-module github.com/qh-project/qh
+module qh
 
 go 1.25.1
 
-require github.com/tbocek/qotp v0.0.0
+require github.com/tbocek/qotp v0.0.4
 
 require (
 	github.com/MatusOllah/slogcolor v1.7.0 // indirect
@@ -12,5 +12,3 @@ require (
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 )
-
-replace github.com/tbocek/qotp => ../qotp
