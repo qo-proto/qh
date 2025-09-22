@@ -1,0 +1,18 @@
+$schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
+version: "0.2"
+dictionaryDefinitions:
+  - name: ignored-words
+    path: ".cspell_ignored"
+dictionaries:
+  - ignored-words
+  - en_us
+  - golang
+ignorePaths:
+  - "**/*.go"
+  - "go.mod"
+  - "go.sum"
+  - "docs/images/**"
+  - .*
+includePaths:
+  - "docs/**/*"
+  - "README.md"

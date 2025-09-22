@@ -26,7 +26,7 @@ Status: Draft
   - [4. Request](#4-request)
     - [4.1 Methods](#41-methods)
     - [4.2 Request Header Fields](#42-request-header-fields)
-    - [4.3 Reqeust Example](#43-reqeust-example)
+    - [4.3 Request Example](#43-reqeust-example)
   - [5 Response](#5-response)
     - [5.1 Status Codes](#51-status-codes)
       - [5.1.1 Status Codes List](#511-status-codes-list)
@@ -139,7 +139,7 @@ Future extensions MAY define additional methods.
 
 ### 4.2 Request Header Fields
 
-### 4.3 Reqeust Example
+### 4.3 Request Example
 
 A request consists of:
 To reduce verbosity, the `Host` is included directly in the start-line, and subsequent header lines contain only the value, omitting the name. The meaning of each header is determined by its order.
