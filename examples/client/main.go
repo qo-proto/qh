@@ -2,7 +2,6 @@ package main
 
 import (
 	"log/slog"
-
 	"qh/internal/client"
 	"qh/internal/protocol"
 )
@@ -37,9 +36,10 @@ func main() {
 
 		var response *protocol.Response
 		var err error
-		if req.method == "GET" {
+		switch req.method {
+		case "GET":
 			response, err = c.GET("127.0.0.1", req.path, "text/plain")
-		} else if req.method == "POST" {
+		case "POST":
 			response, err = c.POST("127.0.0.1", req.path, req.body, "text/plain")
 		}
 

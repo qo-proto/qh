@@ -12,7 +12,7 @@ formatters:
     # format the code
     - gofmt
     # format the block of imports
-    - gci
+    # - gci
 
   settings:
     # format the code with Go standard library

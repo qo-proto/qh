@@ -4,6 +4,8 @@ import (
 	"testing"
 )
 
+// TODO: use testify assert
+
 func TestRequestFormat(t *testing.T) {
 	req := &Request{
 		Method:  GET,

@@ -51,9 +51,7 @@ func (r *Request) Format() string {
 	requestLine := fmt.Sprintf("%d %s %s %s", int(r.Method), r.Host, r.Path, r.Version)
 	parts = append(parts, requestLine)
 
-	for _, header := range r.Headers {
-		parts = append(parts, header)
-	}
+	parts = append(parts, r.Headers...)
 
 	parts = append(parts, "")     // separate headers from body
 	parts = append(parts, r.Body) // always add body
@@ -69,9 +67,7 @@ func (r *Response) Format() string {
 	responseLine := fmt.Sprintf("%s %d", r.Version, r.StatusCode)
 	parts = append(parts, responseLine)
 
-	for _, header := range r.Headers {
-		parts = append(parts, header)
-	}
+	parts = append(parts, r.Headers...)
 
 	parts = append(parts, "")     // separate headers from body
 	parts = append(parts, r.Body) // always add body

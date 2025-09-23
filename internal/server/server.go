@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
-
 	"qh/internal/protocol"
+	"time"
 
 	"github.com/tbocek/qotp"
 )
