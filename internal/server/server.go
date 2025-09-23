@@ -116,7 +116,9 @@ func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
 func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message string) {
 	response := ErrorResponse(statusCode, message)
 	responseData := response.Format()
-	stream.Write([]byte(responseData))
+	if _, err := stream.Write([]byte(responseData)); err != nil {
+		log.Printf("Failed to write error response: %v", err)
+	}
 	stream.Close() // Close stream after error response
 }
 

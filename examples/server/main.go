@@ -20,7 +20,7 @@ func main() {
 
 	srv := server.NewServer()
 
-	srv.HandleFunc("/hello", protocol.GET, func(req *protocol.Request) *protocol.Response {
+	srv.HandleFunc("/hello", protocol.GET, func(_ *protocol.Request) *protocol.Response {
 		slog.Info("Handling request", "method", "GET", "path", "/hello")
 		return server.TextResponse(200, "Hello from QH Protocol!")
 	})
@@ -31,7 +31,7 @@ func main() {
 		return server.TextResponse(200, response)
 	})
 
-	srv.HandleFunc("/status", protocol.GET, func(req *protocol.Request) *protocol.Response {
+	srv.HandleFunc("/status", protocol.GET, func(_ *protocol.Request) *protocol.Response {
 		slog.Info("Handling request", "method", "GET", "path", "/status")
 		return server.TextResponse(200, "QH Server is running!")
 	})
