@@ -3,7 +3,6 @@ package client
 import (
 	"fmt"
 	"log"
-
 	"qh/internal/protocol"
 
 	"github.com/tbocek/qotp"
@@ -12,6 +11,7 @@ import (
 type Client struct {
 	listener *qotp.Listener
 	conn     *qotp.Connection
+	streamID uint32
 }
 
 func NewClient() *Client {
@@ -41,19 +41,27 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 		return nil, fmt.Errorf("client not connected")
 	}
 
-	// always use stream 0 for now
-	stream := c.conn.Stream(0)
+	// use next available stream ID
+	currentStreamID := c.streamID
+	c.streamID++
+
+	stream := c.conn.Stream(currentStreamID)
 
 	// send request
 	requestData := req.Format()
-	log.Printf("Sending request on stream 0 (%d bytes):\n%s", len(requestData), requestData)
+	log.Printf(
+		"Sending request on stream %d (%d bytes):\n%s",
+		currentStreamID,
+		len(requestData),
+		requestData,
+	)
 
 	_, err := stream.Write([]byte(requestData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 
-	// wait for response
+	// wait for response by reading directly from stream
 	var response *protocol.Response
 	var parseErr error
 
@@ -62,12 +70,21 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 			return true // continue waiting
 		}
 
+		if s != stream {
+			return true // continue waiting
+		}
+
 		responseData, err := s.Read()
 		if err != nil || len(responseData) == 0 {
 			return true // continue waiting
 		}
 
-		log.Printf("Received response on stream 0 (%d bytes):\n%s", len(responseData), string(responseData))
+		log.Printf(
+			"Received response on stream %d (%d bytes):\n%s",
+			currentStreamID,
+			len(responseData),
+			string(responseData),
+		)
 		response, parseErr = protocol.ParseResponse(string(responseData))
 		return false // got response, exit loop
 	})

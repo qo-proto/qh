@@ -21,18 +21,16 @@ func main() {
 		{"POST", "/echo", "Hello QH World!"},
 	}
 
-	// TODO: currently using new connections for each request, until multiplexing correctly implemented
+	c := client.NewClient()
+	defer c.Close()
+
+	if err := c.Connect(addr); err != nil {
+		slog.Error("Failed to connect", "error", err)
+		return
+	}
+
 	for _, req := range requests {
 		slog.Info("Testing request", "method", req.method, "path", req.path)
-
-		c := client.NewClient()
-		// TODO: check return value
-		defer c.Close()
-
-		if err := c.Connect(addr); err != nil {
-			slog.Error("Failed to connect", "error", err)
-			continue
-		}
 
 		var response *protocol.Response
 		var err error

@@ -51,10 +51,17 @@ func (s *Server) Serve() error {
 	log.Println("Starting QH server loop...")
 
 	s.listener.Loop(func(stream *qotp.Stream) bool {
-		if stream != nil {
-			log.Printf("NEW STREAM RECEIVED from client")
-			s.handleStream(stream)
+		if stream == nil {
+			return true // continue waiting
 		}
+
+		requestData, err := stream.Read()
+		if err != nil || len(requestData) == 0 {
+			return true // continue waiting for data
+		}
+
+		log.Printf("NEW STREAM RECEIVED from client with %d bytes", len(requestData))
+		s.handleRequest(stream, requestData)
 
 		return true // continue loop
 	})
@@ -62,19 +69,8 @@ func (s *Server) Serve() error {
 	return nil
 }
 
-// handles a single stream (request/response)
-func (s *Server) handleStream(stream *qotp.Stream) {
-	requestData, err := stream.Read()
-	if err != nil {
-		log.Printf("Failed to read from stream: %v", err)
-		return
-	}
-
-	if len(requestData) == 0 {
-		log.Printf("Empty request received")
-		return
-	}
-
+// handles a single request/response
+func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	log.Printf("Received request (%d bytes):\n%s", len(requestData), string(requestData))
 
 	request, err := protocol.ParseRequest(string(requestData))
@@ -98,7 +94,8 @@ func (s *Server) handleStream(stream *qotp.Stream) {
 	}
 
 	log.Printf("Response sent")
-	stream.Close()
+	// Don't close the stream for now, uses qotp's automatic timeout
+	// TODO: Add proper connection closing in edge cases
 }
 
 func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
@@ -119,7 +116,7 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	if _, err := stream.Write([]byte(responseData)); err != nil {
 		log.Printf("Failed to write error response: %v", err)
 	}
-	stream.Close() // Close stream after error response
+	// Don't close the stream for now, uses qotp's automatic timeout
 }
 
 func (s *Server) Close() error {
