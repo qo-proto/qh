@@ -130,12 +130,13 @@ Tags are case-insensitive. Examples include `en` (English), `en-US` (American En
 
 QH/1.0 defines the following methods:
 
-| QH  | Method | Description                |
-| --- | ------ | -------------------------- |
-| 1   | `GET`  | Retrieve a resource.       |
-| 2   | `POST` | Submit data to the server. |
-
-Future extensions MAY define additional methods.
+| QH  | Method | Description                           |
+| --- | ------ | ------------------------------------- |
+| 1   | GET    | Retrieve a resource.                  |
+| 2   | POST   | Submit data to the server.            |
+| 3   | PUT    | Update a resource with provided data. |
+| 4   | DELETE | Remove a specified resource.          |
+| 5   | HEAD   | Retrieve headers without body.        |
 
 ### 4.2 Request Header Fields
 

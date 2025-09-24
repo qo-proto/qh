@@ -122,6 +122,40 @@ func (c *Client) POST(host, path, body string, headers ...string) (*protocol.Res
 	return c.Request(req)
 }
 
+func (c *Client) PUT(host, path, body string, headers ...string) (*protocol.Response, error) {
+	req := &protocol.Request{
+		Method:  protocol.PUT,
+		Host:    host,
+		Path:    path,
+		Version: protocol.Version,
+		Headers: headers,
+		Body:    body,
+	}
+	return c.Request(req)
+}
+
+func (c *Client) DELETE(host, path string, headers ...string) (*protocol.Response, error) {
+	req := &protocol.Request{
+		Method:  protocol.DELETE,
+		Host:    host,
+		Path:    path,
+		Version: protocol.Version,
+		Headers: headers,
+	}
+	return c.Request(req)
+}
+
+func (c *Client) HEAD(host, path string, headers ...string) (*protocol.Response, error) {
+	req := &protocol.Request{
+		Method:  protocol.HEAD,
+		Host:    host,
+		Path:    path,
+		Version: protocol.Version,
+		Headers: headers,
+	}
+	return c.Request(req)
+}
+
 func (c *Client) Close() error {
 	if c.conn != nil {
 		c.conn.Close()

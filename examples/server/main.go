@@ -4,18 +4,13 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+
 	"qh/internal/protocol"
 	"qh/internal/server"
 )
 
+// TODO: Make proper examples
 func main() {
-	// TODO: fix slog output format
-	// suppress qotp debug logs
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	}))
-	slog.SetDefault(logger)
-
 	slog.Info("QH Protocol Server starting")
 
 	srv := server.NewServer()
@@ -36,6 +31,23 @@ func main() {
 		return server.TextResponse(200, "QH Server is running!")
 	})
 
+	srv.HandleFunc("/data", protocol.PUT, func(req *protocol.Request) *protocol.Response {
+		slog.Info("Handling request", "method", "PUT", "path", "/data", "body", req.Body)
+		response := fmt.Sprintf("Updated data: %s", req.Body)
+		return server.TextResponse(200, response)
+	})
+
+	srv.HandleFunc("/data", protocol.DELETE, func(_ *protocol.Request) *protocol.Response {
+		slog.Info("Handling request", "method", "DELETE", "path", "/data")
+		return server.TextResponse(200, "Data deleted successfully")
+	})
+
+	srv.HandleFunc("/info", protocol.HEAD, func(_ *protocol.Request) *protocol.Response {
+		slog.Info("Handling request", "method", "HEAD", "path", "/info")
+		// HEAD returns same headers as GET but without a body
+		return server.TextResponse(200, "")
+	})
+
 	// listening with auto-generated keys
 	addr := "127.0.0.1:8090"
 	if err := srv.Listen(addr); err != nil {
@@ -48,6 +60,4 @@ func main() {
 	if err := srv.Serve(); err != nil {
 		slog.Error("Server error", "error", err)
 	}
-
-	// TODO: make a proper example with shutdown, etc.
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log/slog"
+
 	"qh/internal/client"
 	"qh/internal/protocol"
 )
@@ -19,6 +20,9 @@ func main() {
 		{"GET", "/hello", ""},
 		{"GET", "/status", ""},
 		{"POST", "/echo", "Hello QH World!"},
+		{"PUT", "/data", "Updated resource data"},
+		{"DELETE", "/data", ""},
+		{"HEAD", "/info", ""},
 	}
 
 	c := client.NewClient()
@@ -39,6 +43,12 @@ func main() {
 			response, err = c.GET("127.0.0.1", req.path, "text/plain")
 		case "POST":
 			response, err = c.POST("127.0.0.1", req.path, req.body, "text/plain")
+		case "PUT":
+			response, err = c.PUT("127.0.0.1", req.path, req.body, "text/plain")
+		case "DELETE":
+			response, err = c.DELETE("127.0.0.1", req.path, "text/plain")
+		case "HEAD":
+			response, err = c.HEAD("127.0.0.1", req.path, "text/plain")
 		}
 
 		if err != nil {
