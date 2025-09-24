@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
+	"strings"
 
 	"qh/internal/client"
 	"qh/internal/protocol"
@@ -10,19 +12,23 @@ import (
 func main() {
 	slog.Info("QH Protocol Client starting")
 
-	addr := "127.0.0.1:8090"
+	hostname := "127.0.0.1"
+	port := 8090
+
+	addr := fmt.Sprintf("%s:%d", hostname, port)
+
+	// ptr is a helper to create a pointer to a string literal.
+	ptr := func(s string) *string { return &s }
 
 	requests := []struct {
 		method string
 		path   string
-		body   string
+		body   *string
 	}{
-		{"GET", "/hello", ""},
-		{"GET", "/status", ""},
-		{"POST", "/echo", "Hello QH World!"},
-		{"PUT", "/data", "Updated resource data"},
-		{"DELETE", "/data", ""},
-		{"HEAD", "/info", ""},
+		{method: "GET", path: "/hello"},
+		{method: "GET", path: "/status"},
+		{method: "POST", path: "/echo", body: ptr("Hello QH World!")},
+		{method: "POST", path: "/data", body: ptr(strings.Repeat("a", 2000))},
 	}
 
 	c := client.NewClient()
@@ -40,15 +46,13 @@ func main() {
 		var err error
 		switch req.method {
 		case "GET":
-			response, err = c.GET("127.0.0.1", req.path, "text/plain")
+			response, err = c.GET(hostname, req.path, "text/plain")
 		case "POST":
-			response, err = c.POST("127.0.0.1", req.path, req.body, "text/plain")
-		case "PUT":
-			response, err = c.PUT("127.0.0.1", req.path, req.body, "text/plain")
-		case "DELETE":
-			response, err = c.DELETE("127.0.0.1", req.path, "text/plain")
-		case "HEAD":
-			response, err = c.HEAD("127.0.0.1", req.path, "text/plain")
+			body := ""
+			if req.body != nil {
+				body = *req.body
+			}
+			response, err = c.POST(hostname, req.path, body, "text/plain")
 		}
 
 		if err != nil {

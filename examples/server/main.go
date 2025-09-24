@@ -31,21 +31,10 @@ func main() {
 		return server.TextResponse(200, "QH Server is running!")
 	})
 
-	srv.HandleFunc("/data", protocol.PUT, func(req *protocol.Request) *protocol.Response {
+	srv.HandleFunc("/data", protocol.POST, func(req *protocol.Request) *protocol.Response {
 		slog.Info("Handling request", "method", "PUT", "path", "/data", "body", req.Body)
 		response := fmt.Sprintf("Updated data: %s", req.Body)
 		return server.TextResponse(200, response)
-	})
-
-	srv.HandleFunc("/data", protocol.DELETE, func(_ *protocol.Request) *protocol.Response {
-		slog.Info("Handling request", "method", "DELETE", "path", "/data")
-		return server.TextResponse(200, "Data deleted successfully")
-	})
-
-	srv.HandleFunc("/info", protocol.HEAD, func(_ *protocol.Request) *protocol.Response {
-		slog.Info("Handling request", "method", "HEAD", "path", "/info")
-		// HEAD returns same headers as GET but without a body
-		return server.TextResponse(200, "")
 	})
 
 	// listening with auto-generated keys

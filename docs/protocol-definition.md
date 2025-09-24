@@ -36,6 +36,8 @@ Status: Draft
     - [6.1 Request Headers](#61-request-headers)
     - [6.2 Response Headers](#62-response-headers)
   - [7. Transport](#7-transport)
+    - [7.1 Connection Establishment](#71-connection-establishment)
+      - [7.1.1 Certificate Exchange](#711-certificate-exchange)
   - [8. Security Considerations](#8-security-considerations)
   - [9. Versioning](#9-versioning)
 
@@ -145,7 +147,7 @@ A request consists of:
 To reduce verbosity, the `Host` is included directly in the start-line, and subsequent header lines contain only the value, omitting the name. The meaning of each header is determined by its order.
 
 ```text
-<Method> <Host> <Path> <Version>
+<Host> <Path> <Version>
 <Header-1-Value>
 ...
 
@@ -155,13 +157,13 @@ To reduce verbosity, the `Host` is included directly in the start-line, and subs
 Example:
 
 ```text
-1 example.com /hello.txt 1.0
+example.com /hello.txt 1.0
 ```
 
 QH Example with headers:
 
 ```text
-1 example.com /hello.txt 1.0
+example.com /hello.txt 1.0
 text/plain
 ```
 
@@ -288,6 +290,15 @@ QH is designed to be transported over **qotp**, a secure, reliable, stream-multi
 `qotp` provides an encrypted transport layer, similar in concept to QUIC, handling reliability and congestion control internally.
 
 A single `qotp` connection can carry multiple concurrent streams, allowing for parallel requests and responses without head-of-line blocking.
+
+### 7.1 Connection Establishment
+#### 7.1.1 Certificate Exchange
+
+QOTP enables you to use it without knowing the servers public certificate. But when we dont know the server public certificate it takes some packets for the handshake. A better aproach would be to connect to the server knowing the server public certificate.
+
+To get the server certificate before connecting to the server we try to get the certificate from the DNS.
+
+We need a DNS Entry we can get from the client before connecting.
 
 ## 8. Security Considerations
 

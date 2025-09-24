@@ -11,11 +11,8 @@ const Version = "1.0"
 type Method int
 
 const (
-	GET    Method = 1
-	POST   Method = 2
-	PUT    Method = 3
-	DELETE Method = 4
-	HEAD   Method = 5
+	GET  Method = 1
+	POST Method = 2
 )
 
 // String returns the string representation of the QH protocols method. Implements fmt.Stringer interface, used for logging and debugging.
@@ -25,12 +22,6 @@ func (m Method) String() string {
 		return "GET"
 	case POST:
 		return "POST"
-	case PUT:
-		return "PUT"
-	case DELETE:
-		return "DELETE"
-	case HEAD:
-		return "HEAD"
 	default:
 		return "UNKNOWN"
 	}
