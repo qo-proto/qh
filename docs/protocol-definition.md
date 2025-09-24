@@ -4,8 +4,6 @@
 Category: Experimental
 Status: Draft
 
----
-
 ## Table of Contents
 
 - [QH Protocol](#qh-protocol)
@@ -25,13 +23,13 @@ Status: Draft
     - [3.5 General Header Fields](#35-general-header-fields)
   - [4. Request](#4-request)
     - [4.1 Methods](#41-methods)
-    - [4.2 Request Header Fields](#42-request-header-fields)
-    - [4.3 Request Example](#43-request-example)
-  - [5 Response](#5-response)
+    - [4.2 Request Format](#42-request-format)
+    - [4.3 Request Examples](#43-request-examples)
+  - [5. Response](#5-response)
     - [5.1 Status Codes](#51-status-codes)
       - [5.1.1 Status Codes List](#511-status-codes-list)
-    - [5.2 Response Header Fields](#52-response-header-fields)
-    - [5.3 Response Example](#53-response-example)
+    - [5.2 Response Format](#52-response-format)
+    - [5.3 Response Examples](#53-response-examples)
   - [6. Headers](#6-headers)
     - [6.1 Request Headers](#61-request-headers)
     - [6.2 Response Headers](#62-response-headers)
@@ -40,8 +38,6 @@ Status: Draft
       - [7.1.1 Certificate Exchange](#711-certificate-exchange)
   - [8. Security Considerations](#8-security-considerations)
   - [9. Versioning](#9-versioning)
-
----
 
 ## 1. Introduction
 
@@ -69,9 +65,7 @@ While HTTP is a feature-rich protocol for hypermedia systems, QH focuses on prov
 - **Client**: The initiating party that sends a request.
 - **Server**: The receiving party that processes a request and sends back a response.
 - **Message**: Either a request or a response, consisting of a start line, headers, and an optional body.
-- **Header**: A key-value pair providing metadata about a message.
-
----
+- **Header**: A value-only line providing metadata about a message. The meaning is determined by position.
 
 ## 2. Protocol Parameters
 
@@ -110,8 +104,6 @@ language-tag = primary-tag *("-" subtag)
 
 Tags are case-insensitive. Examples include `en` (English), `en-US` (American English), and `fr` (French).
 
----
-
 ## 3. Message Format
 
 ### 3.1 Message Types
@@ -132,44 +124,61 @@ Tags are case-insensitive. Examples include `en` (English), `en-US` (American En
 
 QH/1.0 defines the following methods:
 
-| Method | Description                           |
-| ------ | ------------------------------------- |
-| GET    | Retrieve a resource.                  |
-| POST   | Submit data to the server.            |
+| Method | Description                |
+| ------ | -------------------------- |
+| GET    | Retrieve a resource.       |
+| POST   | Submit data to the server. |
 
 The Method is not present in the packet header. The method can be inferred from the presence of a body or not. GET does not have a body while POST has.
 
-### 4.2 Request Header Fields
+### 4.2 Request Format
 
-### 4.3 Request Example
-
-A request consists of:
-To reduce verbosity, the `Host` is included directly in the start-line, and subsequent header lines contain only the value, omitting the name. The meaning of each header is determined by its order.
+A request message has the following structure:
 
 ```text
-<Host> <Path> <Version>
-<Header-1-Value>
+<Method> <Host> <Path> <Version>
+<Header-Value-1>
+<Header-Value-2>
 ...
-
-<Optional Body>
+<Empty-Line>
+<Optional-Body>
 ```
 
-Example:
+Where:
+
+- `Method`: Numeric method identifier (1=GET, 2=POST, 3=PUT, 4=DELETE, 5=HEAD)
+- `Host`: Target hostname
+- `Path`: Resource path
+- `Version`: Protocol version (currently "1.0")
+
+### 4.3 Request Examples
+
+**Simple GET request:**
 
 ```text
-example.com /hello.txt 1.0
+1 example.com /hello.txt 1.0
+
 ```
 
-QH Example with headers:
+**GET request with headers:**
 
 ```text
 example.com /hello.txt 1.0
 text/plain
+en-US,en;q=0.5
+
 ```
 
----
+**POST request with body:**
 
-## 5 Response
+```text
+2 example.com /submit 1.0
+application/json
+
+{"name": "test"}
+```
+
+## 5. Response
 
 ### 5.1 Status Codes
 
@@ -225,31 +234,52 @@ QH/1.0 status codes are the same as HTTP, three-digit integers grouped by catego
 | 504         | Gateway Time-out                |
 | 505         | QH Version not supported        |
 
-### 5.2 Response Header Fields
+### 5.2 Response Format
 
-### 5.3 Response Example
-
-Similar to requests, the response format is optimized for size. The reason phrase is omitted, and headers consist only of their values, identified by order.
+A response message has the following structure:
 
 ```text
 <Version> <Status-Code>
-<Header-1-Value>
+<Header-Value-1>
+<Header-Value-2>
 ...
-
-<Optional Body>
+<Empty-Line>
+<Optional-Body>
 ```
 
-Example:
+Where:
+
+- `Version`: Protocol version (currently "1.0")
+- `Status-Code`: HTTP-compatible three-digit status code
+
+### 5.3 Response Examples
+
+**Simple successful response:**
 
 ```text
 1.0 200
-text/plain
-13
 
 Hello, world!
 ```
 
----
+**Response with headers:**
+
+```text
+1.0 200
+*
+
+text/plain
+Wed, 24 Sep 2025 10:00:00 CET
+
+Hello, world!
+```
+
+**Empty response:**
+
+```text
+1.0 204
+
+```
 
 ## 6. Headers
 
