@@ -52,4 +52,139 @@ func TestResponseFormat(t *testing.T) {
 	require.Equal(t, expected, actual)
 }
 
-// TODO: add tests for ParseRequest and ParseResponse
+func TestResponseFormatEmpty(t *testing.T) {
+	resp := &Response{
+		Version:    "1.0",
+		StatusCode: 204,
+		Headers:    []string{},
+		Body:       "",
+	}
+
+	expected := "1.0 204\n\n"
+	require.Equal(t, expected, resp.Format())
+}
+
+func TestParseRequestBasic(t *testing.T) {
+	data := "1 example.com /hello.txt 1.0\ntext/plain\nen-US,en;q=0.5\n\n"
+
+	req, err := ParseRequest(data)
+	require.NoError(t, err)
+	require.Equal(t, GET, req.Method)
+	require.Equal(t, "example.com", req.Host)
+	require.Equal(t, "/hello.txt", req.Path)
+	require.Equal(t, "1.0", req.Version)
+	require.Equal(t, []string{"text/plain", "en-US,en;q=0.5"}, req.Headers)
+	require.Equal(t, "", req.Body)
+}
+
+func TestParseRequestWithBody(t *testing.T) {
+	data := "2 example.com /submit 1.0\napplication/json\n\n{\"name\": \"test\"}"
+
+	req, err := ParseRequest(data)
+	require.NoError(t, err)
+	require.Equal(t, POST, req.Method)
+	require.Equal(t, "example.com", req.Host)
+	require.Equal(t, "/submit", req.Path)
+	require.Equal(t, "1.0", req.Version)
+	require.Equal(t, []string{"application/json"}, req.Headers)
+	require.Equal(t, "{\"name\": \"test\"}", req.Body)
+}
+
+func TestParseRequestWithMultilineBody(t *testing.T) {
+	data := "2 example.com /submit 1.0\napplication/json\n\nline1\nline2\nline3"
+
+	req, err := ParseRequest(data)
+	require.NoError(t, err)
+	require.Equal(t, POST, req.Method)
+	require.Equal(t, "line1\nline2\nline3", req.Body)
+}
+
+func TestParseRequestNoHeaders(t *testing.T) {
+	data := "1 example.com /path 1.0\n\ntest body"
+
+	req, err := ParseRequest(data)
+	require.NoError(t, err)
+	require.Equal(t, GET, req.Method)
+	require.Empty(t, req.Headers)
+	require.Equal(t, "test body", req.Body)
+}
+
+func TestParseRequestErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		data string
+	}{
+		{"empty", ""},
+		{"invalid request line, too few parts", "1 example.com"},
+		{"invalid request line, too many parts", "1 example.com /path 1.0 extra"},
+		{"invalid method", "GET example.com /path 1.0"}, // method should be an integer
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ParseRequest(tt.data)
+			require.Error(t, err)
+		})
+	}
+}
+
+func TestParseResponseBasic(t *testing.T) {
+	data := "1.0 200\n*\n\nHello, world!"
+
+	resp, err := ParseResponse(data)
+	require.NoError(t, err)
+	require.Equal(t, "1.0", resp.Version)
+	require.Equal(t, 200, resp.StatusCode)
+	require.Equal(t, []string{"*"}, resp.Headers)
+	require.Equal(t, "Hello, world!", resp.Body)
+}
+
+func TestParseResponseSingleHeader(t *testing.T) {
+	data := "1.0 200\ntext/plain\n\nResponse body"
+
+	resp, err := ParseResponse(data)
+	require.NoError(t, err)
+	require.Equal(t, "1.0", resp.Version)
+	require.Equal(t, 200, resp.StatusCode)
+	require.Equal(t, []string{"text/plain"}, resp.Headers)
+	require.Equal(t, "Response body", resp.Body)
+}
+
+func TestParseResponseErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		data string
+	}{
+		{"empty", ""},
+		{"invalid response line, too few parts", "1.0"},
+		{"invalid response line, too many parts", "1.0 200 extra"},
+		{"invalid status code", "1.0 invalid"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ParseResponse(tt.data)
+			require.Error(t, err)
+		})
+	}
+}
+
+func TestMethodString(t *testing.T) {
+	tests := []struct {
+		method   Method
+		expected string
+	}{
+		{GET, "GET"},
+		{POST, "POST"},
+		{PUT, "PUT"},
+		{DELETE, "DELETE"},
+		{HEAD, "HEAD"},
+		{Method(123), "UNKNOWN"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expected, func(t *testing.T) {
+			require.Equal(t, tt.expected, tt.method.String())
+		})
+	}
+}
