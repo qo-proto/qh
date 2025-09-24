@@ -2,9 +2,9 @@ package protocol
 
 import (
 	"testing"
-)
 
-// TODO: use testify assert
+	"github.com/stretchr/testify/require"
+)
 
 func TestRequestFormat(t *testing.T) {
 	req := &Request{
@@ -19,9 +19,7 @@ func TestRequestFormat(t *testing.T) {
 	expected := "1 example.com /hello.txt 1.0\ntext/plain\nen-US,en;q=0.5\n\n"
 	actual := req.Format()
 
-	if actual != expected {
-		t.Errorf("Expected:\n%q\nGot:\n%q", expected, actual)
-	}
+	require.Equal(t, expected, actual)
 }
 
 func TestRequestFormatWithBody(t *testing.T) {
@@ -37,9 +35,7 @@ func TestRequestFormatWithBody(t *testing.T) {
 	expected := "2 example.com /submit 1.0\napplication/json\n\n{\"name\": \"test\"}"
 	actual := req.Format()
 
-	if actual != expected {
-		t.Errorf("Expected:\n%q\nGot:\n%q", expected, actual)
-	}
+	require.Equal(t, expected, actual)
 }
 
 func TestResponseFormat(t *testing.T) {
@@ -53,9 +49,7 @@ func TestResponseFormat(t *testing.T) {
 	expected := "1.0 200\n*\n\ntext/plain\nMon, 17 Sep 2025 10:00:00 CET\n\nHello, world!"
 	actual := resp.Format()
 
-	if actual != expected {
-		t.Errorf("Expected:\n%q\nGot:\n%q", expected, actual)
-	}
+	require.Equal(t, expected, actual)
 }
 
 // TODO: add tests for ParseRequest and ParseResponse
