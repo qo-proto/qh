@@ -20,13 +20,13 @@ Status: Draft
   - [3. Message Format](#3-message-format)
     - [3.1 Message Types](#31-message-types)
     - [3.2 Message Headers](#32-message-headers)
-    - [3.3 Message Body](#33-messsage-body)
-    - [3.4 Message Length](#34-messsage-length)
+    - [3.3 Message Body](#33-message-body)
+    - [3.4 Message Length](#34-message-length)
     - [3.5 General Header Fields](#35-general-header-fields)
   - [4. Request](#4-request)
     - [4.1 Methods](#41-methods)
     - [4.2 Request Header Fields](#42-request-header-fields)
-    - [4.3 Request Example](#43-reqeust-example)
+    - [4.3 Request Example](#43-request-example)
   - [5 Response](#5-response)
     - [5.1 Status Codes](#51-status-codes)
       - [5.1.1 Status Codes List](#511-status-codes-list)
@@ -130,13 +130,12 @@ Tags are case-insensitive. Examples include `en` (English), `en-US` (American En
 
 QH/1.0 defines the following methods:
 
-| QH  | Method | Description                           |
-| --- | ------ | ------------------------------------- |
-| 1   | GET    | Retrieve a resource.                  |
-| 2   | POST   | Submit data to the server.            |
-| 3   | PUT    | Update a resource with provided data. |
-| 4   | DELETE | Remove a specified resource.          |
-| 5   | HEAD   | Retrieve headers without body.        |
+| Method | Description                           |
+| ------ | ------------------------------------- |
+| GET    | Retrieve a resource.                  |
+| POST   | Submit data to the server.            |
+
+The Method is not present in the packet header. The method can be inferred from the presence of a body or not. GET does not have a body while POST has.
 
 ### 4.2 Request Header Fields
 
