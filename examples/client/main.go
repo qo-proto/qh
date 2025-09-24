@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net"
@@ -16,7 +17,8 @@ func main() {
 	hostname := "qh.gianhunold.ch"
 	port := 8090
 
-	ips, err := net.LookupIP(hostname)
+	resolver := &net.Resolver{}
+	ips, err := resolver.LookupIPAddr(context.Background(), hostname)
 	if err != nil {
 		slog.Error("Failed to resolve hostname", "hostname", hostname, "error", err)
 		return
@@ -25,8 +27,7 @@ func main() {
 		slog.Error("No IP addresses found for hostname", "hostname", hostname)
 		return
 	}
-	// Use the first resolved IP address
-	ip := ips[0]
+	ip := ips[0].IP // Use the first resolved IP address
 	slog.Info("Resolved hostname", "hostname", hostname, "ip", ip.String())
 	addr := fmt.Sprintf("%s:%d", ip.String(), port)
 
