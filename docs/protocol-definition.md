@@ -324,9 +324,10 @@ QH is designed to be transported over **qotp**, a secure, reliable, stream-multi
 A single `qotp` connection can carry multiple concurrent streams, allowing for parallel requests and responses without head-of-line blocking.
 
 ### 7.1 Connection Establishment
+
 #### 7.1.1 Certificate Exchange
 
-QOTP enables you to use it without knowing the servers public certificate. But when we dont know the server public certificate it takes some packets for the handshake. A better aproach would be to connect to the server knowing the server public certificate.
+QOTP enables you to use it without knowing the servers public certificate. But when we don't know the server public certificate it takes some packets for the handshake. A better approach would be to connect to the server knowing the server public certificate.
 
 To get the server certificate before connecting to the server we try to get the certificate from the DNS.
 
