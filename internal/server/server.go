@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"qh/internal/protocol"
 	"time"
+
+	"qh/internal/protocol"
 
 	"github.com/tbocek/qotp"
 )
@@ -69,6 +70,13 @@ func (s *Server) Serve() error {
 	return nil
 }
 
+func (s *Server) Close() error {
+	if s.listener != nil {
+		return s.listener.Close()
+	}
+	return nil
+}
+
 // handles a single request/response
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	log.Printf("Received request (%d bytes):\n%s", len(requestData), string(requestData))
@@ -117,13 +125,6 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 		log.Printf("Failed to write error response: %v", err)
 	}
 	// Don't close the stream for now, uses qotp's automatic timeout
-}
-
-func (s *Server) Close() error {
-	if s.listener != nil {
-		return s.listener.Close()
-	}
-	return nil
 }
 
 // TODO: add custom header response method
