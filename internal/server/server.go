@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -31,7 +31,7 @@ func (s *Server) HandleFunc(path string, method protocol.Method, handler Handler
 		s.handlers[path] = make(map[protocol.Method]Handler)
 	}
 	s.handlers[path][method] = handler
-	log.Printf("Registered handler for %s %s", method, path)
+	slog.Info("Registered handler", "method", method, "path", path)
 }
 
 func (s *Server) Listen(addr string) error {
@@ -40,7 +40,7 @@ func (s *Server) Listen(addr string) error {
 		return fmt.Errorf("failed to listen on %s: %w", addr, err)
 	}
 	s.listener = listener
-	log.Printf("QH server listening on %s with auto-generated keys", addr)
+	slog.Info("QH server listening with auto-generated keys", "address", addr)
 	return nil
 }
 
@@ -49,7 +49,7 @@ func (s *Server) Serve() error {
 		return fmt.Errorf("server not listening")
 	}
 
-	log.Println("Starting QH server loop...")
+	slog.Info("Starting QH server loop")
 
 	s.listener.Loop(func(stream *qotp.Stream) bool {
 		if stream == nil {
@@ -61,7 +61,7 @@ func (s *Server) Serve() error {
 			return true // continue waiting for data
 		}
 
-		log.Printf("NEW STREAM RECEIVED from client with %d bytes", len(requestData))
+		slog.Info("New stream received from client", "bytes", len(requestData))
 		s.handleRequest(stream, requestData)
 
 		return true // continue loop
@@ -79,11 +79,11 @@ func (s *Server) Close() error {
 
 // handles a single request/response
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
-	log.Printf("Received request (%d bytes):\n%s", len(requestData), string(requestData))
+	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
 
 	request, err := protocol.ParseRequest(string(requestData))
 	if err != nil {
-		log.Printf("Failed to parse request: %v", err)
+		slog.Error("Failed to parse request", "error", err)
 		s.sendErrorResponse(stream, 400, "Bad Request")
 		return
 	}
@@ -92,16 +92,16 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 
 	// send response
 	responseData := response.Format()
-	log.Printf("Sending response (%d bytes):\n%s", len(responseData), responseData)
+	slog.Debug("Sending response", "bytes", len(responseData), "data", responseData)
 
 	_, err = stream.Write([]byte(responseData))
 	if err != nil {
-		log.Printf("Failed to write response: %v", err)
+		slog.Error("Failed to write response", "error", err)
 		stream.Close()
 		return
 	}
 
-	log.Printf("Response sent")
+	slog.Debug("Response sent")
 	// Don't close the stream for now, uses qotp's automatic timeout
 	// TODO: Add proper connection closing in edge cases
 }
@@ -122,7 +122,7 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	response := ErrorResponse(statusCode, message)
 	responseData := response.Format()
 	if _, err := stream.Write([]byte(responseData)); err != nil {
-		log.Printf("Failed to write error response: %v", err)
+		slog.Error("Failed to write error response", "error", err)
 	}
 	// Don't close the stream for now, uses qotp's automatic timeout
 }

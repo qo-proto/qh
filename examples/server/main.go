@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 
@@ -22,7 +21,7 @@ func main() {
 
 	srv.HandleFunc("/echo", protocol.POST, func(req *protocol.Request) *protocol.Response {
 		slog.Info("Handling request", "method", "POST", "path", "/echo", "body", req.Body)
-		response := fmt.Sprintf("Echo: %s", req.Body)
+		response := "Echo: " + req.Body
 		return server.TextResponse(200, response)
 	})
 
@@ -33,7 +32,7 @@ func main() {
 
 	srv.HandleFunc("/data", protocol.POST, func(req *protocol.Request) *protocol.Response {
 		slog.Info("Handling request", "method", "PUT", "path", "/data", "body", req.Body)
-		response := fmt.Sprintf("Updated data: %s", req.Body)
+		response := "Updated data: " + req.Body
 		return server.TextResponse(200, response)
 	})
 
