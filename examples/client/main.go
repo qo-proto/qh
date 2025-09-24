@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"net"
 	"strings"
 
 	"qh/internal/client"
@@ -12,10 +13,22 @@ import (
 func main() {
 	slog.Info("QH Protocol Client starting")
 
-	hostname := "127.0.0.1"
+	hostname := "qh.gianhunold.ch"
 	port := 8090
 
-	addr := fmt.Sprintf("%s:%d", hostname, port)
+	ips, err := net.LookupIP(hostname)
+	if err != nil {
+		slog.Error("Failed to resolve hostname", "hostname", hostname, "error", err)
+		return
+	}
+	if len(ips) == 0 {
+		slog.Error("No IP addresses found for hostname", "hostname", hostname)
+		return
+	}
+	// Use the first resolved IP address
+	ip := ips[0]
+	slog.Info("Resolved hostname", "hostname", hostname, "ip", ip.String())
+	addr := fmt.Sprintf("%s:%d", ip.String(), port)
 
 	// ptr is a helper to create a pointer to a string literal.
 	ptr := func(s string) *string { return &s }
