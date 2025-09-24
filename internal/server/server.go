@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -46,7 +47,7 @@ func (s *Server) Listen(addr string) error {
 
 func (s *Server) Serve() error {
 	if s.listener == nil {
-		return fmt.Errorf("server not listening")
+		return errors.New("server not listening")
 	}
 
 	slog.Info("Starting QH server loop")

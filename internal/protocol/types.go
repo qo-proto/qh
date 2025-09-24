@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -78,7 +79,7 @@ func (r *Response) Format() string {
 func ParseRequest(data string) (*Request, error) {
 	lines := strings.Split(data, "\n")
 	if len(lines) < 1 {
-		return nil, fmt.Errorf("invalid request: empty")
+		return nil, errors.New("invalid request: empty")
 	}
 
 	requestParts := strings.Fields(lines[0])
@@ -121,7 +122,7 @@ func ParseRequest(data string) (*Request, error) {
 func ParseResponse(data string) (*Response, error) {
 	lines := strings.Split(data, "\n")
 	if len(lines) < 1 {
-		return nil, fmt.Errorf("invalid response: empty")
+		return nil, errors.New("invalid response: empty")
 	}
 
 	responseParts := strings.Fields(lines[0])

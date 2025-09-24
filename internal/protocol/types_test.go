@@ -74,7 +74,7 @@ func TestParseRequestBasic(t *testing.T) {
 	require.Equal(t, "/hello.txt", req.Path)
 	require.Equal(t, "1.0", req.Version)
 	require.Equal(t, []string{"text/plain", "en-US,en;q=0.5"}, req.Headers)
-	require.Equal(t, "", req.Body)
+	require.Empty(t, req.Body)
 }
 
 func TestParseRequestWithBody(t *testing.T) {
@@ -87,7 +87,7 @@ func TestParseRequestWithBody(t *testing.T) {
 	require.Equal(t, "/submit", req.Path)
 	require.Equal(t, "1.0", req.Version)
 	require.Equal(t, []string{"application/json"}, req.Headers)
-	require.Equal(t, "{\"name\": \"test\"}", req.Body)
+	require.JSONEq(t, `{"name": "test"}`, req.Body)
 }
 
 func TestParseRequestWithMultilineBody(t *testing.T) {
