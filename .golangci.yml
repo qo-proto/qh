@@ -1,48 +1,26 @@
-# golangci-lint configuration file made by @ccoVeille
-# Source: https://github.com/ccoVeille/golangci-lint-config-examples/
-# Author: @ccoVeille
-# License: MIT
-# Variant: 03-safe
-# Version: v2.0.0
-#
 version: "2"
 
 formatters:
   enable:
     - gofmt
     - goimports
+    # - gofumpt
+    # - golines
 
   settings:
     gofmt:
       simplify: true
       rewrite-rules:
-        # replace `interface{}` with `any` in the code on format
-        - pattern: "interface{}"
+        - pattern: "interface{}" # replace `interface{}` with `any` in the code on format
           replacement: "any"
 
 linters:
   exclusions:
     presets:
-      # exclude check on comments format in godoc
-      # These are common false positives in poor code
-      # you should not use this on recent code you write from scratch
-      # More information: https://golangci-lint.run/usage/false-positives/#comments
-      #
-      # Please uncomment the following line if your code is not using the godoc format
-      - comments
-
-      # Common false positives
-      # feel free to remove this if you don't have any false positives
-      # More information: https://golangci-lint.run/usage/false-positives/#common-false-positives
-      - common-false-positives
-
-      # Legacy preset is not recommended anymore
-      # More information: https://golangci-lint.run/usage/false-positives/#legacy
-      - legacy
-
-      # std-error-handling is a set of rules that avoid reporting unhandled errors on common functions/methods
-      # More information: https://golangci-lint.run/usage/false-positives/#std-error-handling
-      - std-error-handling
+      - comments # Please uncomment the following line if your code is not using the godoc format
+      - common-false-positives # feel free to remove this if you don't have any false positives
+      - legacy # Legacy preset is not recommended anymore
+      - std-error-handling # std-error-handling is a set of rules that avoid reporting unhandled errors on common functions/methods
 
   # some linters are enabled by default: https://golangci-lint.run/usage/linters/
   enable:
@@ -65,7 +43,6 @@ linters:
     - fatcontext # detects nested contexts in loops
     - forbidigo # forbids identifiers
     - funcorder # checks the order of functions, methods, and constructors
-    # - funlen # tool for detection of long functions
     - gocheckcompilerdirectives # validates go compiler directive comments (//go:)
     - gochecknoglobals # checks that no global variables exist
     - gochecknoinits # checks that no init functions are present in Go code
@@ -74,7 +51,6 @@ linters:
     - goconst # finds repeated strings that could be replaced by a constant
     - gocritic # provides diagnostics that check for bugs, performance and style issues
     - gocyclo # computes and checks the cyclomatic complexity of functions
-    # - godot # checks if comments end in a period
     - gomoddirectives # manages the use of 'replace', 'retract', and 'excludes' directives in go.mod
     - goprintffuncname # checks that printf-like functions are named with f at the end
     - gosec # inspects source code for security problems
@@ -86,7 +62,6 @@ linters:
     - makezero # finds slice declarations with non-zero initial length
     - mirror # reports wrong mirror patterns of bytes/strings usage
     - misspell # finds commonly misspelled English words
-    # - mnd # detects magic numbers
     - musttag # enforces field tags in (un)marshaled structs
     - nakedret # finds naked returns in functions greater than a specified function length
     - nestif # reports deeply nested if statements
@@ -111,7 +86,6 @@ linters:
     - staticcheck # is a go vet on steroids, applying a ton of static analysis checks
     - testableexamples # checks if examples are testable (have an expected output)
     - testifylint # checks usage of github.com/stretchr/testify
-    # - testpackage # makes you use a separate _test package
     - thelper # make sure to use t.Helper() when needed
     - tparallel # detects inappropriate usage of t.Parallel() method in your Go test codes
     - unconvert # removes unnecessary type conversions
@@ -122,6 +96,27 @@ linters:
     - wastedassign # finds wasted assignment statements
     - whitespace # detects leading and trailing whitespace
 
+    ## other linters, that could make sense
+    #- arangolint # opinionated best practices for arangodb client
+    #- decorder # checks declaration order and count of types, constants, variables and functions
+    #- exhaustruct # [highly recommend to enable] checks if all structure fields are initialized
+    #- funlen # tool for detection of long functions
+    #- ginkgolinter # [if you use ginkgo/gomega] enforces standards of using ginkgo and gomega
+    #- godot # checks if comments end in a period
+    #- godox # detects usage of FIXME, TODO and other keywords inside comments
+    #- goheader # checks is file header matches to pattern
+    #- inamedparam # [great idea, but too strict, need to ignore a lot of cases by default] reports interfaces with unnamed method parameters
+    #- interfacebloat # checks the number of methods inside an interface
+    #- ireturn # accept interfaces, return concrete types
+    #- mnd # detects magic numbers
+    #- noinlineerr # disallows inline error handling `if err := ...; err != nil {`
+    #- prealloc # [premature optimization, but can be used in some cases] finds slice declarations that could potentially be preallocated
+    #- tagalign # checks that struct tags are well aligned
+    #- testpackage # makes you use a separate _test package
+    #- varnamelen # [great idea, but too many false positives] checks that the length of a variable's name matches its scope
+    #- wrapcheck # checks that errors returned from external packages are wrapped
+    #- zerologlint # detects the wrong usage of zerolog that a user forgets to dispatch zerolog.Event
+
   settings:
     cyclop:
       max-complexity: 20 # default is 10
@@ -129,11 +124,6 @@ linters:
     revive:
       rules:
         # these are the default revive rules
-        # you can remove the whole "rules" node if you want
-        # BUT
-        # ! /!\ they all need to be present when you want to add more rules than the default ones
-        # otherwise, you won't have the default rules, but only the ones you define in the "rules" node
-
         - name: blank-imports # Blank import should be only in a main or test package, or have a comment justifying it.
         - name: context-as-argument # context.Context() should be the first parameter of a function when provided as argument.
           arguments:
@@ -145,7 +135,7 @@ linters:
         - name: error-return # for better readability, the errors should be last in the list of returned values by a function.
         - name: error-strings # for better readability, error messages should not be capitalized or end with punctuation or a newline.
         - name: errorf # report when replacing `errors.New(fmt.Sprintf())` with `fmt.Errorf()` is possible
-        - name: exported # check naming and commenting conventions on exported symbols.
+          # - name: exported # check naming and commenting conventions on exported symbols.
           arguments:
             - "sayRepetitiveInsteadOfStutters" # make error messages clearer
         - name: increment-decrement # incrementing an integer variable by 1 is recommended to be done using the `++` operator
@@ -168,19 +158,7 @@ linters:
       ignore-rules: []
       extra-words: []
 output:
-  # Order to use when sorting results.
-  # Possible values: `file`, `linter`, and `severity`.
-  #
-  # If the severity values are inside the following list, they are ordered in this order:
-  #   1. error
-  #   2. warning
-  #   3. high
-  #   4. medium
-  #   5. low
-  # Either they are sorted alphabetically.
-  #
-  # Default: ["file"]
-  sort-order:
+  sort-order: # order to use when sorting results
     - linter
     - severity
     - file # filepath, line, and column.
