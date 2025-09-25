@@ -1,10 +1,12 @@
 package server
 
 import (
+	"bytes"
+	"encoding/hex"
 	"fmt"
 	"log"
-	"net/http"
 	"qh/internal/protocol"
+	"strconv"
 	"time"
 
 	"github.com/tbocek/qotp"
@@ -13,7 +15,8 @@ import (
 // handles QH requests
 type Handler func(*protocol.Request) *protocol.Response
 
-type Server struct {
+type Server struct { // TODO: add context-based shutdown like http.Server
+	// TODO: add context-based shutdown like http.Server
 	listener *qotp.Listener
 	handlers map[string]map[protocol.Method]Handler // path -> method -> handler
 }
@@ -73,6 +76,16 @@ func (s *Server) Serve() error {
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	log.Printf("Received request (%d bytes):\n%s", len(requestData), string(requestData))
 
+	// Find the end of the header (double newline)
+	headerEnd := bytes.Index(requestData, []byte("\x00\x00"))
+	var headerData []byte
+	if headerEnd != -1 {
+		headerData = requestData[:headerEnd]
+	} else {
+		headerData = requestData // No body, the whole request is the header part
+	}
+	log.Printf("Request header (hex):\n%s", hex.EncodeToString(headerData))
+
 	request, err := protocol.ParseRequest(string(requestData))
 	if err != nil {
 		log.Printf("Failed to parse request: %v", err)
@@ -128,15 +141,18 @@ func (s *Server) Close() error {
 
 // TODO: add custom header response method
 
-func Response(statusCode int, contentType, body string) *protocol.Response {
+func Response(statusCode int, contentType protocol.ContentType, body string) *protocol.Response {
+	// Initialize headers slice with fixed size, filling with empty strings
+	// Using a null byte separator for the start-line components.
 	return &protocol.Response{
 		Version:    protocol.Version,
 		StatusCode: statusCode,
-		Headers: []string{
-			"", // Access-Control-Allow-Origin
-			"", // Content-Encoding (empty unless compression is used)
-			contentType,
-			time.Now().UTC().Format(http.TimeFormat), // Date (RFC 7231 HTTP date format)
+		Headers: []string{ // Ordered headers by position.
+			strconv.Itoa(int(contentType)),           // Content-Type (as code)
+			"",                                       // Access-Control-Allow-Origin
+			strconv.Itoa(len(body)),                  // Content-Length
+			"",                                       // Content-Encoding (empty unless compression is used)
+			strconv.FormatInt(time.Now().Unix(), 10), // Date (Unix timestamp)
 			"",                                       // Set-Cookie
 		},
 		Body: body,
@@ -146,22 +162,22 @@ func Response(statusCode int, contentType, body string) *protocol.Response {
 // convenience methods, e.g. write: server.TextResponse(200, "Hello")  instead of server.Response(200, "text/plain", "Hello")
 // TODO: research if these makes sense to keep/extend
 
-func OKResponse(contentType, body string) *protocol.Response {
+func OKResponse(contentType protocol.ContentType, body string) *protocol.Response {
 	return Response(200, contentType, body)
 }
 
 func ErrorResponse(statusCode int, message string) *protocol.Response {
-	return Response(statusCode, "text/plain", message)
+	return Response(statusCode, protocol.TextPlain, message)
 }
 
 func JSONResponse(statusCode int, body string) *protocol.Response {
-	return Response(statusCode, "application/json", body)
+	return Response(statusCode, protocol.JSON, body)
 }
 
 func TextResponse(statusCode int, body string) *protocol.Response {
-	return Response(statusCode, "text/plain", body)
+	return Response(statusCode, protocol.TextPlain, body)
 }
 
 func HTMLResponse(statusCode int, body string) *protocol.Response {
-	return Response(statusCode, "text/html", body)
+	return Response(statusCode, protocol.HTML, body)
 }

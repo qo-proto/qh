@@ -136,13 +136,10 @@ The Method is not present in the packet header. The method can be inferred from 
 A request message has the following structure:
 
 ```text
-<Method> <Host> <Path> <Version>
-<Header-Value-1>
-<Header-Value-2>
+<Host>\0<Path>\0<Version>
+<Header-Value-1>\0<Header-Value-2>\0...
 ...
-<Empty-Line>
-<Optional-Body>
-```
+<End-of-Headers-Marker><Body>
 
 Where:
 
@@ -150,21 +147,24 @@ Where:
 - `Host`: Target hostname
 - `Path`: Resource path
 - `Version`: Protocol version (currently "1.0")
+- The separator for header fields is a null byte (`\0`).
+- The separator between headers and the body is the End of Text character (`\x03`).
+```
 
 ### 4.3 Request Examples
 
 **Simple GET request:**
 
 ```text
-1 example.com /hello.txt 1.0
+example.com\0/hello.txt\01.0\0\0
 
 ```
 
 **GET request with headers:**
 
 ```text
-example.com /hello.txt 1.0
-text/plain
+example.com\0/hello.txt\01.0
+1
 en-US,en;q=0.5
 
 ```
@@ -239,12 +239,13 @@ QH/1.0 status codes are the same as HTTP, three-digit integers grouped by catego
 A response message has the following structure:
 
 ```text
-<Version> <Status-Code>
+<Version>\0<Status-Code>
 <Header-Value-1>
 <Header-Value-2>
 ...
 <Empty-Line>
 <Optional-Body>
+
 ```
 
 Where:
@@ -257,7 +258,8 @@ Where:
 **Simple successful response:**
 
 ```text
-1.0 200
+1.0\0200
+1
 
 Hello, world!
 ```
@@ -308,10 +310,11 @@ The following table defines the order and meaning of response headers.
 | Order | Header                        | Description                                            | Example                         |
 | ----- | ----------------------------- | ------------------------------------------------------ | ------------------------------- |
 | 1     | `Access-Control-Allow-Origin` | Specifies which origins can access the resource.       | `*`                             |
-| 2     | `Content-Encoding`            | The encoding format of the content.                    | `gzip`                          |
-| 3     | `Content-Type`                | The MIME type of the resource.                         | `text/html; charset=utf-8`      |
-| 4     | `Date`                        | The date and time at which the message was originated. | `Mon, 18 Jul 2016 16:06:00 GMT` |
-| 5     | `Set-Cookie`                  | Sends a cookie from the server to the user agent.      | `my-key=my value; ...`          |
+| 2     | `Content-Length`              | The size of the message body in octets (8-bit bytes).  | `1234`                          |
+| 3     | `Content-Encoding`            | The encoding format of the content.                    | `gzip`                          |
+| 4     | `Content-Type`                | The MIME type of the resource.                         | `text/html; charset=utf-8`      |
+| 5     | `Date`                        | The date and time at which the message was originated. | `1468857960` (Unix timestamp)   |
+| 6     | `Set-Cookie`                  | Sends a cookie from the server to the user agent.      | `my-key=my value; ...`          |
 
 ## 7. Transport
 
