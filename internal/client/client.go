@@ -9,6 +9,7 @@ import (
 	"net"
 	"qh/internal/protocol"
 	"strconv"
+	"strings"
 
 	"github.com/tbocek/qotp"
 )
@@ -87,24 +88,32 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 	// wait for response by reading directly from stream
 	var response *protocol.Response
 	var parseErr error
+	var responseBuffer strings.Builder
 
 	c.listener.Loop(func(s *qotp.Stream) bool {
-		if s == nil {
-			return true // continue waiting
-		}
-
 		if s != stream {
 			return true // continue waiting
 		}
 
-		responseData, err := s.Read()
-		if err != nil || len(responseData) == 0 {
-			return true // continue waiting
-		}
+		// Loop to read all available data from the stream until we have a complete message.
+		for {
+			responseData, err := s.Read()
+			if err != nil || len(responseData) == 0 {
+				return true // No more data right now, continue listening.
+			}
 
-		slog.Debug("Received response", "stream_id", currentStreamID, "bytes", len(responseData), "data", string(responseData))
-		response, parseErr = protocol.ParseResponse(string(responseData))
-		return false // got response, exit loop
+			slog.Info("Received frame from server", "stream_id", currentStreamID, "bytes", len(responseData))
+
+			responseBuffer.Write(responseData)
+
+			// Check if we have received the end-of-transmission character.
+			if strings.HasSuffix(responseBuffer.String(), "\x04") {
+				fullMessage := strings.TrimSuffix(responseBuffer.String(), "\x04")
+				slog.Debug("Reassembled full response", "bytes", len(fullMessage))
+				response, parseErr = protocol.ParseResponse(fullMessage)
+				return false // We have the complete message, exit the listener loop.
+			}
+		}
 	})
 
 	if parseErr != nil {
