@@ -130,7 +130,7 @@ func ParseResponse(data string) (*Response, error) {
 
 	parts := strings.Split(headerPart, "\x00")
 	if len(parts) < 2 { // version, status
-		return nil, fmt.Errorf("invalid response: empty")
+		return nil, errors.New("invalid response: empty")
 	}
 
 	statusCode, err := strconv.Atoi(parts[1])
