@@ -92,6 +92,20 @@ func ParseRequest(data string) (*Request, error) {
 		return nil, fmt.Errorf("invalid method: %s", requestParts[0])
 	}
 
+	if method < 1 || method > 2 {
+		return nil, fmt.Errorf("invalid method: %d (must be 1 or 2)", method)
+	}
+
+	if requestParts[1] == "" {
+		return nil, errors.New("invalid request: empty host")
+	}
+	if requestParts[2] == "" {
+		return nil, errors.New("invalid request: empty path")
+	}
+	if requestParts[3] == "" {
+		return nil, errors.New("invalid request: empty version")
+	}
+
 	req := &Request{
 		Method:  Method(method),
 		Host:    requestParts[1],
@@ -137,6 +151,10 @@ func ParseResponse(data string) (*Response, error) {
 	statusCode, err := strconv.Atoi(responseParts[1])
 	if err != nil {
 		return nil, fmt.Errorf("invalid status code: %s", responseParts[1])
+	}
+
+	if responseParts[0] == "" {
+		return nil, errors.New("invalid response: empty version")
 	}
 
 	resp := &Response{

@@ -118,6 +118,13 @@ func TestParseRequestErrors(t *testing.T) {
 		{"invalid request line, too few parts", "1 example.com"},
 		{"invalid request line, too many parts", "1 example.com /path 1.0 extra"},
 		{"invalid method", "GET example.com /path 1.0"}, // method should be an integer
+		{"invalid method zero", "0 example.com /path 1.0\n\n"},
+		{"invalid method negative", "-1 example.com /path 1.0\n\n"},
+		{"invalid method too large", "999 example.com /path 1.0\n\n"},
+		{"empty host", "1  /path 1.0\n\n"},
+		{"empty path", "1 example.com  1.0\n\n"},
+		{"empty version", "1 example.com /path \n\n"},
+		{"whitespace in host", "1 exam ple.com /path 1.0\n\n"},
 		{"missing empty line separator", "1 example.com /path 1.0\nheader1\nheader2"},
 		{"missing empty line with body", "1 example.com /path 1.0\nheader1\nbody content"},
 	}
@@ -161,6 +168,8 @@ func TestParseResponseErrors(t *testing.T) {
 		{"invalid response line, too few parts", "1.0"},
 		{"invalid response line, too many parts", "1.0 200 extra"},
 		{"invalid status code", "1.0 invalid"},
+		{"empty version", " 200\n\n"},
+		{"whitespace in version", "1. 0 200\n\n"},
 		{"missing empty line separator", "1.0 200\nheader1\nheader2"},
 		{"missing empty line with body", "1.0 200\nheader1\nbody content"},
 	}
