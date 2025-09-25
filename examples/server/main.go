@@ -10,7 +10,6 @@ import (
 	"qh/internal/server"
 )
 
-// TODO: Make proper examples
 func main() {
 	slog.Info("QH Protocol Server starting")
 
@@ -23,7 +22,7 @@ func main() {
 
 	srv.HandleFunc("/echo", protocol.POST, func(req *protocol.Request) *protocol.Response {
 		slog.Info("Handling request", "method", "POST", "path", "/echo", "body", req.Body)
-		response := fmt.Sprintf("Echo: %s", req.Body)
+		response := "Echo: " + req.Body
 		return server.TextResponse(200, response)
 	})
 

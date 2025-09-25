@@ -1,8 +1,10 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net"
 	"qh/internal/protocol"
 	"strconv"
@@ -63,7 +65,7 @@ func (c *Client) Connect(addr string) error {
 
 func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 	if c.conn == nil {
-		return nil, fmt.Errorf("client not connected")
+		return nil, errors.New("client not connected")
 	}
 
 	// use next available stream ID
@@ -74,12 +76,7 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 
 	// send request
 	requestData := req.Format()
-	log.Printf(
-		"Sending request on stream %d (%d bytes):\n%s",
-		currentStreamID,
-		len(requestData),
-		requestData,
-	)
+	slog.Debug("Sending request", "stream_id", currentStreamID, "bytes", len(requestData), "data", requestData)
 
 	_, err := stream.Write([]byte(requestData))
 	if err != nil {
@@ -104,12 +101,7 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 			return true // continue waiting
 		}
 
-		log.Printf(
-			"Received response on stream %d (%d bytes):\n%s",
-			currentStreamID,
-			len(responseData),
-			string(responseData),
-		)
+		slog.Debug("Received response", "stream_id", currentStreamID, "bytes", len(responseData), "data", string(responseData))
 		response, parseErr = protocol.ParseResponse(string(responseData))
 		return false // got response, exit loop
 	})
@@ -118,7 +110,7 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 		return nil, fmt.Errorf("failed to parse response: %w", parseErr)
 	}
 	if response == nil {
-		return nil, fmt.Errorf("no response received")
+		return nil, errors.New("no response received")
 	}
 
 	return response, nil
