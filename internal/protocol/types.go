@@ -99,7 +99,6 @@ func ParseRequest(data string) (*Request, error) {
 		Version: requestParts[3],
 	}
 
-	// TODO: add validation if missing empty line (also for ParseResponse method)
 	// find empty line separating headers from body
 	headerEnd := -1
 	for i := 1; i < len(lines); i++ {
@@ -110,8 +109,13 @@ func ParseRequest(data string) (*Request, error) {
 		req.Headers = append(req.Headers, lines[i])
 	}
 
+	// validate that the empty line spearator was found
+	if headerEnd == -1 {
+		return nil, errors.New("invalid request: missing empty line separator between headers and body")
+	}
+
 	// parse body if exists
-	if headerEnd != -1 && headerEnd+1 < len(lines) {
+	if headerEnd+1 < len(lines) {
 		bodyLines := lines[headerEnd+1:]
 		req.Body = strings.Join(bodyLines, "\n")
 	}
@@ -150,8 +154,13 @@ func ParseResponse(data string) (*Response, error) {
 		resp.Headers = append(resp.Headers, lines[i])
 	}
 
+	// validate that the empty line spearator was found
+	if headerEnd == -1 {
+		return nil, errors.New("invalid response: missing empty line separator between headers and body")
+	}
+
 	// parse body if exists
-	if headerEnd != -1 && headerEnd+1 < len(lines) {
+	if headerEnd+1 < len(lines) {
 		bodyLines := lines[headerEnd+1:]
 		resp.Body = strings.Join(bodyLines, "\n")
 	}

@@ -118,6 +118,8 @@ func TestParseRequestErrors(t *testing.T) {
 		{"invalid request line, too few parts", "1 example.com"},
 		{"invalid request line, too many parts", "1 example.com /path 1.0 extra"},
 		{"invalid method", "GET example.com /path 1.0"}, // method should be an integer
+		{"missing empty line separator", "1 example.com /path 1.0\nheader1\nheader2"},
+		{"missing empty line with body", "1 example.com /path 1.0\nheader1\nbody content"},
 	}
 
 	for _, tt := range tests {
@@ -159,6 +161,8 @@ func TestParseResponseErrors(t *testing.T) {
 		{"invalid response line, too few parts", "1.0"},
 		{"invalid response line, too many parts", "1.0 200 extra"},
 		{"invalid status code", "1.0 invalid"},
+		{"missing empty line separator", "1.0 200\nheader1\nheader2"},
+		{"missing empty line with body", "1.0 200\nheader1\nbody content"},
 	}
 
 	for _, tt := range tests {
