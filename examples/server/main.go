@@ -33,7 +33,7 @@ func main() {
 
 	srv.HandleFunc("/data", protocol.POST, func(req *protocol.Request) *protocol.Response {
 		slog.Info("Handling request", "method", "POST", "path", "/data", "body", req.Body)
-		response := fmt.Sprintf("Updated data: %s ; %s; Hallo Welt;", req.Body, strings.Repeat("a", 1290))
+		response := fmt.Sprintf("Updated data: %s ; %s; Hallo Welt;", req.Body, strings.Repeat("a", 1900))
 		return server.TextResponse(200, response)
 	})
 

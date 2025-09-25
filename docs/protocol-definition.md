@@ -138,8 +138,7 @@ A request message has the following structure:
 ```text
 <Host>\0<Path>\0<Version>
 <Header-Value-1>\0<Header-Value-2>\0...
-...
-<End-of-Headers-Marker><Body>
+<End-of-Headers-Marker><Body><End-of-Transmission-Marker>
 
 Where:
 
@@ -149,6 +148,7 @@ Where:
 - `Version`: Protocol version (currently "1.0")
 - The separator for header fields is a null byte (`\0`).
 - The separator between headers and the body is the End of Text character (`\x03`).
+- The end of the entire message is marked by the End of Transmission character (`\x04`).
 ```
 
 ### 4.3 Request Examples

@@ -69,22 +69,52 @@ func (r *Request) Format() string {
 
 	// Join header parts with null byte, and separate from body with End of Text char.
 	headerPart := strings.Join(parts, "\x00")
-	return headerPart + "\x03" + r.Body
+	// Append End of Transmission character to mark the end of the entire message.
+	return headerPart + "\x03" + r.Body + "\x04"
 }
 
 // format QH response into wire format
 func (r *Response) Format() string {
 	var parts []string
 
-	// Response line: <Version>\0<Status-Code>
 	responseLine := fmt.Sprintf("%s\x00%d", r.Version, r.StatusCode)
 	parts = append(parts, responseLine)
 
 	parts = append(parts, r.Headers...)
 
-	// Join header parts with null byte, and separate from body with End of Text char.
 	headerPart := strings.Join(parts, "\x00")
-	return headerPart + "\x03" + r.Body
+	return headerPart + "\x03" + r.Body + "\x04"
+}
+
+func ParseResponse(data string) (*Response, error) {
+	// Split headers from body using the End of Text character
+	headerPart, body, found := strings.Cut(data, "\x03")
+	if !found {
+		return nil, errors.New("invalid response: missing body separator")
+	}
+
+	parts := strings.Split(headerPart, "\x00")
+	if len(parts) < 2 { // version, status
+		return nil, errors.New("invalid response: empty")
+	}
+
+	statusCode, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("invalid status code: %s", parts[1])
+	}
+
+	resp := &Response{
+		Version:    parts[0],
+		StatusCode: statusCode,
+		Body:       body,
+	}
+
+	// The rest of the parts are headers
+	if len(parts) > 2 {
+		resp.Headers = parts[2:]
+	}
+
+	return resp, nil
 }
 
 func ParseRequest(data string) (*Request, error) {
@@ -119,35 +149,4 @@ func ParseRequest(data string) (*Request, error) {
 	}
 
 	return req, nil
-}
-
-func ParseResponse(data string) (*Response, error) {
-	// Split headers from body using the End of Text character
-	headerPart, body, found := strings.Cut(data, "\x03")
-	if !found {
-		return nil, errors.New("invalid response: missing body separator")
-	}
-
-	parts := strings.Split(headerPart, "\x00")
-	if len(parts) < 2 { // version, status
-		return nil, errors.New("invalid response: empty")
-	}
-
-	statusCode, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return nil, fmt.Errorf("invalid status code: %s", parts[1])
-	}
-
-	resp := &Response{
-		Version:    parts[0],
-		StatusCode: statusCode,
-		Body:       body,
-	}
-
-	// The rest of the parts are headers
-	if len(parts) > 2 {
-		resp.Headers = parts[2:]
-	}
-
-	return resp, nil
 }

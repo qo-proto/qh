@@ -16,7 +16,7 @@ func TestRequestFormat(t *testing.T) {
 		Body:    "",
 	}
 
-	expected := "example.com\x00/hello.txt\x001.0\x001\x00en-US,en;q=0.5\x03"
+	expected := "example.com\x00/hello.txt\x001.0\x001\x00en-US,en;q=0.5\x03\x04"
 	actual := req.Format()
 
 	require.Equal(t, expected, actual)
@@ -32,7 +32,7 @@ func TestRequestFormatWithBody(t *testing.T) {
 		Body:    `{"name": "test"}`,
 	}
 
-	expected := "example.com\x00/submit\x001.0\x002\x03{\"name\": \"test\"}"
+	expected := "example.com\x00/submit\x001.0\x002\x03{\"name\": \"test\"}\x04"
 	actual := req.Format()
 
 	require.Equal(t, expected, actual)
@@ -46,7 +46,7 @@ func TestResponseFormat(t *testing.T) {
 		Body:       "Hello, world!",
 	}
 
-	expected := "1.0\x00200\x001\x00*\x00\x001758784800\x03Hello, world!"
+	expected := "1.0\x00200\x001\x00*\x00\x001758784800\x03Hello, world!\x04"
 	actual := resp.Format()
 
 	require.Equal(t, expected, actual)
@@ -60,7 +60,7 @@ func TestResponseFormatEmpty(t *testing.T) {
 		Body:       "",
 	}
 
-	expected := "1.0\x00204\x000\x03"
+	expected := "1.0\x00204\x000\x03\x04"
 	require.Equal(t, expected, resp.Format())
 }
 
