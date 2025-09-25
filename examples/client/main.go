@@ -60,28 +60,32 @@ func main() {
 		if err != nil {
 			slog.Error("Request failed", "method", req.method, "path", req.path, "error", err)
 		} else {
-			// Format the successful response for better readability
-			var formattedDate string
-			// The date is the 5th header (index 4)
-			if len(response.Headers) > 4 && response.Headers[4] != "" {
-				unixTime, err := strconv.ParseInt(response.Headers[4], 10, 64)
-				if err == nil {
-					// Format to DD.MM.YYYY HH:MM
-					formattedDate = time.Unix(unixTime, 0).Format("02.01.2006 15:04")
-				}
-			}
-
-			var sb strings.Builder
-			sb.WriteString(fmt.Sprintf("\n--- Response for %s %s ---\n", req.method, req.path))
-			sb.WriteString(fmt.Sprintf("Version:    %s\n", response.Version))
-			sb.WriteString(fmt.Sprintf("StatusCode: %d\n", response.StatusCode))
-			if formattedDate != "" {
-				sb.WriteString(fmt.Sprintf("Timestamp:  %s\n", formattedDate))
-			}
-			sb.WriteString(fmt.Sprintf("Body:       %s\n", response.Body))
-			slog.Info(sb.String())
+			logResponse(req.method, req.path, response)
 		}
 	}
 
 	slog.Info("All tests completed")
+}
+
+func logResponse(method, path string, response *protocol.Response) {
+	// Format the successful response for better readability
+	var formattedDate string
+	// The date is the 5th header (index 4)
+	if len(response.Headers) > 4 && response.Headers[4] != "" {
+		unixTime, err := strconv.ParseInt(response.Headers[4], 10, 64)
+		if err == nil {
+			// Format to DD.MM.YYYY HH:MM
+			formattedDate = time.Unix(unixTime, 0).Format("02.01.2006 15:04")
+		}
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("\n--- Response for %s %s ---\n", method, path))
+	sb.WriteString(fmt.Sprintf("Version:    %s\n", response.Version))
+	sb.WriteString(fmt.Sprintf("StatusCode: %d\n", response.StatusCode))
+	if formattedDate != "" {
+		sb.WriteString(fmt.Sprintf("Timestamp:  %s\n", formattedDate))
+	}
+	sb.WriteString(fmt.Sprintf("Body:       %s\n", response.Body))
+	slog.Info(sb.String())
 }

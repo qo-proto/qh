@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -90,12 +91,12 @@ func ParseRequest(data string) (*Request, error) {
 	// Split headers from body using the End of Text character
 	headerPart, body, found := strings.Cut(data, "\x03")
 	if !found {
-		return nil, fmt.Errorf("invalid request: missing body separator")
+		return nil, errors.New("invalid request: missing body separator")
 	}
 
 	parts := strings.Split(headerPart, "\x00")
 	if len(parts) < 3 { // host, path, version
-		return nil, fmt.Errorf("invalid request: not enough parts in header")
+		return nil, errors.New("invalid request: not enough parts in header")
 	}
 
 	req := &Request{
@@ -124,7 +125,7 @@ func ParseResponse(data string) (*Response, error) {
 	// Split headers from body using the End of Text character
 	headerPart, body, found := strings.Cut(data, "\x03")
 	if !found {
-		return nil, fmt.Errorf("invalid response: missing body separator")
+		return nil, errors.New("invalid response: missing body separator")
 	}
 
 	parts := strings.Split(headerPart, "\x00")

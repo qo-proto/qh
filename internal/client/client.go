@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -36,14 +37,14 @@ func (c *Client) Connect(addr string) error {
 	// Resolve hostname to IP if it's not already an IP
 	ip := net.ParseIP(host)
 	if ip == nil {
-		ips, err := net.LookupIP(host)
+		ips, err := net.DefaultResolver.LookupIPAddr(context.Background(), host)
 		if err != nil {
 			return fmt.Errorf("failed to resolve hostname %s: %w", host, err)
 		}
 		if len(ips) == 0 {
 			return fmt.Errorf("no IP addresses found for hostname: %s", host)
 		}
-		ip = ips[0] // Use the first resolved IP
+		ip = ips[0].IP // Use the first resolved IP
 	}
 
 	// create local listener (auto generates keys)
