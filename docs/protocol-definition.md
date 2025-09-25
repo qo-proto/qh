@@ -131,8 +131,6 @@ QH/1.0 defines the following methods:
 
 The Method is not present in the packet header. The method can be inferred from the presence of a body or not. GET does not have a body while POST has.
 
-TODO: update the code according to this
-
 ### 4.2 Request Format
 
 A request message has the following structure:

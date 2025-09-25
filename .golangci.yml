@@ -123,6 +123,9 @@ linters:
     - whitespace # detects leading and trailing whitespace
 
   settings:
+    cyclop:
+      max-complexity: 20 # default is 10
+      package-average: 10.0 # default is 0.0
     revive:
       rules:
         # these are the default revive rules

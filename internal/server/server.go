@@ -20,7 +20,6 @@ type Server struct {
 	handlers map[string]map[protocol.Method]Handler // path -> method -> handler
 }
 
-// TODO: add context-based shutdown like http.Server
 func NewServer() *Server {
 	return &Server{
 		handlers: make(map[string]map[protocol.Method]Handler),
@@ -104,7 +103,6 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 
 	slog.Debug("Response sent")
 	// Don't close the stream for now, uses qotp's automatic timeout
-	// TODO: Add proper connection closing in edge cases
 }
 
 func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
@@ -128,8 +126,6 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	// Don't close the stream for now, uses qotp's automatic timeout
 }
 
-// TODO: add custom header response method
-
 func Response(statusCode int, contentType, body string) *protocol.Response {
 	return &protocol.Response{
 		Version:    protocol.Version,
@@ -146,7 +142,6 @@ func Response(statusCode int, contentType, body string) *protocol.Response {
 }
 
 // convenience methods, e.g. write: server.TextResponse(200, "Hello")  instead of server.Response(200, "text/plain", "Hello")
-// TODO: research if these makes sense to keep/extend
 
 func OKResponse(contentType, body string) *protocol.Response {
 	return Response(200, contentType, body)

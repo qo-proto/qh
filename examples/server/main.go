@@ -8,7 +8,6 @@ import (
 	"qh/internal/server"
 )
 
-// TODO: Make proper examples
 func main() {
 	slog.Info("QH Protocol Server starting")
 
