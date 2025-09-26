@@ -1,15 +1,13 @@
 package server
 
 import (
-	"bytes"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
-	"qh/internal/protocol"
 	"strconv"
 	"time"
+
+	"qh/internal/protocol"
 
 	"github.com/tbocek/qotp"
 )
@@ -17,8 +15,7 @@ import (
 // handles QH requests
 type Handler func(*protocol.Request) *protocol.Response
 
-type Server struct { // TODO: add context-based shutdown like http.Server
-	// TODO: add context-based shutdown like http.Server
+type Server struct {
 	listener *qotp.Listener
 	handlers map[string]map[protocol.Method]Handler // path -> method -> handler
 }
@@ -84,16 +81,6 @@ func (s *Server) Close() error {
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
 
-	// Find the end of the header (double newline)
-	headerEnd := bytes.Index(requestData, []byte("\x00\x00"))
-	var headerData []byte
-	if headerEnd != -1 {
-		headerData = requestData[:headerEnd]
-	} else {
-		headerData = requestData // No body, the whole request is the header part
-	}
-	log.Printf("Request header (hex):\n%s", hex.EncodeToString(headerData))
-
 	request, err := protocol.ParseRequest(string(requestData))
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
@@ -138,8 +125,6 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	}
 	// Don't close the stream for now, uses qotp's automatic timeout
 }
-
-// TODO: add custom header response method
 
 func Response(statusCode int, contentType protocol.ContentType, body string) *protocol.Response {
 	// Initialize headers slice with fixed size, filling with empty strings

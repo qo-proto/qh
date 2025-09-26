@@ -98,6 +98,14 @@ func ParseResponse(data string) (*Response, error) {
 		return nil, errors.New("invalid response: empty")
 	}
 
+	// Validate required fields are not empty
+	if parts[0] == "" {
+		return nil, errors.New("invalid response: empty version")
+	}
+	if parts[1] == "" {
+		return nil, errors.New("invalid response: empty status code")
+	}
+
 	statusCode, err := strconv.Atoi(parts[1])
 	if err != nil {
 		return nil, fmt.Errorf("invalid status code: %s", parts[1])
@@ -129,9 +137,23 @@ func ParseRequest(data string) (*Request, error) {
 		return nil, errors.New("invalid request: not enough parts in header")
 	}
 
+	// Validate required fields are not empty
+	if parts[0] == "" {
+		return nil, errors.New("invalid request: empty host")
+	}
+	if parts[2] == "" {
+		return nil, errors.New("invalid request: empty version")
+	}
+
+	// Default empty path to root
+	path := parts[1]
+	if path == "" {
+		path = "/"
+	}
+
 	req := &Request{
 		Host:    parts[0],
-		Path:    parts[1],
+		Path:    path,
 		Version: parts[2],
 		Body:    body,
 	}
