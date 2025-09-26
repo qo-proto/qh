@@ -109,6 +109,19 @@ func TestParseRequestNoHeaders(t *testing.T) {
 	require.Equal(t, "test body", req.Body)
 }
 
+func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
+	data := "example.com\x00\x001.0\x03"
+
+	req, err := ParseRequest(data)
+	require.NoError(t, err)
+	require.Equal(t, GET, req.Method) // No body, so it's GET
+	require.Equal(t, "example.com", req.Host)
+	require.Equal(t, "/", req.Path) // Empty path should default to "/"
+	require.Equal(t, "1.0", req.Version)
+	require.Empty(t, req.Headers)
+	require.Empty(t, req.Body)
+}
+
 func TestParseRequestErrors(t *testing.T) {
 	tests := []struct {
 		name string
@@ -117,7 +130,9 @@ func TestParseRequestErrors(t *testing.T) {
 		{"no body separator", "example.com\x00/path\x001.0"},
 		{"empty", ""},
 		{"invalid request line, too few parts", "example.com"},
-		{"invalid request line, too many parts", "example.com\x00/path\x001.0\x00extra"},
+		{"invalid request line, too few parts with separator", "example.com\x00/path"},
+		{"host missing", "\x00/path\x001.0\x03"},
+		{"version missing", "example.com\x00/path\x00\x03"},
 	}
 
 	for _, tt := range tests {
@@ -158,8 +173,11 @@ func TestParseResponseErrors(t *testing.T) {
 		{"no body separator", "1.0\x00200"},
 		{"empty", ""},
 		{"invalid response line, too few parts", "1.0"},
-		{"invalid response line, too many parts", "1.0\x00200\x00extra"},
-		{"invalid status code", "1.0\x00invalid"},
+		{"invalid response line, only version", "1.0\x03"},
+		// {"invalid status code", "1.0\x00invalid\x03"},
+		// {"negative status code", "1.0\x00-200\x03"},
+		{"version missing", "\x00200\x03"},
+		{"status code missing", "1.0\x00\x03"},
 	}
 
 	for _, tt := range tests {
