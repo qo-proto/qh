@@ -1,11 +1,8 @@
 package server
 
 import (
-	"bytes"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"strconv"
 	"time"
@@ -83,17 +80,6 @@ func (s *Server) Close() error {
 // handles a single request/response
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
-
-	// TODO: needed? already in types.go?
-	// Find the end of the header (double newline)
-	headerEnd := bytes.Index(requestData, []byte("\x00\x00"))
-	var headerData []byte
-	if headerEnd != -1 {
-		headerData = requestData[:headerEnd]
-	} else {
-		headerData = requestData // No body, the whole request is the header part
-	}
-	log.Printf("Request header (hex):\n%s", hex.EncodeToString(headerData))
 
 	request, err := protocol.ParseRequest(string(requestData))
 	if err != nil {
