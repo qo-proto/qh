@@ -77,7 +77,8 @@ func (r *Request) Format() string {
 func (r *Response) Format() string {
 	var parts []string
 
-	responseLine := fmt.Sprintf("%s\x00%d", r.Version, r.StatusCode)
+	compactStatus := EncodeStatusCode(r.StatusCode)
+	responseLine := fmt.Sprintf("%s\x00%d", r.Version, compactStatus)
 	parts = append(parts, responseLine)
 
 	parts = append(parts, r.Headers...)
@@ -106,14 +107,16 @@ func ParseResponse(data string) (*Response, error) {
 		return nil, errors.New("invalid response: empty status code")
 	}
 
-	statusCode, err := strconv.Atoi(parts[1])
+	compactStatus, err := strconv.Atoi(parts[1])
 	if err != nil {
 		return nil, fmt.Errorf("invalid status code: %s", parts[1])
 	}
 
+	httpStatusCode := DecodeStatusCode(uint8(compactStatus))
+
 	resp := &Response{
 		Version:    parts[0],
-		StatusCode: statusCode,
+		StatusCode: httpStatusCode,
 		Body:       body,
 	}
 
