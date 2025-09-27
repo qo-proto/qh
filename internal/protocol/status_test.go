@@ -23,9 +23,9 @@ func TestDecodeStatusCode(t *testing.T) {
 }
 
 func TestEncodeStatusCodeFallback(t *testing.T) {
-	require.Equal(t, uint8(163), EncodeStatusCode(419)) // 419 & 0xFF = 163
-	require.Equal(t, uint8(195), EncodeStatusCode(451)) // 451 & 0xFF = 195
-	require.Equal(t, uint8(43), EncodeStatusCode(299))  // 299 & 0xFF = 43
+	// all unmapped codes should return compact code for 500 -> 3
+	require.Equal(t, uint8(3), EncodeStatusCode(419))
+	require.Equal(t, uint8(3), EncodeStatusCode(451))
 }
 
 func TestDecodeStatusCodeFallback(t *testing.T) {

@@ -66,8 +66,8 @@ func EncodeStatusCode(httpCode int) uint8 {
 	if compact, exists := StatusToCompact[httpCode]; exists {
 		return compact
 	}
-	// Fallback: use HTTP code directly for unmapped codes (works for not mapped codes 100-255)
-	return uint8(httpCode)
+	// Fallback: use 500 Internal Server Error for unmapped codes
+	return StatusToCompact[500]
 }
 
 // convert compact format to HTTP status code

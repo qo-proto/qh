@@ -112,6 +112,10 @@ func ParseResponse(data string) (*Response, error) {
 		return nil, fmt.Errorf("invalid status code: %s", parts[1])
 	}
 
+	if compactStatus < 0 || compactStatus > 255 {
+		return nil, fmt.Errorf("compact status code out of range: %d", compactStatus)
+	}
+
 	httpStatusCode := DecodeStatusCode(uint8(compactStatus))
 
 	resp := &Response{
