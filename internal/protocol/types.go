@@ -61,8 +61,8 @@ type Response struct {
 func (r *Request) Format() string {
 	var parts []string
 
-	// Request line: <Host>\0<Path>\0<Version>
-	requestLine := fmt.Sprintf("%s\x00%s\x00%s", r.Host, r.Path, r.Version)
+	// Request line: <Method>\0<Host>\0<Path>\0<Version>
+	requestLine := fmt.Sprintf("%d\x00%s\x00%s\x00%s", int(r.Method), r.Host, r.Path, r.Version)
 	parts = append(parts, requestLine)
 
 	parts = append(parts, r.Headers...)
@@ -133,41 +133,42 @@ func ParseRequest(data string) (*Request, error) {
 	}
 
 	parts := strings.Split(headerPart, "\x00")
-	if len(parts) < 3 { // host, path, version
+	if len(parts) < 4 { // method, host, path, version
 		return nil, errors.New("invalid request: not enough parts in header")
 	}
 
+	// Parse method
+	methodInt, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return nil, fmt.Errorf("invalid method: %s", parts[0])
+	}
+	method := Method(methodInt)
+
 	// Validate required fields are not empty
-	if parts[0] == "" {
+	if parts[1] == "" {
 		return nil, errors.New("invalid request: empty host")
 	}
-	if parts[2] == "" {
+	if parts[3] == "" {
 		return nil, errors.New("invalid request: empty version")
 	}
 
 	// Default empty path to root
-	path := parts[1]
+	path := parts[2]
 	if path == "" {
 		path = "/"
 	}
 
 	req := &Request{
-		Host:    parts[0],
+		Method:  method,
+		Host:    parts[1],
 		Path:    path,
-		Version: parts[2],
+		Version: parts[3],
 		Body:    body,
 	}
 
 	// The rest of the parts are headers
-	if len(parts) > 3 {
-		req.Headers = parts[3:]
-	}
-
-	// Infer method from body presence
-	if len(req.Body) > 0 {
-		req.Method = POST
-	} else {
-		req.Method = GET
+	if len(parts) > 4 {
+		req.Headers = parts[4:]
 	}
 
 	return req, nil
