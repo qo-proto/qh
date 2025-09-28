@@ -149,6 +149,9 @@ func ParseRequest(data string) (*Request, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid method: %s", parts[0])
 	}
+	if methodInt != int(GET) && methodInt != int(POST) {
+		return nil, fmt.Errorf("invalid method value: %d", methodInt)
+	}
 	method := Method(methodInt)
 
 	// Validate required fields are not empty
