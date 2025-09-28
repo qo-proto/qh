@@ -51,7 +51,7 @@ var StatusToCompact = map[int]uint8{
 	// room for additional codes up until 99
 }
 
-var CompactToStatus map[uint8]int // revers mapping for decoding
+var CompactToStatus map[uint8]int // reverse mapping for decoding
 
 // TODO: maybe use manual reverse map over init method
 func init() {
