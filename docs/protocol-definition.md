@@ -15,6 +15,7 @@ Status: Draft
     - [2.1 QH Version](#21-qh-version)
     - [2.2 Media Types](#22-media-types)
     - [2.3 Language Tags](#23-language-tags)
+    - [2.4 qh URI Scheme](#24-qh-uri-scheme)
   - [3. Message Format](#3-message-format)
     - [3.1 Message Types](#31-message-types)
     - [3.2 Message Headers](#32-message-headers)
@@ -36,6 +37,9 @@ Status: Draft
   - [7. Transport](#7-transport)
     - [7.1 Connection Establishment](#71-connection-establishment)
       - [7.1.1 Certificate Exchange](#711-certificate-exchange)
+    - [7.2 Connection Management](#72-connection-management)
+      - [7.2.1 Connection Reuse](#721-connection-reuse)
+      - [7.2.2 Reusing Connections for Multiple Origins](#722-reusing-connections-for-multiple-origins)
   - [8. Security Considerations](#8-security-considerations)
   - [9. Versioning](#9-versioning)
 
@@ -50,7 +54,7 @@ QH uses a **request/response model**.
 - The client sends a request message to the server.
 - The server replies with a response message.
 - Each message is encoded in UTF-8 text unless otherwise specified.
-- Messages are delimited by a blank line between headers and body.
+- The header section is separated from the body by a special character.
 
 ### 1.1 Purpose
 
@@ -94,15 +98,33 @@ For example: `text/html; charset=utf-8`. The `type`, `subtype`, and parameter na
 
 ### 2.3 Language Tags
 
-QH uses language tags to indicate the natural language of the content, primarily within the `Accept-Language` header. A language tag identifies a natural language spoken or written by humans.
+A language tag, as defined in [RFC5646], identifies a natural language spoken, written, or otherwise conveyed by human beings for communication of information to other human beings. Computer languages are explicitly excluded.
 
-The syntax is composed of a primary tag and optional subtags, separated by a hyphen.
+QH uses language tags within the `Accept-Language` header.
 
 ```text
-language-tag = primary-tag *("-" subtag)
+language-tag = <Language-Tag, see [RFC5646], Section 2.1>
 ```
 
 Tags are case-insensitive. Examples include `en` (English), `en-US` (American English), and `fr` (French).
+
+### 2.4 qh URI Scheme
+
+The "qh" URI scheme is defined for identifying resources that are accessible via the QH protocol. Communication is performed over `qotp`, a secure, UDP-based transport.
+
+```text
+qh-URI = "qh" "://" authority path-abempty [ "?" query ]
+```
+
+The origin server for a "qh" URI is identified by the `authority` component, which includes a host identifier and an optional port number. If the port is not specified, the default port for QH is `8090`.
+
+A sender MUST NOT generate a "qh" URI with an empty host identifier. A recipient that processes such a URI MUST reject it as invalid.
+
+The hierarchical `path` component and optional `query` component identify the target resource within the origin server's namespace.
+
+All communication over QH is inherently secured by the underlying `qotp` transport, which provides mandatory end-to-end encryption. Clients and servers do not need to perform additional steps to secure the channel, as this is a built-in feature of the transport layer.
+
+Resources made available via the "qh" scheme have no shared identity with resources from "http" or "https" schemes. They are distinct origins with separate namespaces.
 
 ## 3. Message Format
 
@@ -129,20 +151,19 @@ QH/1.0 defines the following methods:
 | GET    | Retrieve a resource.       |
 | POST   | Submit data to the server. |
 
-The Method is not present in the packet header. The method can be inferred from the presence of a body or not. GET does not have a body while POST has.
+The method is inferred based on the presence of a message body: a request with a non-empty body is treated as `POST`, and a request with an empty body is treated as `GET`.
 
 ### 4.2 Request Format
 
 A request message has the following structure:
 
 ```text
-<Host>\0<Path>\0<Version>
-<Header-Value-1>\0<Header-Value-2>\0...
+<Host>\0<Path>\0<Version>\0
+<Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0
 <End-of-Headers-Marker><Body><End-of-Transmission-Marker>
 
 Where:
 
-- `Method`: Numeric method identifier (1=GET, 2=POST, 3=PUT, 4=DELETE, 5=HEAD)
 - `Host`: Target hostname
 - `Path`: Resource path
 - `Version`: Protocol version (currently "1.0")
@@ -156,7 +177,7 @@ Where:
 **Simple GET request:**
 
 ```text
-example.com\0/hello.txt\01.0\0\0
+example.com\0/hello.txt\01.0\x03\x04
 
 ```
 
@@ -300,6 +321,8 @@ Note: `Host` is not included as it appears in the start-line of the request, not
 | 1     | `Accept`          | Media types the client can process.      | `text/html,application/xhtml+xml` |
 | 2     | `Accept-Language` | The preferred language for the response. | `en-US,en;q=0.5`                  |
 | 3     | `Accept-Encoding` | Content-coding the client can process.   | `gzip, deflate, br`               |
+| 4     | `Fragment-Offset` | The byte offset for a fragmented body.   | `1200`                            |
+| 5     | `Connection`      | Control options for the current connection. | `close`                        |
 
 ![QH Message Format](./docs/images/header.svg)
 
@@ -314,7 +337,11 @@ The following table defines the order and meaning of response headers.
 | 3     | `Content-Encoding`            | The encoding format of the content.                    | `gzip`                          |
 | 4     | `Content-Type`                | The MIME type of the resource.                         | `text/html; charset=utf-8`      |
 | 5     | `Date`                        | The date and time at which the message was originated. | `1468857960` (Unix timestamp)   |
-| 6     | `Set-Cookie`                  | Sends a cookie from the server to the user agent.      | `my-key=my value; ...`          |
+| 6     | `Content-Language` | The preferred language for the response. | `en-US,en;q=0.5`                  |
+| 7     | `Fragment-Offset`             | The byte offset for a fragmented body.                 | `1200`                          |
+| 8     | `Fragment-Request-ID`         | A unique ID to correlate fragments.                    | `42`                            |
+| 9     | `Date`                        | The date and time at which the message was originated. | `1468857960` (Unix timestamp)   |
+| 10    | `Connection`                  | Control options for the current connection.            | `close`                         |
 
 ## 7. Transport
 
@@ -333,6 +360,22 @@ QOTP enables you to use it without knowing the servers public certificate. But w
 To get the server certificate before connecting to the server we try to get the certificate from the DNS.
 
 We need a DNS Entry we can get from the client before connecting.
+
+### 7.2 Connection Management
+
+#### 7.2.1 Connection Reuse
+
+QH connections, which are built on the underlying `qotp` transport, are persistent. For best performance, clients SHOULD reuse connections for multiple requests rather than establishing a new connection for each one. Connections should remain open until it is determined that no further communication with the server is necessary (e.g., when a user navigates away from an application) or until the server closes the connection.
+
+Clients SHOULD NOT open more than one QH connection to a given IP address and UDP port for the same transport configuration.
+
+#### 7.2.2 Reusing Connections for Multiple Origins
+
+A single connection to a server endpoint MAY be reused for requests to different origins (i.e., different hostnames) if they resolve to the same IP address. To do this securely, the client MUST validate that the server is authoritative for the new origin. This involves verifying the server's public key against the expected key for the new origin (e.g., by fetching it from a DNS TXT record).
+
+If the server's identity cannot be verified for the new origin, the client MUST NOT reuse the connection for that origin and SHOULD establish a new connection instead.
+
+A server that receives a request for an origin it is not authoritative for can indicate this by sending a `421 (Misdirected Request)` status code.
 
 ## 8. Security Considerations
 
