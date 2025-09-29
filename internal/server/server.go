@@ -139,6 +139,7 @@ func Response(statusCode int, contentType protocol.ContentType, body string) *pr
 			"",                                       // Content-Encoding (empty unless compression is used)
 			strconv.FormatInt(time.Now().Unix(), 10), // Date (Unix timestamp)
 			"",                                       // Set-Cookie
+			"",                                       // Connection
 		},
 		Body: body,
 	}
