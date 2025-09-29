@@ -146,162 +146,190 @@ Resources made available via the "qh" scheme have no shared identity with resour
 
 QH/1.0 defines the following methods:
 
-| Method | Description                |
-| ------ | -------------------------- |
-| GET    | Retrieve a resource.       |
-| POST   | Submit data to the server. |
+| Method | Code | Description                |
+| ------ | ---- | -------------------------- |
+| GET    | 1    | Retrieve a resource.       |
+| POST   | 2    | Submit data to the server. |
 
-The method is inferred based on the presence of a message body: a request with a non-empty body is treated as `POST`, and a request with an empty body is treated as `GET`.
+Methods are encoded as numeric codes in the wire format for compactness. The method code appears in the first field of the request line.
 
 ### 4.2 Request Format
 
 A request message has the following structure:
 
 ```text
-<Host>\0<Path>\0<Version>\0
-<Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0
-<End-of-Headers-Marker><Body><End-of-Transmission-Marker>
+<Method>\0<Host>\0<Path>\0<Version>\0<Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>\x04
+```
 
 Where:
 
+- `Method`: Numeric method code (1=GET, 2=POST)
 - `Host`: Target hostname
 - `Path`: Resource path
 - `Version`: Protocol version (currently "1.0")
-- The separator for header fields is a null byte (`\0`).
-- The separator between headers and the body is the End of Text character (`\x03`).
-- The end of the entire message is marked by the End of Transmission character (`\x04`).
-```
+- `Header-Value-N`: Header values in predefined order
+- The separator for all fields is a null byte (`\0`)
+- The separator between headers and body is the End of Text character (`\x03`)
+- The end of the entire message is marked by the End of Transmission character (`\x04`)
 
 ### 4.3 Request Examples
 
 **Simple GET request:**
 
 ```text
-example.com\0/hello.txt\01.0\x03\x04
-
+1\0example.com\0/hello.txt\01.0\0\x03\x04
 ```
 
 **GET request with headers:**
 
 ```text
-example.com\0/hello.txt\01.0
-1
-en-US,en;q=0.5
-
+1\0example.com\0/hello.txt\01.0\0
+text/html,application/xhtml+xml\0
+en-US,en;q=0.5\0
+\x03\x04
 ```
 
 **POST request with body:**
 
 ```text
-2 example.com /submit 1.0
-application/json
-
+2\0example.com\0/submit\01.0\0
+application/json\0
+\x03
 {"name": "test"}
+\x04
 ```
 
 ## 5. Response
 
 ### 5.1 Status Codes
 
-QH/1.0 status codes are the same as HTTP, three-digit integers grouped by category:
+QH/1.0 uses HTTP-compatible status codes but encodes them in a compact wire format for efficiency. Status codes are mapped to single-byte compact codes ordered by frequency of use.
 
-- `1xx` Informational — Request received, continuing process.
-- `2xx` Success — Request successfully processed (e.g., `200 OK`).
-- `3xx` Redirection — Further action is needed (e.g., `301 Moved`).
-- `4xx` Client Error — The client sent a bad request (e.g., `404 Not Found`).
-- `5xx` Server Error — The server failed to process a valid request (e.g., `500 Internal Error`).
+The protocol supports standard HTTP status code categories:
 
-#### 5.1.1 Status Codes List
+- `1xx` Informational — Request received, continuing process
+- `2xx` Success — Request successfully processed (e.g., `200 OK`)
+- `3xx` Redirection — Further action is needed (e.g., `301 Moved`)
+- `4xx` Client Error — The client sent a bad request (e.g., `404 Not Found`)
+- `5xx` Server Error — The server failed to process a valid request (e.g., `500 Internal Error`)
 
-| Status Code | Reason Phrase                   |
-| ----------- | ------------------------------- |
-| 100         | Continue                        |
-| 200         | OK                              |
-| 201         | Created                         |
-| 202         | Accepted                        |
-| 203         | Non-Authoritative Information   |
-| 204         | No Content                      |
-| 205         | Reset Content                   |
-| 206         | Partial Content                 |
-| 300         | Multiple Choices                |
-| 301         | Moved Permanently               |
-| 302         | Found                           |
-| 303         | See Other                       |
-| 304         | Not Modified                    |
-| 305         | Use Proxy                       |
-| 307         | Temporary Redirect              |
-| 400         | Bad Request                     |
-| 401         | Unauthorized                    |
-| 402         | Payment Required                |
-| 403         | Forbidden                       |
-| 404         | Not Found                       |
-| 405         | Method Not Allowed              |
-| 406         | Not Acceptable                  |
-| 407         | Proxy Authentication Required   |
-| 408         | Request Time-out                |
-| 409         | Conflict                        |
-| 410         | Gone                            |
-| 411         | Length Required                 |
-| 412         | Precondition Failed             |
-| 413         | Request Entity Too Large        |
-| 414         | Request-URI Too Large           |
-| 415         | Unsupported Media Type          |
-| 416         | Requested range not satisfiable |
-| 417         | Expectation Failed              |
-| 500         | Internal Server Error           |
-| 501         | Not Implemented                 |
-| 502         | Bad Gateway                     |
-| 503         | Service Unavailable             |
-| 504         | Gateway Time-out                |
-| 505         | QH Version not supported        |
+#### Status Code Encoding
+
+For wire efficiency, common HTTP status codes are mapped to compact single-byte representations:
+
+#### 5.1.1 Supported Status Codes
+
+The following status codes are supported with their compact wire format encoding:
+
+| HTTP Code | Compact Code | Reason Phrase                 |
+| --------- | ------------ | ----------------------------- |
+| 200       | 1            | OK                            |
+| 404       | 2            | Not Found                     |
+| 500       | 3            | Internal Server Error         |
+| 302       | 4            | Found                         |
+| 400       | 5            | Bad Request                   |
+| 403       | 6            | Forbidden                     |
+| 401       | 7            | Unauthorized                  |
+| 301       | 8            | Moved Permanently             |
+| 304       | 9            | Not Modified                  |
+| 503       | 10           | Service Unavailable           |
+| 201       | 11           | Created                       |
+| 202       | 12           | Accepted                      |
+| 204       | 13           | No Content                    |
+| 206       | 14           | Partial Content               |
+| 307       | 15           | Temporary Redirect            |
+| 308       | 16           | Permanent Redirect            |
+| 409       | 17           | Conflict                      |
+| 410       | 18           | Gone                          |
+| 412       | 19           | Precondition Failed           |
+| 413       | 20           | Payload Too Large             |
+| 414       | 21           | URI Too Long                  |
+| 415       | 22           | Unsupported Media Type        |
+| 422       | 23           | Unprocessable Entity          |
+| 429       | 24           | Too Many Requests             |
+| 502       | 25           | Bad Gateway                   |
+| 504       | 26           | Gateway Timeout               |
+| 505       | 27           | QH Version Not Supported      |
+| 100       | 31           | Continue                      |
+| 101       | 32           | Switching Protocols           |
+| 102       | 33           | Processing                    |
+| 103       | 34           | Early Hints                   |
+| 205       | 35           | Reset Content                 |
+| 207       | 36           | Multi-Status                  |
+| 208       | 37           | Already Reported              |
+| 226       | 38           | IM Used                       |
+| 300       | 39           | Multiple Choices              |
+| 303       | 40           | See Other                     |
+| 305       | 41           | Use Proxy                     |
+| 402       | 42           | Payment Required              |
+| 405       | 43           | Method Not Allowed            |
+| 406       | 44           | Not Acceptable                |
+| 407       | 45           | Proxy Authentication Required |
+| 408       | 46           | Request Timeout               |
+| 411       | 47           | Length Required               |
+| 416       | 48           | Range Not Satisfiable         |
+| 417       | 49           | Expectation Failed            |
+
+**Encoding Rules:**
+
+- Status codes are ordered by frequency to optimize common cases
+- Unmapped status codes default to 500 (Internal Server Error) with compact code 3
+- The compact code is transmitted in the wire format, then decoded to the HTTP status code
 
 ### 5.2 Response Format
 
 A response message has the following structure:
 
 ```text
-<Version>\0<Status-Code>
-<Header-Value-1>
-<Header-Value-2>
-...
-<Empty-Line>
-<Optional-Body>
-
+<Version>\0<Compact-Status-Code>\0<Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>\x04
 ```
 
 Where:
 
 - `Version`: Protocol version (currently "1.0")
-- `Status-Code`: HTTP-compatible three-digit status code
+- `Compact-Status-Code`: Single-byte encoded status code (see encoding table above)
+- `Header-Value-N`: Header values in predefined order
+- The separator for all fields is a null byte (`\0`)
+- The separator between headers and body is the End of Text character (`\x03`)
+- The end of the entire message is marked by the End of Transmission character (`\x04`)
 
 ### 5.3 Response Examples
 
 **Simple successful response:**
 
 ```text
-1.0\0200
-1
-
+1.0\01\0
+\x03
 Hello, world!
+\x04
 ```
 
 **Response with headers:**
 
 ```text
-1.0 200
-*
-
-text/plain
-Wed, 24 Sep 2025 10:00:00 CET
-
+1.0\01\0
+*\0
+text/plain\0
+\x03
 Hello, world!
+\x04
 ```
 
-**Empty response:**
+**Empty response (No Content):**
 
 ```text
-1.0 204
+1.0\013\0
+\x03
+\x04
+```
 
+**Error response:**
+
+```text
+1.0\02\0
+\x03
+Page not found
+\x04
 ```
 
 ## 6. Headers
@@ -316,13 +344,13 @@ The following table defines the order and meaning of request headers.
 
 Note: `Host` is not included as it appears in the start-line of the request, not as a header.
 
-| Order | Header            | Description                              | Example                           |
-| ----- | ----------------- | ---------------------------------------- | --------------------------------- |
-| 1     | `Accept`          | Media types the client can process.      | `text/html,application/xhtml+xml` |
-| 2     | `Accept-Language` | The preferred language for the response. | `en-US,en;q=0.5`                  |
-| 3     | `Accept-Encoding` | Content-coding the client can process.   | `gzip, deflate, br`               |
-| 4     | `Fragment-Offset` | The byte offset for a fragmented body.   | `1200`                            |
-| 5     | `Connection`      | Control options for the current connection. | `close`                        |
+| Order | Header            | Description                                 | Example                           |
+| ----- | ----------------- | ------------------------------------------- | --------------------------------- |
+| 1     | `Accept`          | Media types the client can process.         | `text/html,application/xhtml+xml` |
+| 2     | `Accept-Language` | The preferred language for the response.    | `en-US,en;q=0.5`                  |
+| 3     | `Accept-Encoding` | Content-coding the client can process.      | `gzip, deflate, br`               |
+| 4     | `Fragment-Offset` | The byte offset for a fragmented body.      | `1200`                            |
+| 5     | `Connection`      | Control options for the current connection. | `close`                           |
 
 ![QH Message Format](./docs/images/header.svg)
 
@@ -330,18 +358,18 @@ Note: `Host` is not included as it appears in the start-line of the request, not
 
 The following table defines the order and meaning of response headers.
 
-| Order | Header                        | Description                                            | Example                         |
-| ----- | ----------------------------- | ------------------------------------------------------ | ------------------------------- |
-| 1     | `Access-Control-Allow-Origin` | Specifies which origins can access the resource.       | `*`                             |
-| 2     | `Content-Length`              | The size of the message body in octets (8-bit bytes).  | `1234`                          |
-| 3     | `Content-Encoding`            | The encoding format of the content.                    | `gzip`                          |
-| 4     | `Content-Type`                | The MIME type of the resource.                         | `text/html; charset=utf-8`      |
-| 5     | `Date`                        | The date and time at which the message was originated. | `1468857960` (Unix timestamp)   |
-| 6     | `Content-Language` | The preferred language for the response. | `en-US,en;q=0.5`                  |
-| 7     | `Fragment-Offset`             | The byte offset for a fragmented body.                 | `1200`                          |
-| 8     | `Fragment-Request-ID`         | A unique ID to correlate fragments.                    | `42`                            |
-| 9     | `Date`                        | The date and time at which the message was originated. | `1468857960` (Unix timestamp)   |
-| 10    | `Connection`                  | Control options for the current connection.            | `close`                         |
+| Order | Header                        | Description                                            | Example                       |
+| ----- | ----------------------------- | ------------------------------------------------------ | ----------------------------- |
+| 1     | `Access-Control-Allow-Origin` | Specifies which origins can access the resource.       | `*`                           |
+| 2     | `Content-Length`              | The size of the message body in octets (8-bit bytes).  | `1234`                        |
+| 3     | `Content-Encoding`            | The encoding format of the content.                    | `gzip`                        |
+| 4     | `Content-Type`                | The MIME type of the resource.                         | `text/html; charset=utf-8`    |
+| 5     | `Date`                        | The date and time at which the message was originated. | `1468857960` (Unix timestamp) |
+| 6     | `Content-Language`            | The preferred language for the response.               | `en-US,en;q=0.5`              |
+| 7     | `Fragment-Offset`             | The byte offset for a fragmented body.                 | `1200`                        |
+| 8     | `Fragment-Request-ID`         | A unique ID to correlate fragments.                    | `42`                          |
+| 9     | `Date`                        | The date and time at which the message was originated. | `1468857960` (Unix timestamp) |
+| 10    | `Connection`                  | Control options for the current connection.            | `close`                       |
 
 ## 7. Transport
 

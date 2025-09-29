@@ -28,7 +28,7 @@ var StatusToCompact = map[int]uint8{
 	429: 24, // Too Many Requests
 	502: 25, // Bad Gateway
 	504: 26, // Gateway Timeout
-	505: 27, // HTTP Version Not Supported
+	505: 27, // QH Version Not Supported
 	100: 31, // Continue
 	101: 32, // Switching Protocols
 	102: 33, // Processing
