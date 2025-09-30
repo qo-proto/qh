@@ -99,9 +99,9 @@ func ParseResponse(data string) (*Response, error) {
 	}
 
 	// First byte contains status and version
-	firstByte := uint8(headerPart[0])
-	version := firstByte >> 6                      // Upper 2 bits
-	compactStatus := uint8(firstByte & 0b00111111) // Lower 6 bits
+	firstByte := headerPart[0]
+	version := firstByte >> 6               // Upper 2 bits
+	compactStatus := firstByte & 0b00111111 // Lower 6 bits
 
 	if version > 3 { // 2 bits can hold values 0-3
 		return nil, fmt.Errorf("invalid compact status code: %d", compactStatus)
@@ -146,7 +146,7 @@ func ParseRequest(data string) (*Request, error) {
 
 	// The first byte contains the method (lower 3 bits) and version (upper 5 bits).
 	firstByte := headerPart[0]
-	version := uint8(firstByte >> 6)                // Extract upper 2 bits
+	version := firstByte >> 6                       // Extract upper 2 bits
 	method := Method((firstByte >> 3) & 0b00000111) // Extract middle 3 bits
 
 	if method != GET && method != POST {
