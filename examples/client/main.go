@@ -31,6 +31,7 @@ func main() {
 		{method: "GET", path: "/status"},
 		{method: "POST", path: "/echo", body: ptr("Hello QH World!")},
 		{method: "POST", path: "/data", body: ptr("Updated data!")},
+		{method: "GET", path: "/not-found"}, // This will trigger a 404
 	}
 
 	c := client.NewClient()
@@ -81,7 +82,7 @@ func logResponse(method, path string, response *protocol.Response) {
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("\n--- Response for %s %s ---\n", method, path))
-	sb.WriteString(fmt.Sprintf("Version:    %s\n", response.Version))
+	sb.WriteString(fmt.Sprintf("Version:    %d\n", response.Version))
 	sb.WriteString(fmt.Sprintf("StatusCode: %d\n", response.StatusCode))
 	if formattedDate != "" {
 		sb.WriteString(fmt.Sprintf("Timestamp:  %s\n", formattedDate))

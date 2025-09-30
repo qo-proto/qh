@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
+	"strings"
 	"time"
 
 	"qh/internal/protocol"
@@ -84,7 +85,11 @@ func (s *Server) Close() error {
 
 // handleRequest parses a request from a stream, routes it, and sends a response.
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
-	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
+	var reqBin strings.Builder
+	for _, b := range requestData {
+		fmt.Fprintf(&reqBin, "%08b ", b)
+	}
+	slog.Info("Received raw request from client", "binary", reqBin.String())
 
 	request, err := protocol.ParseRequest(string(requestData))
 	if err != nil {
@@ -97,7 +102,11 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 
 	// send response
 	responseData := response.Format()
-	slog.Debug("Sending response", "bytes", len(responseData), "data", responseData)
+	var respBin strings.Builder
+	for _, b := range []byte(responseData) {
+		fmt.Fprintf(&respBin, "%08b ", b)
+	}
+	slog.Info("Sending raw response to client", "binary", respBin.String())
 
 	_, err = stream.Write([]byte(responseData))
 	if err != nil {
@@ -111,16 +120,10 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 }
 
 func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
-	// Infer method from body presence
-	method := protocol.GET
-	if request.Body != "" {
-		method = protocol.POST
-	}
-	slog.Debug("Routing request", "path", request.Path, "inferred_method", method.String())
 
 	// check if we have a handler for this path and method
 	if pathHandlers, exists := s.handlers[request.Path]; exists {
-		if handler, methodExists := pathHandlers[method]; methodExists {
+		if handler, methodExists := pathHandlers[request.Method]; methodExists {
 			return handler(request) // Execute the handler for the inferred method
 		}
 	}
@@ -142,7 +145,7 @@ func Response(statusCode int, contentType protocol.ContentType, body string) *pr
 	// Initialize headers slice with fixed size, filling with empty strings
 	// Using a null byte separator for the start-line components.
 	return &protocol.Response{
-		Version:    protocol.Version,
+		Version:    0,
 		StatusCode: statusCode,
 		Headers: []string{ // Ordered headers by position.
 			strconv.Itoa(int(contentType)),           // Content-Type (as code)

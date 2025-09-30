@@ -76,12 +76,9 @@ While HTTP is a feature-rich protocol for hypermedia systems, QH focuses on prov
 
 ### 2.1 QH Version
 
-QH uses a `<major>.<minor>` numbering scheme to indicate the protocol version. This policy allows communicating parties to know the message format and capabilities of each other.
+QH uses a `<number>` numbering scheme to indicate the protocol version. This policy allows communicating parties to know the message format and capabilities of each other.
 
-- The **`<major>`** number is incremented when a change breaks the fundamental message parsing, such as a change to the overall message structure.
-- The **`<minor>`** number is incremented for backward-compatible changes, like adding new methods or headers.
-
-The protocol version is included in the start-line of every request and response. This document specifies version `1.0`.
+The protocol version is included in the start-line of every request and response. This document specifies version `0`.
 
 A server that receives a request with a major version higher than what it supports SHOULD respond with a `505 (Version Not Supported)` error.
 
@@ -145,30 +142,34 @@ Resources made available via the "qh" scheme have no shared identity with resour
 
 ### 4.1 Methods
 
-QH/1.0 supports the following methods:
+QH/1.0 defines the following methods. The version and method are encoded in the first byte of the request message as follows:
 
-| Method | Description                |
-| ------ | -------------------------- |
-| GET    | Retrieve a resource.       |
-| POST   | Submit data to the server. |
+- **Bits 6-7 (upper 2 bits):** Version
+- **Bits 3-5 (middle 3 bits):** Method
+- **Bits 0-2 (lower 3 bits):** Reserved
 
-The method is inferred based on the presence of a message body: a request with a non-empty body is treated as `POST`, and a request with an empty body is treated as `GET`.
+| Method | Code | Description                |
+| ------ | ---- | -------------------------- |
+| GET    | 000  | Retrieve a resource.       |
+| POST   | 001  | Submit data to the server. |
+
+For QH/0, the version number is `0`. So, a GET request uses `\x00` (00000000) and a POST request uses `\x08` (00001000).
 
 ### 4.2 Request Format
 
 A request message has the following structure:
 
 ```text
-<Host>\0<Path>\0<Version>\0<Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>\x04
+<1-byte-field><Host>\0<Path>\0<Header-Value-1>\0...<Header-Value-N>\x03<Body>\x04
 ```
 
 Where:
 
-- `Host`: Target hostname
+- `1-byte-field`: A single byte encoding the version (upper 2 bits) and method (middle 3 bits).
+- `Host`: Target hostname.
 - `Path`: Resource path
-- `Version`: Protocol version (currently "1.0")
-- `Header-Value-N`: Header values in predefined order
-- The separator for all fields is a null byte (`\0`)
+- `Header-Value-N`: Header values in a predefined order.
+- The separator for all string-based fields is a null byte (`\0`).
 - The separator between headers and body is the End of Text character (`\x03`)
 - The end of the entire message is marked by the End of Transmission character (`\x04`)
 
@@ -177,7 +178,7 @@ Where:
 **Simple GET request:**
 
 ```text
-example.com\0/hello.txt\01.0\0\x03\x04
+\x00example.com\0/hello.txt\x03\x04
 ```
 
 **GET request with headers:**
@@ -215,7 +216,10 @@ The protocol supports standard HTTP status code categories:
 
 #### Status Code Encoding
 
-For wire efficiency, common HTTP status codes are mapped to compact single-byte representations:
+For wire efficiency, the response version and status code are encoded into a single byte:
+
+- **Bits 6-7 (upper 2 bits):** Version
+- **Bits 0-5 (lower 6 bits):** Compact Status Code
 
 #### 5.1.1 Supported Status Codes
 
@@ -223,71 +227,69 @@ The following status codes are supported with their compact wire format encoding
 
 | HTTP Code | Compact Code | Reason Phrase                 |
 | --------- | ------------ | ----------------------------- |
-| 200       | 1            | OK                            |
-| 404       | 2            | Not Found                     |
-| 500       | 3            | Internal Server Error         |
-| 302       | 4            | Found                         |
-| 400       | 5            | Bad Request                   |
-| 403       | 6            | Forbidden                     |
-| 401       | 7            | Unauthorized                  |
-| 301       | 8            | Moved Permanently             |
-| 304       | 9            | Not Modified                  |
-| 503       | 10           | Service Unavailable           |
-| 201       | 11           | Created                       |
-| 202       | 12           | Accepted                      |
-| 204       | 13           | No Content                    |
-| 206       | 14           | Partial Content               |
-| 307       | 15           | Temporary Redirect            |
-| 308       | 16           | Permanent Redirect            |
-| 409       | 17           | Conflict                      |
-| 410       | 18           | Gone                          |
-| 412       | 19           | Precondition Failed           |
-| 413       | 20           | Payload Too Large             |
-| 414       | 21           | URI Too Long                  |
-| 415       | 22           | Unsupported Media Type        |
-| 422       | 23           | Unprocessable Entity          |
-| 429       | 24           | Too Many Requests             |
-| 502       | 25           | Bad Gateway                   |
-| 504       | 26           | Gateway Timeout               |
-| 505       | 27           | QH Version Not Supported      |
-| 100       | 31           | Continue                      |
-| 101       | 32           | Switching Protocols           |
-| 102       | 33           | Processing                    |
-| 103       | 34           | Early Hints                   |
-| 205       | 35           | Reset Content                 |
-| 207       | 36           | Multi-Status                  |
-| 208       | 37           | Already Reported              |
-| 226       | 38           | IM Used                       |
-| 300       | 39           | Multiple Choices              |
-| 303       | 40           | See Other                     |
-| 305       | 41           | Use Proxy                     |
-| 402       | 42           | Payment Required              |
-| 405       | 43           | Method Not Allowed            |
-| 406       | 44           | Not Acceptable                |
-| 407       | 45           | Proxy Authentication Required |
-| 408       | 46           | Request Timeout               |
-| 411       | 47           | Length Required               |
-| 416       | 48           | Range Not Satisfiable         |
-| 417       | 49           | Expectation Failed            |
+| 200       | 0            | OK                            |
+| 404       | 1            | Not Found                     |
+| 500       | 2            | Internal Server Error         |
+| 302       | 3            | Found                         |
+| 400       | 4            | Bad Request                   |
+| 403       | 5            | Forbidden                     |
+| 401       | 6            | Unauthorized                  |
+| 301       | 7            | Moved Permanently             |
+| 304       | 8            | Not Modified                  |
+| 503       | 9            | Service Unavailable           |
+| 201       | 10           | Created                       |
+| 202       | 11           | Accepted                      |
+| 204       | 12           | No Content                    |
+| 206       | 13           | Partial Content               |
+| 307       | 14           | Temporary Redirect            |
+| 308       | 15           | Permanent Redirect            |
+| 409       | 16           | Conflict                      |
+| 410       | 17           | Gone                          |
+| 412       | 18           | Precondition Failed           |
+| 413       | 19           | Payload Too Large             |
+| 414       | 20           | URI Too Long                  |
+| 415       | 21           | Unsupported Media Type        |
+| 422       | 22           | Unprocessable Entity          |
+| 429       | 23           | Too Many Requests             |
+| 502       | 24           | Bad Gateway                   |
+| 504       | 25           | Gateway Timeout               |
+| 505       | 26           | QH Version Not Supported      |
+| 100       | 27           | Continue                      |
+| 101       | 28           | Switching Protocols           |
+| 102       | 29           | Processing                    |
+| 103       | 30           | Early Hints                   |
+| 205       | 31           | Reset Content                 |
+| 207       | 32           | Multi-Status                  |
+| 208       | 33           | Already Reported              |
+| 226       | 34           | IM Used                       |
+| 300       | 35           | Multiple Choices              |
+| 303       | 36           | See Other                     |
+| 305       | 37           | Use Proxy                     |
+| 402       | 38           | Payment Required              |
+| 405       | 39           | Method Not Allowed            |
+| 406       | 40           | Not Acceptable                |
+| 407       | 41           | Proxy Authentication Required |
+| 408       | 42           | Request Timeout               |
+| 411       | 43           | Length Required               |
+| 416       | 44           | Range Not Satisfiable         |
+| 417       | 45           | Expectation Failed            |
 
 **Encoding Rules:**
 
 - Status codes are ordered by frequency to optimize common cases
-- Unmapped status codes default to 500 (Internal Server Error) with compact code 3
-- The compact code is transmitted in the wire format, then decoded to the HTTP status code
+- Unmapped status codes default to 500 (Internal Server Error) with compact code 2.
+- The compact code and version are packed into the first byte of the response.
 
 ### 5.2 Response Format
 
 A response message has the following structure:
 
 ```text
-<Version>\0<Compact-Status-Code>\0<Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>\x04
+<1-byte-field><Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>\x04
 ```
 
 Where:
 
-- `Version`: Protocol version (currently "1.0")
-- `Compact-Status-Code`: Single-byte encoded status code (see encoding table above)
 - `Header-Value-N`: Header values in predefined order
 - The separator for all fields is a null byte (`\0`)
 - The separator between headers and body is the End of Text character (`\x03`)
@@ -417,7 +419,7 @@ Future specifications MAY define authentication headers or security extensions.
 
 ## 9. Versioning
 
-This document specifies QH/1.0.
+This document specifies QH/0.
 
 Future versions MAY introduce new methods, headers, or binary framing.
 
