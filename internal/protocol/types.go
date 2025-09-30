@@ -58,8 +58,8 @@ type Response struct {
 
 // format QH request into wire format
 func (r *Request) Format() string {
-	// The first byte contains the method (3 bits) and version (5 bits).
-	// Version (2 bits) | Method (3 bits) | Reserved (3 bits)
+	// The first byte contains: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
+	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
 	firstByte := (r.Version << 6) | (byte(r.Method) << 3)
 
 	otherParts := []string{r.Host, r.Path}
