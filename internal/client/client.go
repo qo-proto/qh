@@ -16,7 +16,7 @@ import (
 
 type Client struct {
 	listener *qotp.Listener
-	conn     *qotp.Connection
+	conn     *qotp.Conn
 	streamID uint32
 }
 
@@ -149,10 +149,10 @@ func (c *Client) POST(host, path, body string, contentType protocol.ContentType,
 
 func (c *Client) Close() error {
 	if c.conn != nil {
-		c.conn.Close()
+		c.conn.CloseNow()
 	}
 	if c.listener != nil {
-		return c.listener.Close()
+		return c.listener.CloseNow()
 	}
 	return nil
 }

@@ -77,7 +77,7 @@ func (s *Server) Serve() error {
 // Close shuts down the server's listener.
 func (s *Server) Close() error {
 	if s.listener != nil {
-		return s.listener.Close()
+		return s.listener.CloseNow()
 	}
 	return nil
 }
@@ -102,7 +102,7 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	_, err = stream.Write(responseData)
 	if err != nil {
 		slog.Error("Failed to write response", "error", err)
-		stream.Close()
+		stream.CloseNow()
 		return
 	}
 
