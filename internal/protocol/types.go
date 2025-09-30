@@ -76,8 +76,8 @@ func (r *Response) Format() string {
 	// First byte: Version (upper 2 bits) + Status Code (lower 6 bits)
 	firstByte := (r.Version << 6) | compactStatus
 
-	parts := append([]string{string(firstByte)}, r.Headers...)
-	headerPart := strings.Join(parts, "\x00")
+	headerPart := string(firstByte) + strings.Join(r.Headers, "\x00")
+
 	return headerPart + "\x03" + r.Body + "\x04"
 }
 
@@ -111,7 +111,12 @@ func ParseResponse(data string) (*Response, error) {
 
 	// The rest of the header part is null-separated strings.
 	stringHeaderPart := headerPart[1:]
-	parts := strings.Split(stringHeaderPart, "\x00")
+	var parts []string
+	// Only split if there's content, otherwise parts will be `[""]` which is not what we want.
+	// We want an empty slice if there are no headers.
+	if stringHeaderPart != "" {
+		parts = strings.Split(stringHeaderPart, "\x00")
+	}
 
 	resp := &Response{
 		Version:    version,
@@ -119,7 +124,7 @@ func ParseResponse(data string) (*Response, error) {
 		Body:       body,
 	}
 
-	if len(parts) > 0 && (len(parts) > 1 || parts[0] != "") {
+	if len(parts) > 0 {
 		resp.Headers = parts
 	}
 

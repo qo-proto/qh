@@ -46,7 +46,7 @@ func TestResponseFormat(t *testing.T) {
 		Body:       "Hello, world!",
 	}
 
-	expected := "\x00\x001\x00*\x00\x001758784800\x03Hello, world!\x04" // V(00)S(000000) -> 00000000 -> \x00
+	expected := "\x001\x00*\x00\x001758784800\x03Hello, world!\x04" // V(00)S(000000) -> 00000000 -> \x00
 	actual := resp.Format()
 
 	require.Equal(t, expected, actual)
@@ -60,7 +60,7 @@ func TestResponseFormatEmpty(t *testing.T) {
 		Body:       "",
 	}
 
-	expected := "\x0c\x000\x03\x04" // V(00)S(001100) -> 00001100 -> \x0c
+	expected := "\x0c0\x03\x04" // V(00)S(001100) -> 00001100 -> \x0c
 	require.Equal(t, expected, resp.Format())
 }
 
@@ -145,7 +145,7 @@ func TestParseRequestErrors(t *testing.T) {
 }
 
 func TestParseResponseBasic(t *testing.T) {
-	data := "\x00\x001\x00*\x00\x001758784800\x03Hello, world!\x04" // V(00)S(000000) -> \x00
+	data := "\x001\x00*\x00\x001758784800\x03Hello, world!\x04" // V(00)S(000000) -> \x00
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
@@ -155,8 +155,8 @@ func TestParseResponseBasic(t *testing.T) {
 	require.Equal(t, "Hello, world!", resp.Body)
 }
 
-func TestParseResponseSingleHeader(t *testing.T) {
-	data := "\x00\x001\x03Response body\x04" // V(00)S(000000) -> \x00
+func TestParseResponseSingleHeader(t *testing.T) { // V(00)S(000000) -> \x00
+	data := "\x001\x03Response body\x04"
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
