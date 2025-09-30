@@ -7,9 +7,9 @@ import (
 	"log"
 	"log/slog"
 	"net"
-	"qh/internal/protocol"
 	"strconv"
-	"strings"
+
+	"qh/internal/protocol"
 
 	"github.com/tbocek/qotp"
 )
@@ -78,9 +78,9 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 
 	// send request
 	requestData := req.Format()
-	slog.Debug("Sending request", "stream_id", currentStreamID, "bytes", len(requestData), "data", requestData)
+	slog.Debug("Sending request", "stream_id", currentStreamID, "bytes", len(requestData))
 
-	_, err := stream.Write([]byte(requestData))
+	_, err := stream.Write(requestData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
@@ -88,7 +88,7 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 	// wait for response by reading directly from stream
 	var response *protocol.Response
 	var parseErr error
-	var responseBuffer strings.Builder
+	var responseBuffer []byte
 
 	c.listener.Loop(func(s *qotp.Stream) bool {
 		if s != stream {
@@ -104,12 +104,12 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 
 			slog.Info("Received frame from server", "stream_id", currentStreamID, "bytes", len(responseData))
 
-			responseBuffer.Write(responseData)
+			responseBuffer = append(responseBuffer, responseData...)
 
 			// Check if we have received the end-of-transmission character.
-			if strings.HasSuffix(responseBuffer.String(), "\x04") {
-				slog.Debug("Reassembled full response", "bytes", responseBuffer.Len())
-				response, parseErr = protocol.ParseResponse(responseBuffer.String())
+			if len(responseBuffer) > 0 && responseBuffer[len(responseBuffer)-1] == '\x04' {
+				slog.Debug("Reassembled full response", "bytes", len(responseBuffer))
+				response, parseErr = protocol.ParseResponse(responseBuffer)
 				return false // We have the complete message, exit the listener loop.
 			}
 		}
@@ -142,7 +142,7 @@ func (c *Client) POST(host, path, body string, contentType protocol.ContentType,
 		Version: protocol.Version,
 		// The first header for a POST request is the Content-Type of the body.
 		Headers: append([]string{strconv.Itoa(int(contentType))}, otherHeaders...),
-		Body:    body,
+		Body:    []byte(body),
 	}
 	return c.Request(req)
 }

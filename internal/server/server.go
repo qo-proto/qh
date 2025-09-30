@@ -84,9 +84,9 @@ func (s *Server) Close() error {
 
 // handleRequest parses a request from a stream, routes it, and sends a response.
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
-	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
+	slog.Debug("Received request", "bytes", len(requestData))
 
-	request, err := protocol.ParseRequest(string(requestData))
+	request, err := protocol.ParseRequest(requestData)
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
 		s.sendErrorResponse(stream, 400, "Bad Request")
@@ -97,9 +97,9 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 
 	// send response
 	responseData := response.Format()
-	slog.Debug("Sending response", "bytes", len(responseData), "data", responseData)
+	slog.Debug("Sending response", "bytes", len(responseData))
 
-	_, err = stream.Write([]byte(responseData))
+	_, err = stream.Write(responseData)
 	if err != nil {
 		slog.Error("Failed to write response", "error", err)
 		stream.Close()
@@ -113,7 +113,7 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
 	// Infer method from body presence
 	method := protocol.GET
-	if request.Body != "" {
+	if len(request.Body) > 0 {
 		method = protocol.POST
 	}
 	slog.Debug("Routing request", "path", request.Path, "inferred_method", method.String())
@@ -132,13 +132,13 @@ func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
 func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message string) {
 	response := ErrorResponse(statusCode, message)
 	responseData := response.Format()
-	if _, err := stream.Write([]byte(responseData)); err != nil {
+	if _, err := stream.Write(responseData); err != nil {
 		slog.Error("Failed to write error response", "error", err)
 	}
 	// Don't close the stream for now, uses qotp's automatic timeout
 }
 
-func Response(statusCode int, contentType protocol.ContentType, body string) *protocol.Response {
+func Response(statusCode int, contentType protocol.ContentType, body []byte) *protocol.Response {
 	// Initialize headers slice with fixed size, filling with empty strings
 	// Using a null byte separator for the start-line components.
 	return &protocol.Response{
@@ -159,22 +159,22 @@ func Response(statusCode int, contentType protocol.ContentType, body string) *pr
 
 // convenience methods, e.g. write: server.TextResponse(200, "Hello")  instead of server.Response(200, "text/plain", "Hello")
 
-func OKResponse(contentType protocol.ContentType, body string) *protocol.Response {
+func OKResponse(contentType protocol.ContentType, body []byte) *protocol.Response {
 	return Response(200, contentType, body)
 }
 
 func ErrorResponse(statusCode int, message string) *protocol.Response {
-	return Response(statusCode, protocol.TextPlain, message)
+	return Response(statusCode, protocol.TextPlain, []byte(message))
 }
 
 func JSONResponse(statusCode int, body string) *protocol.Response {
-	return Response(statusCode, protocol.JSON, body)
+	return Response(statusCode, protocol.JSON, []byte(body))
 }
 
 func TextResponse(statusCode int, body string) *protocol.Response {
-	return Response(statusCode, protocol.TextPlain, body)
+	return Response(statusCode, protocol.TextPlain, []byte(body))
 }
 
 func HTMLResponse(statusCode int, body string) *protocol.Response {
-	return Response(statusCode, protocol.HTML, body)
+	return Response(statusCode, protocol.HTML, []byte(body))
 }
