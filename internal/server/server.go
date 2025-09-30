@@ -17,23 +17,26 @@ type Handler func(*protocol.Request) *protocol.Response
 
 type Server struct {
 	listener *qotp.Listener
-	handlers map[string]map[protocol.Method]Handler // path -> method -> handler
+	handlers map[string]map[protocol.Method]Handler // path -> method -> handler, where method is inferred
 }
 
 func NewServer() *Server {
 	return &Server{
-		handlers: make(map[string]map[protocol.Method]Handler),
+		handlers: make(map[string]map[protocol.Method]Handler), // path -> method -> handler
 	}
 }
 
+// HandleFunc registers a handler for a given path and method.
 func (s *Server) HandleFunc(path string, method protocol.Method, handler Handler) {
 	if s.handlers[path] == nil {
 		s.handlers[path] = make(map[protocol.Method]Handler)
 	}
 	s.handlers[path][method] = handler
-	slog.Info("Registered handler", "method", method, "path", path)
+	slog.Info("Registered handler", "method", method.String(), "path", path)
 }
 
+// Listen starts listening on the given address.
+// It uses qotp with auto-generated keys.
 func (s *Server) Listen(addr string) error {
 	listener, err := qotp.Listen(qotp.WithListenAddr(addr))
 	if err != nil {
@@ -44,6 +47,7 @@ func (s *Server) Listen(addr string) error {
 	return nil
 }
 
+// Serve starts the server's main loop, accepting and handling incoming streams.
 func (s *Server) Serve() error {
 	if s.listener == nil {
 		return errors.New("server not listening")
@@ -70,6 +74,7 @@ func (s *Server) Serve() error {
 	return nil
 }
 
+// Close shuts down the server's listener.
 func (s *Server) Close() error {
 	if s.listener != nil {
 		return s.listener.Close()
@@ -77,7 +82,7 @@ func (s *Server) Close() error {
 	return nil
 }
 
-// handles a single request/response
+// handleRequest parses a request from a stream, routes it, and sends a response.
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
 
@@ -106,10 +111,17 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 }
 
 func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
+	// Infer method from body presence
+	method := protocol.GET
+	if request.Body != "" {
+		method = protocol.POST
+	}
+	slog.Debug("Routing request", "path", request.Path, "inferred_method", method.String())
+
 	// check if we have a handler for this path and method
 	if pathHandlers, exists := s.handlers[request.Path]; exists {
-		if handler, exists := pathHandlers[request.Method]; exists {
-			return handler(request)
+		if handler, methodExists := pathHandlers[method]; methodExists {
+			return handler(request) // Execute the handler for the inferred method
 		}
 	}
 

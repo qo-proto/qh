@@ -41,7 +41,6 @@ const (
 )
 
 type Request struct {
-	Method  Method
 	Host    string
 	Path    string
 	Version string
@@ -69,7 +68,8 @@ func (r *Request) Format() string {
 
 	// Join header parts with null byte, and separate from body with End of Text char.
 	headerPart := strings.Join(parts, "\x00")
-	// Append End of Transmission character to mark the end of the entire message.
+
+	// Per the protocol spec, the body separator and EOT are always present.
 	return headerPart + "\x03" + r.Body + "\x04"
 }
 
@@ -77,7 +77,8 @@ func (r *Request) Format() string {
 func (r *Response) Format() string {
 	var parts []string
 
-	responseLine := fmt.Sprintf("%s\x00%d", r.Version, r.StatusCode)
+	compactStatus := EncodeStatusCode(r.StatusCode)
+	responseLine := fmt.Sprintf("%s\x00%d", r.Version, compactStatus)
 	parts = append(parts, responseLine)
 
 	parts = append(parts, r.Headers...)
@@ -87,6 +88,12 @@ func (r *Response) Format() string {
 }
 
 func ParseResponse(data string) (*Response, error) {
+	// The EOT character (\x04) marks the end of the message.
+	// It should be trimmed before parsing.
+	data, found := strings.CutSuffix(data, "\x04")
+	if !found {
+		return nil, errors.New("invalid response: missing EOT terminator")
+	}
 	// Split headers from body using the End of Text character
 	headerPart, body, found := strings.Cut(data, "\x03")
 	if !found {
@@ -106,14 +113,20 @@ func ParseResponse(data string) (*Response, error) {
 		return nil, errors.New("invalid response: empty status code")
 	}
 
-	statusCode, err := strconv.Atoi(parts[1])
+	compactStatus, err := strconv.Atoi(parts[1])
 	if err != nil {
 		return nil, fmt.Errorf("invalid status code: %s", parts[1])
 	}
 
+	if compactStatus < 0 || compactStatus > 255 {
+		return nil, fmt.Errorf("compact status code out of range: %d", compactStatus)
+	}
+
+	httpStatusCode := DecodeStatusCode(uint8(compactStatus))
+
 	resp := &Response{
 		Version:    parts[0],
-		StatusCode: statusCode,
+		StatusCode: httpStatusCode,
 		Body:       body,
 	}
 
@@ -126,7 +139,14 @@ func ParseResponse(data string) (*Response, error) {
 }
 
 func ParseRequest(data string) (*Request, error) {
-	// Split headers from body using the End of Text character
+	// The EOT character (\x04) marks the end of the message.
+	// It should be trimmed before parsing.
+	data, found := strings.CutSuffix(data, "\x04")
+	if !found {
+		return nil, errors.New("invalid request: missing EOT terminator")
+	}
+	// Split headers from body using the End of Text character.
+	// This is now consistent with ParseResponse.
 	headerPart, body, found := strings.Cut(data, "\x03")
 	if !found {
 		return nil, errors.New("invalid request: missing body separator")
@@ -161,13 +181,6 @@ func ParseRequest(data string) (*Request, error) {
 	// The rest of the parts are headers
 	if len(parts) > 3 {
 		req.Headers = parts[3:]
-	}
-
-	// Infer method from body presence
-	if len(req.Body) > 0 {
-		req.Method = POST
-	} else {
-		req.Method = GET
 	}
 
 	return req, nil
