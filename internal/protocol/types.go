@@ -46,18 +46,18 @@ type Request struct {
 	Version string
 	// TODO: Add ContentType to request headers
 	Headers []string // Ordered headers by position
-	Body    string
+	Body    []byte
 }
 
 type Response struct {
 	Version    string
 	StatusCode int
 	Headers    []string // Ordered headers by position
-	Body       string
+	Body       []byte
 }
 
 // format QH request into wire format
-func (r *Request) Format() string {
+func (r *Request) Format() []byte {
 	var parts []string
 
 	// Request line: <Host>\0<Path>\0<Version>
@@ -69,12 +69,16 @@ func (r *Request) Format() string {
 	// Join header parts with null byte, and separate from body with End of Text char.
 	headerPart := strings.Join(parts, "\x00")
 
-	// Per the protocol spec, the body separator and EOT are always present.
-	return headerPart + "\x03" + r.Body + "\x04"
+	// Build message: headers + ETX + body + EOT
+	result := []byte(headerPart)
+	result = append(result, '\x03')
+	result = append(result, r.Body...)
+	result = append(result, '\x04')
+	return result
 }
 
 // format QH response into wire format
-func (r *Response) Format() string {
+func (r *Response) Format() []byte {
 	var parts []string
 
 	compactStatus := EncodeStatusCode(r.StatusCode)
@@ -84,21 +88,29 @@ func (r *Response) Format() string {
 	parts = append(parts, r.Headers...)
 
 	headerPart := strings.Join(parts, "\x00")
-	return headerPart + "\x03" + r.Body + "\x04"
+
+	// Build message: headers + ETX + body + EOT
+	result := []byte(headerPart)
+	result = append(result, '\x03')
+	result = append(result, r.Body...)
+	result = append(result, '\x04')
+	return result
 }
 
-func ParseResponse(data string) (*Response, error) {
-	// The EOT character (\x04) marks the end of the message.
-	// It should be trimmed before parsing.
-	data, found := strings.CutSuffix(data, "\x04")
+func ParseResponse(data []byte) (*Response, error) {
+	// The EOT character (\x04) marks the end of the message
+	dataStr, found := strings.CutSuffix(string(data), "\x04")
 	if !found {
 		return nil, errors.New("invalid response: missing EOT terminator")
 	}
+
 	// Split headers from body using the End of Text character
-	headerPart, body, found := strings.Cut(data, "\x03")
+	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
 	if !found {
 		return nil, errors.New("invalid response: missing body separator")
 	}
+
+	body := []byte(bodyPart)
 
 	parts := strings.Split(headerPart, "\x00")
 	if len(parts) < 2 { // version, status
@@ -138,19 +150,20 @@ func ParseResponse(data string) (*Response, error) {
 	return resp, nil
 }
 
-func ParseRequest(data string) (*Request, error) {
-	// The EOT character (\x04) marks the end of the message.
-	// It should be trimmed before parsing.
-	data, found := strings.CutSuffix(data, "\x04")
+func ParseRequest(data []byte) (*Request, error) {
+	// The EOT character (\x04) marks the end of the message
+	dataStr, found := strings.CutSuffix(string(data), "\x04")
 	if !found {
 		return nil, errors.New("invalid request: missing EOT terminator")
 	}
-	// Split headers from body using the End of Text character.
-	// This is now consistent with ParseResponse.
-	headerPart, body, found := strings.Cut(data, "\x03")
+
+	// Split headers from body using the End of Text character
+	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
 	if !found {
 		return nil, errors.New("invalid request: missing body separator")
 	}
+
+	body := []byte(bodyPart)
 
 	parts := strings.Split(headerPart, "\x00")
 	if len(parts) < 3 { // host, path, version
