@@ -84,6 +84,7 @@ func (s *Server) Close() error {
 
 // handleRequest parses a request from a stream, routes it, and sends a response.
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
+	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
 	request, err := protocol.ParseRequest(string(requestData))
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
@@ -95,6 +96,7 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 
 	// send response
 	responseData := response.Format()
+	slog.Debug("Sending response", "bytes", len(responseData), "data", responseData)
 
 	_, err = stream.Write([]byte(responseData))
 	if err != nil {
@@ -108,6 +110,7 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 }
 
 func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
+	slog.Debug("Routing request", "path", request.Path, "inferred_method", request.Method)
 	// check if we have a handler for this path and method
 	if pathHandlers, exists := s.handlers[request.Path]; exists {
 		if handler, methodExists := pathHandlers[request.Method]; methodExists {
