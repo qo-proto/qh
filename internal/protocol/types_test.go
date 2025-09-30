@@ -63,7 +63,7 @@ func TestResponseFormatEmpty(t *testing.T) {
 }
 
 func TestParseRequestBasic(t *testing.T) {
-	data := "example.com\x00/hello.txt\x001.0\x001\x00en-US,en;q=0.5\x03"
+	data := "example.com\x00/hello.txt\x001.0\x001\x00en-US,en;q=0.5\x03\x04"
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -79,7 +79,7 @@ func TestParseRequestBasic(t *testing.T) {
 }
 
 func TestParseRequestWithBody(t *testing.T) {
-	data := "example.com\x00/submit\x001.0\x002\x03{\"name\": \"test\"}"
+	data := "example.com\x00/submit\x001.0\x002\x03{\"name\": \"test\"}\x04"
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -95,7 +95,7 @@ func TestParseRequestWithBody(t *testing.T) {
 }
 
 func TestParseRequestWithMultilineBody(t *testing.T) {
-	data := "example.com\x00/submit\x001.0\x002\x03line1\nline2\nline3"
+	data := "example.com\x00/submit\x001.0\x002\x03line1\nline2\nline3\x04"
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -105,7 +105,7 @@ func TestParseRequestWithMultilineBody(t *testing.T) {
 }
 
 func TestParseRequestNoHeaders(t *testing.T) {
-	data := "example.com\x00/path\x001.0\x03test body"
+	data := "example.com\x00/path\x001.0\x03test body\x04"
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -116,7 +116,7 @@ func TestParseRequestNoHeaders(t *testing.T) {
 }
 
 func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
-	data := "example.com\x00\x001.0\x03"
+	data := "example.com\x00\x001.0\x03\x04"
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -151,7 +151,7 @@ func TestParseRequestErrors(t *testing.T) {
 }
 
 func TestParseResponseBasic(t *testing.T) {
-	data := "1.0\x001\x001\x00*\x00\x001758784800\x03Hello, world!"
+	data := "1.0\x001\x001\x00*\x00\x001758784800\x03Hello, world!\x04"
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
@@ -162,7 +162,7 @@ func TestParseResponseBasic(t *testing.T) {
 }
 
 func TestParseResponseSingleHeader(t *testing.T) {
-	data := "1.0\x001\x001\x03Response body"
+	data := "1.0\x001\x001\x03Response body\x04"
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
