@@ -104,7 +104,7 @@ func ParseResponse(data string) (*Response, error) {
 	compactStatus := firstByte & 0b00111111 // Lower 6 bits
 
 	if version > 3 { // 2 bits can hold values 0-3
-		return nil, fmt.Errorf("invalid compact status code: %d", compactStatus)
+		return nil, fmt.Errorf("invalid version: %d", version)
 	}
 
 	httpStatusCode := DecodeStatusCode(compactStatus)
