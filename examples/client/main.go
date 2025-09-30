@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -31,6 +32,8 @@ func main() {
 		{method: "GET", path: "/status"},
 		{method: "POST", path: "/echo", body: ptr("Hello QH World!")},
 		{method: "POST", path: "/data", body: ptr("Updated data!")},
+		{method: "GET", path: "/file"},
+		{method: "GET", path: "/image"},
 	}
 
 	c := client.NewClient()
@@ -61,6 +64,17 @@ func main() {
 			slog.Error("Request failed", "method", req.method, "path", req.path, "error", err)
 		} else {
 			logResponse(req.method, req.path, response)
+
+			// save image
+			if req.path == "/image" {
+				filename := "downloaded_cloud.jpeg"
+				err := os.WriteFile(filename, response.Body, 0o644)
+				if err != nil {
+					slog.Error("Failed to save file", "path", filename, "error", err)
+				} else {
+					slog.Info("Saved response to file", "path", filename, "bytes", len(response.Body))
+				}
+			}
 		}
 	}
 
@@ -86,6 +100,11 @@ func logResponse(method, path string, response *protocol.Response) {
 	if formattedDate != "" {
 		sb.WriteString(fmt.Sprintf("Timestamp:  %s\n", formattedDate))
 	}
-	sb.WriteString(fmt.Sprintf("Body:       %s\n", response.Body))
+	// Show body size and preview for binary data
+	bodyPreview := string(response.Body)
+	if len(response.Body) > 100 {
+		bodyPreview = string(response.Body[:100]) + "... (truncated)"
+	}
+	sb.WriteString(fmt.Sprintf("Body (%d bytes): %s\n", len(response.Body), bodyPreview))
 	slog.Info(sb.String())
 }

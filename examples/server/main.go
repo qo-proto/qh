@@ -21,8 +21,8 @@ func main() {
 	})
 
 	srv.HandleFunc("/echo", protocol.POST, func(req *protocol.Request) *protocol.Response {
-		slog.Info("Handling request", "method", "POST", "path", "/echo", "body", req.Body)
-		response := "Echo: " + req.Body
+		slog.Info("Handling request", "method", "POST", "path", "/echo", "body", string(req.Body))
+		response := "Echo: " + string(req.Body)
 		return server.TextResponse(200, response)
 	})
 
@@ -32,9 +32,30 @@ func main() {
 	})
 
 	srv.HandleFunc("/data", protocol.POST, func(req *protocol.Request) *protocol.Response {
-		slog.Info("Handling request", "method", "POST", "path", "/data", "body", req.Body)
-		response := fmt.Sprintf("Updated data: %s ; %s; Hallo Welt;", req.Body, strings.Repeat("a", 1900))
+		slog.Info("Handling request", "method", "POST", "path", "/data", "body", string(req.Body))
+		response := fmt.Sprintf("Updated data: %s ; %s; Hallo Welt;", string(req.Body), strings.Repeat("a", 1900))
 		return server.TextResponse(200, response)
+	})
+
+	srv.HandleFunc("/file", protocol.GET, func(_ *protocol.Request) *protocol.Response {
+		slog.Info("Handling request", "method", "GET", "path", "/file")
+		content, err := os.ReadFile("examples/server/files/text.txt")
+		if err != nil {
+			slog.Error("Failed to read file", "error", err)
+			return server.ErrorResponse(500, "Internal Server Error")
+		}
+		return server.Response(200, protocol.OctetStream, content)
+	})
+
+	srv.HandleFunc("/image", protocol.GET, func(_ *protocol.Request) *protocol.Response {
+		slog.Info("Handling request", "method", "GET", "path", "/image")
+		content, err := os.ReadFile("examples/server/files/cloud.jpeg")
+		if err != nil {
+			slog.Error("Failed to read image", "error", err)
+			return server.ErrorResponse(500, "Internal Server Error")
+		}
+		slog.Info("Serving image", "bytes", len(content))
+		return server.Response(200, protocol.OctetStream, content)
 	})
 
 	// listening with auto-generated keys
