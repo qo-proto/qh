@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
-	"strings"
 	"time"
 
 	"qh/internal/protocol"
@@ -85,12 +84,6 @@ func (s *Server) Close() error {
 
 // handleRequest parses a request from a stream, routes it, and sends a response.
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
-	var reqBin strings.Builder
-	for _, b := range requestData {
-		fmt.Fprintf(&reqBin, "%08b ", b)
-	}
-	slog.Info("Received raw request from client", "binary", reqBin.String())
-
 	request, err := protocol.ParseRequest(string(requestData))
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
@@ -102,11 +95,6 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 
 	// send response
 	responseData := response.Format()
-	var respBin strings.Builder
-	for _, b := range []byte(responseData) {
-		fmt.Fprintf(&respBin, "%08b ", b)
-	}
-	slog.Info("Sending raw response to client", "binary", respBin.String())
 
 	_, err = stream.Write([]byte(responseData))
 	if err != nil {
