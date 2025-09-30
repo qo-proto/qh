@@ -108,9 +108,8 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 
 			// Check if we have received the end-of-transmission character.
 			if strings.HasSuffix(responseBuffer.String(), "\x04") {
-				fullMessage := strings.TrimSuffix(responseBuffer.String(), "\x04")
-				slog.Debug("Reassembled full response", "bytes", len(fullMessage))
-				response, parseErr = protocol.ParseResponse(fullMessage)
+				slog.Debug("Reassembled full response", "bytes", responseBuffer.Len())
+				response, parseErr = protocol.ParseResponse(responseBuffer.String())
 				return false // We have the complete message, exit the listener loop.
 			}
 		}
@@ -128,7 +127,6 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 
 func (c *Client) GET(host, path string, contentType protocol.ContentType, otherHeaders ...string) (*protocol.Response, error) {
 	req := &protocol.Request{
-		Method:  protocol.GET,
 		Host:    host,
 		Path:    path,
 		Version: protocol.Version,
@@ -139,7 +137,6 @@ func (c *Client) GET(host, path string, contentType protocol.ContentType, otherH
 
 func (c *Client) POST(host, path, body string, contentType protocol.ContentType, otherHeaders ...string) (*protocol.Response, error) {
 	req := &protocol.Request{
-		Method:  protocol.POST,
 		Host:    host,
 		Path:    path,
 		Version: protocol.Version,

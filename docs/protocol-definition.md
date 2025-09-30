@@ -28,7 +28,8 @@ Status: Draft
     - [4.3 Request Examples](#43-request-examples)
   - [5. Response](#5-response)
     - [5.1 Status Codes](#51-status-codes)
-      - [5.1.1 Status Codes List](#511-status-codes-list)
+      - [Status Code Encoding](#status-code-encoding)
+      - [5.1.1 Supported Status Codes](#511-supported-status-codes)
     - [5.2 Response Format](#52-response-format)
     - [5.3 Response Examples](#53-response-examples)
   - [6. Headers](#6-headers)
@@ -144,26 +145,25 @@ Resources made available via the "qh" scheme have no shared identity with resour
 
 ### 4.1 Methods
 
-QH/1.0 defines the following methods:
+QH/1.0 supports the following methods:
 
-| Method | Code | Description                |
-| ------ | ---- | -------------------------- |
-| GET    | 1    | Retrieve a resource.       |
-| POST   | 2    | Submit data to the server. |
+| Method | Description                |
+| ------ | -------------------------- |
+| GET    | Retrieve a resource.       |
+| POST   | Submit data to the server. |
 
-Methods are encoded as numeric codes in the wire format for compactness. The method code appears in the first field of the request line.
+The method is inferred based on the presence of a message body: a request with a non-empty body is treated as `POST`, and a request with an empty body is treated as `GET`.
 
 ### 4.2 Request Format
 
 A request message has the following structure:
 
 ```text
-<Method>\0<Host>\0<Path>\0<Version>\0<Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>\x04
+<Host>\0<Path>\0<Version>\0<Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>\x04
 ```
 
 Where:
 
-- `Method`: Numeric method code (1=GET, 2=POST)
 - `Host`: Target hostname
 - `Path`: Resource path
 - `Version`: Protocol version (currently "1.0")
@@ -177,13 +177,13 @@ Where:
 **Simple GET request:**
 
 ```text
-1\0example.com\0/hello.txt\01.0\0\x03\x04
+example.com\0/hello.txt\01.0\0\x03\x04
 ```
 
 **GET request with headers:**
 
 ```text
-1\0example.com\0/hello.txt\01.0\0
+example.com\0/hello.txt\01.0\0
 text/html,application/xhtml+xml\0
 en-US,en;q=0.5\0
 \x03\x04
@@ -192,7 +192,7 @@ en-US,en;q=0.5\0
 **POST request with body:**
 
 ```text
-2\0example.com\0/submit\01.0\0
+example.com\0/submit\01.0\0
 application/json\0
 \x03
 {"name": "test"}

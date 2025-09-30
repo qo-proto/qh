@@ -41,7 +41,6 @@ const (
 )
 
 type Request struct {
-	Method  Method
 	Host    string
 	Path    string
 	Version string
@@ -61,15 +60,16 @@ type Response struct {
 func (r *Request) Format() string {
 	var parts []string
 
-	// Request line: <Method>\0<Host>\0<Path>\0<Version>
-	requestLine := fmt.Sprintf("%d\x00%s\x00%s\x00%s", int(r.Method), r.Host, r.Path, r.Version)
+	// Request line: <Host>\0<Path>\0<Version>
+	requestLine := fmt.Sprintf("%s\x00%s\x00%s", r.Host, r.Path, r.Version)
 	parts = append(parts, requestLine)
 
 	parts = append(parts, r.Headers...)
 
 	// Join header parts with null byte, and separate from body with End of Text char.
 	headerPart := strings.Join(parts, "\x00")
-	// Append End of Transmission character to mark the end of the entire message.
+
+	// Per the protocol spec, the body separator and EOT are always present.
 	return headerPart + "\x03" + r.Body + "\x04"
 }
 
@@ -88,6 +88,12 @@ func (r *Response) Format() string {
 }
 
 func ParseResponse(data string) (*Response, error) {
+	// The EOT character (\x04) marks the end of the message.
+	// It should be trimmed before parsing.
+	data, found := strings.CutSuffix(data, "\x04")
+	if !found {
+		return nil, errors.New("invalid response: missing EOT terminator")
+	}
 	// Split headers from body using the End of Text character
 	headerPart, body, found := strings.Cut(data, "\x03")
 	if !found {
@@ -133,52 +139,48 @@ func ParseResponse(data string) (*Response, error) {
 }
 
 func ParseRequest(data string) (*Request, error) {
-	// Split headers from body using the End of Text character
+	// The EOT character (\x04) marks the end of the message.
+	// It should be trimmed before parsing.
+	data, found := strings.CutSuffix(data, "\x04")
+	if !found {
+		return nil, errors.New("invalid request: missing EOT terminator")
+	}
+	// Split headers from body using the End of Text character.
+	// This is now consistent with ParseResponse.
 	headerPart, body, found := strings.Cut(data, "\x03")
 	if !found {
 		return nil, errors.New("invalid request: missing body separator")
 	}
 
 	parts := strings.Split(headerPart, "\x00")
-	if len(parts) < 4 { // method, host, path, version
+	if len(parts) < 3 { // host, path, version
 		return nil, errors.New("invalid request: not enough parts in header")
 	}
 
-	// Parse method
-	methodInt, err := strconv.Atoi(parts[0])
-	if err != nil {
-		return nil, fmt.Errorf("invalid method: %s", parts[0])
-	}
-	if methodInt != int(GET) && methodInt != int(POST) {
-		return nil, fmt.Errorf("invalid method value: %d", methodInt)
-	}
-	method := Method(methodInt)
-
 	// Validate required fields are not empty
-	if parts[1] == "" {
+	if parts[0] == "" {
 		return nil, errors.New("invalid request: empty host")
 	}
-	if parts[3] == "" {
+	if parts[2] == "" {
 		return nil, errors.New("invalid request: empty version")
 	}
 
 	// Default empty path to root
-	path := parts[2]
+	path := parts[1]
 	if path == "" {
 		path = "/"
 	}
 
 	req := &Request{
-		Method:  method,
-		Host:    parts[1],
+		Host:    parts[0],
 		Path:    path,
-		Version: parts[3],
+		Version: parts[2],
 		Body:    body,
 	}
 
 	// The rest of the parts are headers
-	if len(parts) > 4 {
-		req.Headers = parts[4:]
+	if len(parts) > 3 {
+		req.Headers = parts[3:]
 	}
 
 	return req, nil
