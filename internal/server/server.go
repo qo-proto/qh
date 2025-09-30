@@ -85,7 +85,6 @@ func (s *Server) Close() error {
 // handleRequest parses a request from a stream, routes it, and sends a response.
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
-
 	request, err := protocol.ParseRequest(string(requestData))
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
@@ -111,16 +110,10 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 }
 
 func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
-	// Infer method from body presence
-	method := protocol.GET
-	if request.Body != "" {
-		method = protocol.POST
-	}
-	slog.Debug("Routing request", "path", request.Path, "inferred_method", method.String())
-
+	slog.Debug("Routing request", "path", request.Path, "inferred_method", request.Method)
 	// check if we have a handler for this path and method
 	if pathHandlers, exists := s.handlers[request.Path]; exists {
-		if handler, methodExists := pathHandlers[method]; methodExists {
+		if handler, methodExists := pathHandlers[request.Method]; methodExists {
 			return handler(request) // Execute the handler for the inferred method
 		}
 	}
@@ -142,7 +135,7 @@ func Response(statusCode int, contentType protocol.ContentType, body string) *pr
 	// Initialize headers slice with fixed size, filling with empty strings
 	// Using a null byte separator for the start-line components.
 	return &protocol.Response{
-		Version:    protocol.Version,
+		Version:    0,
 		StatusCode: statusCode,
 		Headers: []string{ // Ordered headers by position.
 			strconv.Itoa(int(contentType)),           // Content-Type (as code)

@@ -8,14 +8,15 @@ import (
 
 func TestRequestFormat(t *testing.T) {
 	req := &Request{
+		Method:  GET,
 		Host:    "example.com",
 		Path:    "/hello.txt",
-		Version: "1.0",
+		Version: 0,
 		Headers: []string{"1", "en-US,en;q=0.5"},
 		Body:    "",
 	}
 
-	expected := "example.com\x00/hello.txt\x001.0\x001\x00en-US,en;q=0.5\x03\x04"
+	expected := "\x00example.com\x00/hello.txt\x001\x00en-US,en;q=0.5\x03\x04" // V(00)M(000)R(000) -> 00000000 -> \x00
 	actual := req.Format()
 
 	require.Equal(t, expected, actual)
@@ -23,14 +24,15 @@ func TestRequestFormat(t *testing.T) {
 
 func TestRequestFormatWithBody(t *testing.T) {
 	req := &Request{
+		Method:  POST,
 		Host:    "example.com",
 		Path:    "/submit",
-		Version: "1.0",
+		Version: 0,
 		Headers: []string{"2"},
 		Body:    `{"name": "test"}`,
 	}
 
-	expected := "example.com\x00/submit\x001.0\x002\x03{\"name\": \"test\"}\x04"
+	expected := "\x08example.com\x00/submit\x002\x03{\"name\": \"test\"}\x04" // V(00)M(001)R(000) -> 00001000 -> \x08
 	actual := req.Format()
 
 	require.Equal(t, expected, actual)
@@ -38,13 +40,13 @@ func TestRequestFormatWithBody(t *testing.T) {
 
 func TestResponseFormat(t *testing.T) {
 	resp := &Response{
-		Version:    "1.0",
+		Version:    0,
 		StatusCode: 200,
 		Headers:    []string{"1", "*", "", "1758784800"},
 		Body:       "Hello, world!",
 	}
 
-	expected := "1.0\x001\x001\x00*\x00\x001758784800\x03Hello, world!\x04"
+	expected := "\x001\x00*\x00\x001758784800\x03Hello, world!\x04" // V(00)S(000000) -> 00000000 -> \x00
 	actual := resp.Format()
 
 	require.Equal(t, expected, actual)
@@ -52,79 +54,72 @@ func TestResponseFormat(t *testing.T) {
 
 func TestResponseFormatEmpty(t *testing.T) {
 	resp := &Response{
-		Version:    "1.0",
+		Version:    0,
 		StatusCode: 204,
 		Headers:    []string{"0"},
 		Body:       "",
 	}
 
-	expected := "1.0\x0013\x000\x03\x04"
+	expected := "\x0c0\x03\x04" // V(00)S(001100) -> 00001100 -> \x0c
 	require.Equal(t, expected, resp.Format())
 }
 
 func TestParseRequestBasic(t *testing.T) {
-	data := "example.com\x00/hello.txt\x001.0\x001\x00en-US,en;q=0.5\x03\x04"
+	data := "\x00example.com\x00/hello.txt\x001\x00en-US,en;q=0.5\x03\x04" // V(00)M(000)R(000) -> \x00
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
-
-	// Method is inferred, not stored. We can check the body to confirm.
-	require.Empty(t, req.Body, "A request with an empty body should be treated as GET")
+	require.Equal(t, GET, req.Method)
 
 	require.Equal(t, "example.com", req.Host)
 	require.Equal(t, "/hello.txt", req.Path)
-	require.Equal(t, "1.0", req.Version)
+	require.Equal(t, uint8(0), req.Version)
 	require.Equal(t, []string{"1", "en-US,en;q=0.5"}, req.Headers)
 	require.Empty(t, req.Body)
 }
 
 func TestParseRequestWithBody(t *testing.T) {
-	data := "example.com\x00/submit\x001.0\x002\x03{\"name\": \"test\"}\x04"
+	data := "\x08example.com\x00/submit\x002\x03{\"name\": \"test\"}\x04" // V(00)M(001)R(000) -> \x08
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
-
-	// Method is inferred, not stored. We can check the body to confirm.
-	require.NotEmpty(t, req.Body, "A request with a non-empty body should be treated as POST")
+	require.Equal(t, POST, req.Method)
 
 	require.Equal(t, "example.com", req.Host)
 	require.Equal(t, "/submit", req.Path)
-	require.Equal(t, "1.0", req.Version)
+	require.Equal(t, uint8(0), req.Version)
 	require.Equal(t, []string{"2"}, req.Headers)
 	require.JSONEq(t, `{"name": "test"}`, req.Body)
 }
 
 func TestParseRequestWithMultilineBody(t *testing.T) {
-	data := "example.com\x00/submit\x001.0\x002\x03line1\nline2\nline3\x04"
+	data := "\x08example.com\x00/submit\x03line1\nline2\nline3\x04"
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
-	// Method is inferred, not stored. We can check the body to confirm.
-	require.NotEmpty(t, req.Body, "A request with a non-empty body should be treated as POST")
+	require.Equal(t, POST, req.Method)
 	require.Equal(t, "line1\nline2\nline3", req.Body)
 }
 
 func TestParseRequestNoHeaders(t *testing.T) {
-	data := "example.com\x00/path\x001.0\x03test body\x04"
+	data := "\x08example.com\x00/path\x03test body\x04"
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
-	// Method is inferred, not stored. We can check the body to confirm.
-	require.NotEmpty(t, req.Body, "A request with a non-empty body should be treated as POST")
+	require.Equal(t, POST, req.Method)
 	require.Empty(t, req.Headers)
 	require.Equal(t, "test body", req.Body)
 }
 
 func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
-	data := "example.com\x00\x001.0\x03\x04"
+	data := "\x00example.com\x00\x03\x04"
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
-	// Method is inferred, not stored. We can check the body to confirm.
-	require.Empty(t, req.Body, "A request with an empty body should be treated as GET")
+	require.Equal(t, GET, req.Method)
 	require.Equal(t, "example.com", req.Host)
 	require.Equal(t, "/", req.Path) // Empty path should default to "/"
-	require.Equal(t, "1.0", req.Version)
+	require.Equal(t, uint8(0), req.Version)
 	require.Empty(t, req.Headers)
 	require.Empty(t, req.Body)
 }
@@ -136,10 +131,9 @@ func TestParseRequestErrors(t *testing.T) {
 	}{
 		{"no body separator", "example.com\x00/path\x001.0"},
 		{"empty", ""},
-		{"invalid request line, too few parts", "example.com"},
-		{"invalid request line, too few parts with separator", "example.com\x00/path"},
-		{"host missing", "\x00/path\x001.0\x03"},
-		{"version missing", "example.com\x00/path\x00\x03"},
+		{"invalid request line, too few parts", "\x00example.com"},
+		{"invalid request line, too few parts with separator", "\x00example.com\x03"},
+		{"host missing", "\x00\x00/path\x03"},
 	}
 
 	for _, tt := range tests {
@@ -151,22 +145,22 @@ func TestParseRequestErrors(t *testing.T) {
 }
 
 func TestParseResponseBasic(t *testing.T) {
-	data := "1.0\x001\x001\x00*\x00\x001758784800\x03Hello, world!\x04"
+	data := "\x001\x00*\x00\x001758784800\x03Hello, world!\x04" // V(00)S(000000) -> \x00
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
-	require.Equal(t, "1.0", resp.Version)
+	require.Equal(t, uint8(0), resp.Version)
 	require.Equal(t, 200, resp.StatusCode)
 	require.Equal(t, []string{"1", "*", "", "1758784800"}, resp.Headers)
 	require.Equal(t, "Hello, world!", resp.Body)
 }
 
 func TestParseResponseSingleHeader(t *testing.T) {
-	data := "1.0\x001\x001\x03Response body\x04"
+	data := "\x001\x03Response body\x04" // V(00)S(000000) -> \x00
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
-	require.Equal(t, "1.0", resp.Version)
+	require.Equal(t, uint8(0), resp.Version)
 	require.Equal(t, 200, resp.StatusCode)
 	require.Equal(t, []string{"1"}, resp.Headers)
 	require.Equal(t, "Response body", resp.Body)
@@ -177,14 +171,9 @@ func TestParseResponseErrors(t *testing.T) {
 		name string
 		data string
 	}{
-		{"no body separator", "1.0\x00200"},
+		{"no body separator", "\x00"},
 		{"empty", ""},
-		{"invalid response line, too few parts", "1.0"},
-		{"invalid response line, only version", "1.0\x03"},
-		// {"invalid status code", "1.0\x00invalid\x03"},
-		// {"negative status code", "1.0\x00-200\x03"},
-		{"version missing", "\x00200\x03"},
-		{"status code missing", "1.0\x00\x03"},
+		{"invalid response line, only status/version byte", "\x00\x03"},
 	}
 
 	for _, tt := range tests {
