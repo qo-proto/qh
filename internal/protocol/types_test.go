@@ -155,8 +155,8 @@ func TestParseResponseBasic(t *testing.T) {
 	require.Equal(t, "Hello, world!", resp.Body)
 }
 
-func TestParseResponseSingleHeader(t *testing.T) { // V(00)S(000000) -> \x00
-	data := "\x001\x03Response body\x04"
+func TestParseResponseSingleHeader(t *testing.T) {
+	data := "\x001\x03Response body\x04" // V(00)S(000000) -> \x00
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
