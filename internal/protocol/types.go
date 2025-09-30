@@ -60,7 +60,7 @@ type Response struct {
 func (r *Request) Format() string {
 	// The first byte contains the method (3 bits) and version (5 bits).
 	// Version (2 bits) | Method (3 bits) | Reserved (3 bits)
-	firstByte := (byte(r.Version) << 6) | (byte(r.Method) << 3)
+	firstByte := (r.Version << 6) | (byte(r.Method) << 3)
 
 	otherParts := []string{r.Host, r.Path}
 	otherParts = append(otherParts, r.Headers...)
@@ -74,7 +74,7 @@ func (r *Request) Format() string {
 func (r *Response) Format() string {
 	compactStatus := EncodeStatusCode(r.StatusCode)
 	// First byte: Version (upper 2 bits) + Status Code (lower 6 bits)
-	firstByte := (byte(r.Version) << 6) | compactStatus
+	firstByte := (r.Version << 6) | compactStatus
 
 	parts := append([]string{string(firstByte)}, r.Headers...)
 	headerPart := strings.Join(parts, "\x00")
@@ -99,8 +99,8 @@ func ParseResponse(data string) (*Response, error) {
 	}
 
 	// First byte contains status and version
-	firstByte := headerPart[0]
-	version := uint8(firstByte >> 6)               // Upper 2 bits
+	firstByte := uint8(headerPart[0])
+	version := firstByte >> 6                      // Upper 2 bits
 	compactStatus := uint8(firstByte & 0b00111111) // Lower 6 bits
 
 	if version > 3 { // 2 bits can hold values 0-3

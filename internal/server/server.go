@@ -108,7 +108,6 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 }
 
 func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
-
 	// check if we have a handler for this path and method
 	if pathHandlers, exists := s.handlers[request.Path]; exists {
 		if handler, methodExists := pathHandlers[request.Method]; methodExists {
