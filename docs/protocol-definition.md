@@ -188,13 +188,13 @@ A request message has the following structure:
 
 Where:
 
-- `1-byte-field`: A single byte encoding the version (upper 2 bits) and method (middle 3 bits).
+- `1-byte-field`: First byte encoding (see [Section 4.1](#41-methods) for bit layout).
 - `Host`: Target hostname.
 - `Path`: Resource path.
-- `Header-Value-N`: Header values in a predefined order (see Section 6.1).
+- `Header-Value-N`: Header values in a predefined order (see [Section 6.1](#61-request-headers)).
 - `Body`: Optional request body (present for POST/PUT requests).
 
-For general formatting rules (separators, Content-Length, message completeness), see Section 3.
+For general formatting rules (separators, Content-Length, message completeness), see [Section 3](#3-message-format).
 
 ### 4.3 Request Examples
 
@@ -290,11 +290,11 @@ A response message has the following structure:
 
 Where:
 
-- `1-byte-field`: A single byte encoding the version (upper 2 bits) and compact status code (lower 6 bits).
-- `Header-Value-N`: Header values in predefined order (see Section 6.2).
+- `1-byte-field`: First byte encoding (see [Section 5.1](#51-status-codes) for bit layout).
+- `Header-Value-N`: Header values in predefined order (see [Section 6.2](#62-response-headers)).
 - `Body`: Optional response body.
 
-For general formatting rules (separators, Content-Length, message completeness), see Section 3.
+For general formatting rules (separators, Content-Length, message completeness), see [Section 3](#3-message-format).
 
 ### 5.3 Response Examples
 
