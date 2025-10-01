@@ -358,18 +358,19 @@ Note: `Host` is not included as it appears in the start-line of the request, not
 
 The following table defines the order and meaning of response headers.
 
-| Order | Header                        | Description                                            | Example                       |
-| ----- | ----------------------------- | ------------------------------------------------------ | ----------------------------- |
-| 1     | `Access-Control-Allow-Origin` | Specifies which origins can access the resource.       | `*`                           |
-| 2     | `Content-Length`              | The size of the message body in octets (8-bit bytes).  | `1234`                        |
-| 3     | `Content-Encoding`            | The encoding format of the content.                    | `gzip`                        |
-| 4     | `Content-Type`                | The MIME type of the resource.                         | `text/html; charset=utf-8`    |
-| 5     | `Date`                        | The date and time at which the message was originated. | `1468857960` (Unix timestamp) |
-| 6     | `Content-Language`            | The preferred language for the response.               | `en-US,en;q=0.5`              |
-| 7     | `Fragment-Offset`             | The byte offset for a fragmented body.                 | `1200`                        |
-| 8     | `Fragment-Request-ID`         | A unique ID to correlate fragments.                    | `42`                          |
-| 9     | `Date`                        | The date and time at which the message was originated. | `1468857960` (Unix timestamp) |
-| 10    | `Connection`                  | Control options for the current connection.            | `close`                       |
+| Index | Header                      | Description                             | Example            |
+| ----- | --------------------------- | --------------------------------------- | ------------------ |
+| 0     | Content-Type                | Numeric content type code               | 1                  |
+| 1     | Content-Length              | Size of the message body in bytes       | 13                 |
+| 2     | Cache-Control               | Caching directives                      | max-age=3600       |
+| 3     | Content-Encoding            | Content encoding used                   | gzip               |
+| 4     | Authorization               | Authentication information              | Bearer <token>     |
+| 5     | Access-Control-Allow-Origin | CORS allowed origins                    | \*                 |
+| 6     | ETag                        | Entity tag for cache validation         | abc123             |
+| 7     | Date                        | Unix timestamp of when response created | 1758784800         |
+| 8     | Content-Security-Policy     | CSP directives                          | default-src 'self' |
+| 9     | X-Content-Type-Options      | MIME sniffing protection                | nosniff            |
+| 10    | X-Frame-Options             | Clickjacking protection                 | SAMEORIGIN         |
 
 ## 7. Transport
 
