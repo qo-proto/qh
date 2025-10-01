@@ -59,6 +59,9 @@ func main() {
 				body = *req.body
 			}
 			response, err = c.POST(hostname, req.path, body, protocol.TextPlain)
+		default:
+			slog.Error("Unsupported method", "method", req.method, "path", req.path)
+			continue
 		}
 
 		if err != nil {
