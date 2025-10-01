@@ -67,18 +67,18 @@ func main() {
 
 		if err != nil {
 			slog.Error("Request failed", "method", req.method, "path", req.path, "error", err)
-		} else {
-			logResponse(req.method, req.path, response)
+			continue
+		}
 
-			// save image
-			if req.path == "/image" {
-				filename := "downloaded_cloud.jpeg"
-				err := os.WriteFile(filename, response.Body, 0o644)
-				if err != nil {
-					slog.Error("Failed to save file", "path", filename, "error", err)
-				} else {
-					slog.Info("Saved response to file", "path", filename, "bytes", len(response.Body))
-				}
+		logResponse(req.method, req.path, response)
+
+		// save image
+		if req.path == "/image" {
+			filename := "downloaded_cloud.jpeg"
+			if err := os.WriteFile(filename, response.Body, 0o600); err != nil {
+				slog.Error("Failed to save file", "path", filename, "error", err)
+			} else {
+				slog.Info("Saved response to file", "path", filename, "bytes", len(response.Body))
 			}
 		}
 	}
