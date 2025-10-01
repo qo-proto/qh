@@ -64,6 +64,21 @@ const (
 	ReqHeaderContentLength  = 3 // Size of request body in bytes
 )
 
+// Response header indices (ordered by position in wire format)
+const (
+	RespHeaderContentType     = 0  // Content type (as code)
+	RespHeaderContentLength   = 1  // Size of response body in bytes
+	RespHeaderCacheControl    = 2  // Cache-Control directives
+	RespHeaderContentEncoding = 3  // Content encoding used (e.g., "gzip")
+	RespHeaderAuthorization   = 4  // Authorization info
+	RespHeaderCORS            = 5  // Access-Control-Allow-Origin
+	RespHeaderETag            = 6  // Entity tag for cache validation
+	RespHeaderDate            = 7  // Unix timestamp
+	RespHeaderCSP             = 8  // Content-Security-Policy
+	RespHeaderContentTypeOpts = 9  // X-Content-Type-Options
+	RespHeaderFrameOptions    = 10 // X-Frame-Options
+)
+
 type Request struct {
 	Method  Method
 	Host    string
