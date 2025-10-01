@@ -88,10 +88,10 @@ func (r *Request) Format() []byte {
 
 	otherParts := []string{r.Host, r.Path}
 	otherParts = append(otherParts, r.Headers...)
-	headerPart := string(firstByte) + strings.Join(otherParts, "\x00")
 
-	// Build message: headers + ETX + body
-	result := []byte(headerPart)
+	// Build message: first byte + headers + ETX + body
+	result := []byte{firstByte}
+	result = append(result, []byte(strings.Join(otherParts, "\x00"))...)
 	result = append(result, '\x03')
 	result = append(result, r.Body...)
 	return result
@@ -103,10 +103,9 @@ func (r *Response) Format() []byte {
 	// First byte: Version (upper 2 bits) + Status Code (lower 6 bits)
 	firstByte := (r.Version << 6) | compactStatus
 
-	headerPart := string(firstByte) + strings.Join(r.Headers, "\x00")
-
-	// Build message: headers + ETX + body
-	result := []byte(headerPart)
+	// Build message: first byte + headers + ETX + body
+	result := []byte{firstByte}
+	result = append(result, []byte(strings.Join(r.Headers, "\x00"))...)
 	result = append(result, '\x03')
 	result = append(result, r.Body...)
 	return result
@@ -182,8 +181,10 @@ func IsResponseComplete(data []byte) (bool, error) {
 	}
 
 	contentLengthStr := parts[1]
+
+	// If Content-Length is empty, treat response as complete (no body expected)
 	if contentLengthStr == "" {
-		return false, errors.New("missing Content-Length header")
+		return true, nil
 	}
 
 	expectedLen, err := strconv.Atoi(contentLengthStr)
