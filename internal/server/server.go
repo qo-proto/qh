@@ -112,6 +112,18 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	responseData := response.Format()
 	slog.Debug("Sending response", "bytes", len(responseData))
 
+	complete, validateErr := protocol.IsResponseComplete(responseData)
+	if validateErr != nil {
+		slog.Error("Response validation error", "error", validateErr)
+		s.sendErrorResponse(stream, 500, "Internal Server Error")
+		return
+	}
+	if !complete {
+		slog.Error("Response is incomplete")
+		s.sendErrorResponse(stream, 500, "Internal Server Error")
+		return
+	}
+
 	_, err = stream.Write(responseData)
 	if err != nil {
 		slog.Error("Failed to write response", "error", err)
