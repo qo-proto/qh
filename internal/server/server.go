@@ -55,20 +55,34 @@ func (s *Server) Serve() error {
 
 	slog.Info("Starting QH server loop")
 
+	requestBuffers := make(map[*qotp.Stream][]byte)
+
 	s.listener.Loop(func(stream *qotp.Stream) bool {
 		if stream == nil {
-			return true // continue waiting
+			return true
 		}
 
-		requestData, err := stream.Read()
-		if err != nil || len(requestData) == 0 {
-			return true // continue waiting for data
+		chunk, err := stream.Read()
+		if err != nil || len(chunk) == 0 {
+			return true
 		}
 
-		slog.Info("New stream received from client", "bytes", len(requestData))
-		s.handleRequest(stream, requestData)
+		requestBuffers[stream] = append(requestBuffers[stream], chunk...)
 
-		return true // continue loop
+		complete, checkErr := protocol.IsRequestComplete(requestBuffers[stream])
+		if checkErr != nil {
+			slog.Error("Error checking request completeness", "error", checkErr)
+			delete(requestBuffers, stream)
+			return true
+		}
+
+		if complete {
+			slog.Info("Complete request received", "bytes", len(requestBuffers[stream]))
+			s.handleRequest(stream, requestBuffers[stream])
+			delete(requestBuffers, stream)
+		}
+
+		return true
 	})
 
 	return nil
@@ -106,8 +120,7 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 		return
 	}
 
-	slog.Debug("Response sent")
-	// Don't close the stream for now, uses qotp's automatic timeout
+	slog.Debug("Response sent, stream kept open for reuse")
 }
 
 func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
@@ -135,7 +148,6 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	if _, err := stream.Write(responseData); err != nil {
 		slog.Error("Failed to write error response", "error", err)
 	}
-	// Don't close the stream for now, uses qotp's automatic timeout
 }
 
 func Response(statusCode int, contentType protocol.ContentType, body []byte) *protocol.Response {

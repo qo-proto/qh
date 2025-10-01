@@ -76,7 +76,6 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 
 	stream := c.conn.Stream(currentStreamID)
 
-	// send request
 	requestData := req.Format()
 	slog.Debug("Sending request", "stream_id", currentStreamID, "bytes", len(requestData))
 
@@ -85,36 +84,35 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 
-	// wait for response by reading directly from stream
-	var response *protocol.Response
-	var parseErr error
 	var responseBuffer []byte
 
 	c.listener.Loop(func(s *qotp.Stream) bool {
-		if s != stream {
-			return true // continue waiting
+		if s == nil {
+			return true
 		}
 
-		// Loop to read all available data from the stream until we have a complete message.
-		for {
-			responseData, err := s.Read()
-			if err != nil || len(responseData) == 0 {
-				return true // No more data right now, continue listening.
-			}
-
-			slog.Info("Received frame from server", "stream_id", currentStreamID, "bytes", len(responseData))
-
-			responseBuffer = append(responseBuffer, responseData...)
-
-			// Check if we have received the end-of-transmission character.
-			if len(responseBuffer) > 0 && responseBuffer[len(responseBuffer)-1] == '\x04' {
-				slog.Debug("Reassembled full response", "bytes", len(responseBuffer))
-				response, parseErr = protocol.ParseResponse(responseBuffer)
-				return false // We have the complete message, exit the listener loop.
-			}
+		chunk, err := s.Read()
+		if err != nil || len(chunk) == 0 {
+			return true
 		}
+
+		slog.Debug("Received chunk from server", "bytes", len(chunk))
+		responseBuffer = append(responseBuffer, chunk...)
+
+		complete, checkErr := protocol.IsResponseComplete(responseBuffer)
+		if checkErr != nil {
+			slog.Error("Error checking response completeness", "error", checkErr)
+			return false
+		}
+
+		if complete {
+			return false
+		}
+
+		return true
 	})
 
+	response, parseErr := protocol.ParseResponse(responseBuffer)
 	if parseErr != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", parseErr)
 	}

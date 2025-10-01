@@ -15,7 +15,7 @@ func TestRequestFormat(t *testing.T) {
 		Body:    []byte(""),
 	}
 
-	expected := []byte("example.com\x00/hello.txt\x001.0\x001\x00en-US,en;q=0.5\x03\x04")
+	expected := []byte("example.com\x00/hello.txt\x001.0\x001\x00en-US,en;q=0.5\x03")
 	actual := req.Format()
 
 	require.Equal(t, expected, actual)
@@ -30,7 +30,7 @@ func TestRequestFormatWithBody(t *testing.T) {
 		Body:    []byte(`{"name": "test"}`),
 	}
 
-	expected := []byte("example.com\x00/submit\x001.0\x002\x03{\"name\": \"test\"}\x04")
+	expected := []byte("example.com\x00/submit\x001.0\x002\x03{\"name\": \"test\"}")
 	actual := req.Format()
 
 	require.Equal(t, expected, actual)
@@ -44,7 +44,7 @@ func TestResponseFormat(t *testing.T) {
 		Body:       []byte("Hello, world!"),
 	}
 
-	expected := []byte("1.0\x001\x001\x00*\x00\x001758784800\x03Hello, world!\x04")
+	expected := []byte("1.0\x001\x001\x00*\x00\x001758784800\x03Hello, world!")
 	actual := resp.Format()
 
 	require.Equal(t, expected, actual)
@@ -58,12 +58,12 @@ func TestResponseFormatEmpty(t *testing.T) {
 		Body:       []byte(""),
 	}
 
-	expected := []byte("1.0\x0013\x000\x03\x04")
+	expected := []byte("1.0\x0013\x000\x03")
 	require.Equal(t, expected, resp.Format())
 }
 
 func TestParseRequestBasic(t *testing.T) {
-	data := []byte("example.com\x00/hello.txt\x001.0\x001\x00en-US,en;q=0.5\x03\x04")
+	data := []byte("example.com\x00/hello.txt\x001.0\x001\x00en-US,en;q=0.5\x03")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -79,7 +79,7 @@ func TestParseRequestBasic(t *testing.T) {
 }
 
 func TestParseRequestWithBody(t *testing.T) {
-	data := []byte("example.com\x00/submit\x001.0\x002\x03{\"name\": \"test\"}\x04")
+	data := []byte("example.com\x00/submit\x001.0\x002\x03{\"name\": \"test\"}")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -95,7 +95,7 @@ func TestParseRequestWithBody(t *testing.T) {
 }
 
 func TestParseRequestWithMultilineBody(t *testing.T) {
-	data := []byte("example.com\x00/submit\x001.0\x002\x03line1\nline2\nline3\x04")
+	data := []byte("example.com\x00/submit\x001.0\x002\x03line1\nline2\nline3")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -105,7 +105,7 @@ func TestParseRequestWithMultilineBody(t *testing.T) {
 }
 
 func TestParseRequestNoHeaders(t *testing.T) {
-	data := []byte("example.com\x00/path\x001.0\x03test body\x04")
+	data := []byte("example.com\x00/path\x001.0\x03test body")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -116,7 +116,7 @@ func TestParseRequestNoHeaders(t *testing.T) {
 }
 
 func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
-	data := []byte("example.com\x00\x001.0\x03\x04")
+	data := []byte("example.com\x00\x001.0\x03")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -151,18 +151,18 @@ func TestParseRequestErrors(t *testing.T) {
 }
 
 func TestParseResponseBasic(t *testing.T) {
-	data := []byte("1.0\x001\x001\x00*\x00\x001758784800\x03Hello, world!\x04")
+	data := []byte("1.0\x001\x001\x00*\x0013\x00\x001758784800\x03Hello, world!")
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
 	require.Equal(t, "1.0", resp.Version)
 	require.Equal(t, 200, resp.StatusCode)
-	require.Equal(t, []string{"1", "*", "", "1758784800"}, resp.Headers)
+	require.Equal(t, []string{"1", "*", "13", "", "1758784800"}, resp.Headers)
 	require.Equal(t, []byte("Hello, world!"), resp.Body)
 }
 
 func TestParseResponseSingleHeader(t *testing.T) {
-	data := []byte("1.0\x001\x001\x03Response body\x04")
+	data := []byte("1.0\x001\x001\x03Response body")
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)

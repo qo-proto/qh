@@ -69,11 +69,10 @@ func (r *Request) Format() []byte {
 	// Join header parts with null byte, and separate from body with End of Text char.
 	headerPart := strings.Join(parts, "\x00")
 
-	// Build message: headers + ETX + body + EOT
+	// Build message: headers + ETX + body
 	result := []byte(headerPart)
 	result = append(result, '\x03')
 	result = append(result, r.Body...)
-	result = append(result, '\x04')
 	return result
 }
 
@@ -89,22 +88,62 @@ func (r *Response) Format() []byte {
 
 	headerPart := strings.Join(parts, "\x00")
 
-	// Build message: headers + ETX + body + EOT
+	// Build message: headers + ETX + body
 	result := []byte(headerPart)
 	result = append(result, '\x03')
 	result = append(result, r.Body...)
-	result = append(result, '\x04')
 	return result
 }
 
-func ParseResponse(data []byte) (*Response, error) {
-	// The EOT character (\x04) marks the end of the message
-	dataStr, found := strings.CutSuffix(string(data), "\x04")
+// IsRequestComplete checks if we have received a complete request
+func IsRequestComplete(data []byte) (bool, error) {
+	dataStr := string(data)
+	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
 	if !found {
-		return nil, errors.New("invalid response: missing EOT terminator")
+		return false, nil
 	}
 
+	parts := strings.Split(headerPart, "\x00")
+	if len(parts) < 3 {
+		return false, nil
+	}
+
+	if len(bodyPart) == 0 {
+		return true, nil
+	}
+
+	return true, nil
+}
+
+// IsResponseComplete checks if we have received a complete response based on Content-Length
+func IsResponseComplete(data []byte) (bool, error) {
+	dataStr := string(data)
+	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
+	if !found {
+		return false, nil
+	}
+
+	parts := strings.Split(headerPart, "\x00")
+	if len(parts) < 5 {
+		return false, nil
+	}
+
+	contentLengthStr := parts[4]
+	if contentLengthStr == "" {
+		return false, errors.New("missing Content-Length header")
+	}
+
+	expectedLen, err := strconv.Atoi(contentLengthStr)
+	if err != nil {
+		return false, fmt.Errorf("invalid Content-Length: %s", contentLengthStr)
+	}
+
+	return len(bodyPart) >= expectedLen, nil
+}
+
+func ParseResponse(data []byte) (*Response, error) {
 	// Split headers from body using the End of Text character
+	dataStr := string(data)
 	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
 	if !found {
 		return nil, errors.New("invalid response: missing body separator")
@@ -147,17 +186,20 @@ func ParseResponse(data []byte) (*Response, error) {
 		resp.Headers = parts[2:]
 	}
 
+	// Validate Content-Length if present (header index 2)
+	if len(resp.Headers) > 2 && resp.Headers[2] != "" {
+		expectedLen, err := strconv.Atoi(resp.Headers[2])
+		if err == nil && len(body) < expectedLen {
+			return nil, errors.New("incomplete response: not all body data received")
+		}
+	}
+
 	return resp, nil
 }
 
 func ParseRequest(data []byte) (*Request, error) {
-	// The EOT character (\x04) marks the end of the message
-	dataStr, found := strings.CutSuffix(string(data), "\x04")
-	if !found {
-		return nil, errors.New("invalid request: missing EOT terminator")
-	}
-
 	// Split headers from body using the End of Text character
+	dataStr := string(data)
 	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
 	if !found {
 		return nil, errors.New("invalid request: missing body separator")
