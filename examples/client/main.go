@@ -30,6 +30,7 @@ func main() {
 	}{
 		{method: "GET", path: "/hello"},
 		{method: "GET", path: "/status"},
+		{method: "GET", path: "/api/user"}, // JSON response
 		{method: "POST", path: "/echo", body: ptr("Hello QH World!")},
 		{method: "POST", path: "/data", body: ptr("Updated data!")},
 		{method: "GET", path: "/file"},
@@ -88,9 +89,9 @@ func main() {
 func logResponse(method, path string, response *protocol.Response) {
 	// Format the successful response for better readability
 	var formattedDate string
-	// The date is the 5th header (index 4)
-	if len(response.Headers) > 4 && response.Headers[4] != "" {
-		unixTime, err := strconv.ParseInt(response.Headers[4], 10, 64)
+	// The date is the 8th header (index 7)
+	if len(response.Headers) > 7 && response.Headers[7] != "" {
+		unixTime, err := strconv.ParseInt(response.Headers[7], 10, 64)
 		if err == nil {
 			// Format to DD.MM.YYYY HH:MM
 			formattedDate = time.Unix(unixTime, 0).Format("02.01.2006 15:04")
@@ -101,6 +102,16 @@ func logResponse(method, path string, response *protocol.Response) {
 	sb.WriteString(fmt.Sprintf("\n--- Response for %s %s ---\n", method, path))
 	sb.WriteString(fmt.Sprintf("Version:    %d\n", response.Version))
 	sb.WriteString(fmt.Sprintf("StatusCode: %d\n", response.StatusCode))
+
+	// Show Content-Type (decode from header position 0)
+	if len(response.Headers) > 0 && response.Headers[0] != "" {
+		contentTypeCode, err := strconv.Atoi(response.Headers[0])
+		if err == nil {
+			contentType := protocol.ContentType(contentTypeCode)
+			sb.WriteString(fmt.Sprintf("Content:    %s\n", contentType.String()))
+		}
+	}
+
 	if formattedDate != "" {
 		sb.WriteString(fmt.Sprintf("Timestamp:  %s\n", formattedDate))
 	}

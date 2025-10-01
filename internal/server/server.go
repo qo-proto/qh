@@ -151,14 +151,18 @@ func Response(statusCode int, contentType protocol.ContentType, body []byte) *pr
 	return &protocol.Response{
 		Version:    0,
 		StatusCode: statusCode,
-		Headers: []string{ // Ordered headers by position.
-			strconv.Itoa(int(contentType)),           // Content-Type (as code)
-			"",                                       // Access-Control-Allow-Origin
-			strconv.Itoa(len(body)),                  // Content-Length
-			"",                                       // Content-Encoding (empty unless compression is used)
-			strconv.FormatInt(time.Now().Unix(), 10), // Date (Unix timestamp)
-			"",                                       // Set-Cookie
-			"",                                       // Connection
+		Headers: []string{ // Ordered headers by position (must match ResponseHeaderNames in protocol/types.go)
+			strconv.Itoa(int(contentType)),           // [0] Content-Type (as code)
+			strconv.Itoa(len(body)),                  // [1] Content-Length
+			"",                                       // [2] Cache-Control (empty for now, e.g., "max-age=3600", "no-cache")
+			"",                                       // [3] Content-Encoding (empty unless compression is used, e.g., "gzip")
+			"",                                       // [4] Authorization (typically in requests, not responses)
+			"",                                       // [5] Access-Control-Allow-Origin (empty unless CORS needed, e.g., "*")
+			"",                                       // [6] ETag (empty unless using cache validation, e.g., "abc123")
+			strconv.FormatInt(time.Now().Unix(), 10), // [7] Date (Unix timestamp)
+			"default-src 'self'",                     // [8] Content-Security-Policy (reasonable secure default)
+			"nosniff",                                // [9] X-Content-Type-Options (always nosniff)
+			"SAMEORIGIN",                             // [10] X-Frame-Options (allow same-origin framing)
 		},
 		Body: body,
 	}

@@ -31,6 +31,11 @@ func main() {
 		return server.TextResponse(200, "QH Server is running!")
 	})
 
+	srv.HandleFunc("/api/user", protocol.GET, func(_ *protocol.Request) *protocol.Response {
+		slog.Info("Handling request", "method", "GET", "path", "/api/user")
+		return server.JSONResponse(200, `{"name": "John Doe", "id": 123, "active": true}`)
+	})
+
 	srv.HandleFunc("/data", protocol.POST, func(req *protocol.Request) *protocol.Response {
 		slog.Info("Handling request", "method", "POST", "path", "/data", "body", string(req.Body))
 		response := fmt.Sprintf("Updated data: %s ; %s; Hallo Welt;", string(req.Body), strings.Repeat("a", 1900))
@@ -44,7 +49,7 @@ func main() {
 			slog.Error("Failed to read file", "error", err)
 			return server.ErrorResponse(500, "Internal Server Error")
 		}
-		return server.Response(200, protocol.OctetStream, content)
+		return server.Response(200, protocol.TextPlain, content)
 	})
 
 	srv.HandleFunc("/image", protocol.GET, func(_ *protocol.Request) *protocol.Response {

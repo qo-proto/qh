@@ -40,6 +40,23 @@ const (
 	// ... up to 15
 )
 
+func (ct ContentType) String() string {
+	switch ct {
+	case Custom:
+		return "custom"
+	case TextPlain:
+		return "text/plain"
+	case JSON:
+		return "application/json"
+	case HTML:
+		return "text/html"
+	case OctetStream:
+		return "application/octet-stream"
+	default:
+		return "unknown"
+	}
+}
+
 type Request struct {
 	Method  Method
 	Host    string
@@ -128,13 +145,13 @@ func IsResponseComplete(data []byte) (bool, error) {
 	}
 
 	parts := strings.Split(stringHeaderPart, "\x00")
-	// Content-Length is at header position 2 (parts[2])
-	// parts[0] = Content-Type, parts[1] = Access-Control-Allow-Origin, parts[2] = Content-Length
-	if len(parts) < 3 {
+	// Content-Length is at header position 1 (parts[1])
+	// parts[0] = Content-Type, parts[1] = Content-Length, parts[2-10] = other headers
+	if len(parts) < 2 {
 		return false, nil
 	}
 
-	contentLengthStr := parts[2]
+	contentLengthStr := parts[1]
 	if contentLengthStr == "" {
 		return false, errors.New("missing Content-Length header")
 	}
@@ -191,9 +208,9 @@ func ParseResponse(data []byte) (*Response, error) {
 		resp.Headers = parts
 	}
 
-	// Validate Content-Length if present (header index 2)
-	if len(resp.Headers) > 2 && resp.Headers[2] != "" {
-		expectedLen, err := strconv.Atoi(resp.Headers[2])
+	// Validate Content-Length if present (header index 1)
+	if len(resp.Headers) > 1 && resp.Headers[1] != "" {
+		expectedLen, err := strconv.Atoi(resp.Headers[1])
 		if err == nil && len(body) < expectedLen {
 			return nil, errors.New("incomplete response: not all body data received")
 		}
@@ -260,16 +277,19 @@ func ParseRequest(data []byte) (*Request, error) {
 }
 
 // ResponseHeaderNames maps the positional index of a response header to its name.
+// Most important headers for SPA functionality.
 var ResponseHeaderNames = map[int]string{
-	0: "Access-Control-Allow-Origin",
-	1: "Content-Length",
-	2: "Content-Encoding",
-	3: "Content-Type",
-	4: "Date",
-	5: "Content-Language",
-	6: "Fragment-Offset",
-	7: "Fragment-Request-ID",
-	8: "Connection",
+	0:  "Content-Type",   // Required: How to parse the body
+	1:  "Content-Length", // Required: When response is complete
+	2:  "Cache-Control",  // Critical: Browser caching strategy for assets
+	3:  "Content-Encoding",
+	4:  "Authorization",               // JWT/Bearer tokens for API auth
+	5:  "Access-Control-Allow-Origin", // CORS
+	6:  "ETag",                        // Optimization: Conditional requests
+	7:  "Date",                        // TODO: see if it makes sense to keep for debugging and logging
+	8:  "Content-Security-Policy",     // Security: XSS protection
+	9:  "X-Content-Type-Options",      // Security: MIME sniffing protection
+	10: "X-Frame-Options",             // Security: Clickjacking protection
 }
 
 // FormatHeaders takes a slice of response header values and returns a formatted string for logging.
