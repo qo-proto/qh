@@ -117,12 +117,24 @@ func IsResponseComplete(data []byte) (bool, error) {
 		return false, nil
 	}
 
-	parts := strings.Split(headerPart, "\x00")
-	if len(parts) < 5 {
+	if len(headerPart) == 0 {
 		return false, nil
 	}
 
-	contentLengthStr := parts[4]
+	// Skip first byte (version + status), then split remaining headers
+	stringHeaderPart := headerPart[1:]
+	if stringHeaderPart == "" {
+		return false, nil
+	}
+
+	parts := strings.Split(stringHeaderPart, "\x00")
+	// Content-Length is at header position 2 (parts[2])
+	// parts[0] = Content-Type, parts[1] = Access-Control-Allow-Origin, parts[2] = Content-Length
+	if len(parts) < 3 {
+		return false, nil
+	}
+
+	contentLengthStr := parts[2]
 	if contentLengthStr == "" {
 		return false, errors.New("missing Content-Length header")
 	}
