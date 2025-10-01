@@ -13,15 +13,6 @@ import (
 	"github.com/tbocek/qotp"
 )
 
-// Response header indices (for use with ResponseWithHeaders)
-// Note: RespHeaderDate is always set automatically and cannot be overridden.
-// Example usage:
-//
-//	server.ResponseWithHeaders(200, protocol.JSON, body, map[int]string{
-//	    protocol.RespHeaderCacheControl: "max-age=3600",
-//	    protocol.RespHeaderCORS: "*",
-//	})
-
 // handles QH requests
 type Handler func(*protocol.Request) *protocol.Response
 
