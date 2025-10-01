@@ -65,31 +65,20 @@ func (s *Server) Serve() error {
 
 	slog.Info("Starting QH server loop")
 
-	requestBuffers := make(map[*qotp.Stream][]byte)
-
 	s.listener.Loop(func(stream *qotp.Stream) bool {
 		if stream == nil {
 			return true
 		}
 
-		chunk, err := stream.Read()
-		if err != nil || len(chunk) == 0 {
+		data, err := stream.Read()
+		if err != nil {
+			slog.Error("Stream read error", "error", err)
 			return true
 		}
 
-		requestBuffers[stream] = append(requestBuffers[stream], chunk...)
-
-		complete, checkErr := protocol.IsRequestComplete(requestBuffers[stream])
-		if checkErr != nil {
-			slog.Error("Error checking request completeness", "error", checkErr)
-			delete(requestBuffers, stream)
-			return true
-		}
-
-		if complete {
-			slog.Info("Complete request received", "bytes", len(requestBuffers[stream]))
-			s.handleRequest(stream, requestBuffers[stream])
-			delete(requestBuffers, stream)
+		if len(data) > 0 {
+			slog.Info("Complete request received", "bytes", len(data))
+			s.handleRequest(stream, data)
 		}
 
 		return true
