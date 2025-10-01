@@ -305,35 +305,3 @@ func ParseRequest(data []byte) (*Request, error) {
 
 	return req, nil
 }
-
-// ResponseHeaderNames maps the positional index of a response header to its name.
-// Most important headers for SPA functionality.
-var ResponseHeaderNames = map[int]string{
-	0:  "Content-Type",
-	1:  "Content-Length",
-	2:  "Cache-Control",
-	3:  "Content-Encoding",
-	4:  "Authorization",               // JWT/Bearer tokens
-	5:  "Access-Control-Allow-Origin", // CORS
-	6:  "ETag",                        // Optimization: Conditional requests
-	7:  "Date",                        // TODO: see if it makes sense to keep for debugging and logging
-	8:  "Content-Security-Policy",     // Security: XSS protection
-	9:  "X-Content-Type-Options",      // Security: MIME sniffing protection
-	10: "X-Frame-Options",             // Security: Clickjacking protection
-}
-
-// FormatHeaders takes a slice of response header values and returns a formatted string for logging.
-func (r *Response) FormatHeaders() string {
-	if len(r.Headers) == 0 {
-		return "  (no headers)"
-	}
-	var builder strings.Builder
-	for i, value := range r.Headers {
-		name, ok := ResponseHeaderNames[i]
-		if !ok {
-			name = fmt.Sprintf("Unknown-Header-%d", i)
-		}
-		builder.WriteString(fmt.Sprintf("  %s: %q\n", name, value))
-	}
-	return strings.TrimSuffix(builder.String(), "\n")
-}
