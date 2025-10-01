@@ -123,26 +123,29 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 	return response, nil
 }
 
-func (c *Client) GET(host, path string, contentType protocol.ContentType, otherHeaders ...string) (*protocol.Response, error) {
+func (c *Client) GET(host, path string, accept, acceptEncoding string) (*protocol.Response, error) {
+	headers := make([]string, 4)
+	headers[protocol.ReqHeaderAccept] = accept
+	headers[protocol.ReqHeaderAcceptEncoding] = acceptEncoding
+	// Content-Type and Content-Length are empty for GET requests
+
 	req := &protocol.Request{
 		Method:  protocol.GET,
 		Host:    host,
 		Path:    path,
 		Version: protocol.Version,
-		Headers: append([]string{strconv.Itoa(int(contentType))}, otherHeaders...),
+		Headers: headers,
 	}
 	return c.Request(req)
 }
 
-func (c *Client) POST(host, path, body string, contentType protocol.ContentType, otherHeaders ...string) (*protocol.Response, error) {
+func (c *Client) POST(host, path, body string, accept, acceptEncoding string, contentType protocol.ContentType) (*protocol.Response, error) {
 	bodyBytes := []byte(body)
-	headers := []string{
-		strconv.Itoa(int(contentType)), // [0] Content-Type
-		strconv.Itoa(len(bodyBytes)),   // [1] Content-Length
-	}
-	if len(otherHeaders) > 0 {
-		headers = append(headers, otherHeaders...)
-	}
+	headers := make([]string, 4)
+	headers[protocol.ReqHeaderAccept] = accept
+	headers[protocol.ReqHeaderAcceptEncoding] = acceptEncoding
+	headers[protocol.ReqHeaderContentType] = strconv.Itoa(int(contentType))
+	headers[protocol.ReqHeaderContentLength] = strconv.Itoa(len(bodyBytes))
 
 	req := &protocol.Request{
 		Method:  protocol.POST,

@@ -53,13 +53,13 @@ func main() {
 		var err error
 		switch req.method {
 		case "GET":
-			response, err = c.GET(hostname, req.path, protocol.TextPlain)
+			response, err = c.GET(hostname, req.path, "text/html,application/json,text/plain", "")
 		case "POST":
 			body := ""
 			if req.body != nil {
 				body = *req.body
 			}
-			response, err = c.POST(hostname, req.path, body, protocol.TextPlain)
+			response, err = c.POST(hostname, req.path, body, "application/json,text/plain", "", protocol.TextPlain)
 		default:
 			slog.Error("Unsupported method", "method", req.method, "path", req.path)
 			continue

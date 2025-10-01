@@ -136,13 +136,11 @@ Resources made available via the "qh" scheme have no shared identity with resour
 
 ### 3.5 General Header Fields
 
----
-
 ## 4. Request
 
 ### 4.1 Methods
 
-QH/1.0 defines the following methods. The version and method are encoded in the first byte of the request message as follows:
+QH Versoin 0 defines the following methods. The version and method are encoded in the first byte of the request message as follows:
 
 - **Bits 6-7 (upper 2 bits):** Version
 - **Bits 3-5 (middle 3 bits):** Method
@@ -171,36 +169,13 @@ Where:
 - `Header-Value-N`: Header values in a predefined order.
 - The separator for all string-based fields is a null byte (`\0`).
 - The separator between headers and body is the End of Text character (`\x03`)
-- Content-Length: When a request includes a body, the Content-Length header (header index 1) MUST specify the exact number of bytes in the body.
-- Requests without a body (e.g., GET) SHOULD omit Content-Length and the body is considered empty.
-- Completeness: A request is considered complete once headers and the ETX (`\x03`) separator are received; if Content-Length is present, the receiver waits until the body size matches Content-Length.
+- Content-Length: When a request includes a body, the Content-Length header (header index 3) MUST specify the exact number of bytes in the body.
+- Requests without a body (e.g., GET) SHOULD have empty Content-Type and Content-Length headers, and the body is considered empty.
+- Completeness: A request is considered complete once headers and the ETX (`\x03`) separator are received; if Content-Length is present and non-empty, the receiver waits until the body size matches Content-Length.
 
 ### 4.3 Request Examples
 
-**Simple GET request:**
-
-```text
-\x00example.com\0/hello.txt\x03
-```
-
-**GET request with headers:**
-
-```text
-example.com\0/hello.txt\01.0\0
-text/html,application/xhtml+xml\0
-en-US,en;q=0.5\0
-\x03
-```
-
-**POST request with body:**
-
-```text
-example.com\0/submit\0
-application/json\0
-12\0
-\x03
-{"name": "test"}
-```
+TODO: Add mermaid diagrams for simple get request, with/without headers, with body, ...
 
 ## 5. Response
 
@@ -299,38 +274,7 @@ Where:
 
 ### 5.3 Response Examples
 
-**Simple successful response:**
-
-```text
-1.0\01\0
-\x03
-Hello, world!
-```
-
-**Response with headers:**
-
-```text
-1.0\01\0
-*\0
-text/plain\0
-\x03
-Hello, world!
-```
-
-**Empty response (No Content):**
-
-```text
-1.0\013\0
-\x03
-```
-
-**Error response:**
-
-```text
-1.0\02\0
-\x03
-Page not found
-```
+TODO: Add mermaid diagrams for simple success response, response with headers, empty response, etc.
 
 ## 6. Headers
 
@@ -344,13 +288,12 @@ The following table defines the order and meaning of request headers.
 
 Note: `Host` is not included as it appears in the start-line of the request, not as a header.
 
-| Order | Header            | Description                                 | Example                           |
-| ----- | ----------------- | ------------------------------------------- | --------------------------------- |
-| 1     | `Accept`          | Media types the client can process.         | `text/html,application/xhtml+xml` |
-| 2     | `Accept-Language` | The preferred language for the response.    | `en-US,en;q=0.5`                  |
-| 3     | `Accept-Encoding` | Content-coding the client can process.      | `gzip, deflate, br`               |
-| 4     | `Fragment-Offset` | The byte offset for a fragmented body.      | `1200`                            |
-| 5     | `Connection`      | Control options for the current connection. | `close`                           |
+| Order | Header            | Description                                | Example                           |
+| ----- | ----------------- | ------------------------------------------ | --------------------------------- |
+| 1     | `Accept`          | Media types the client can process.        | `text/html,application/xhtml+xml` |
+| 2     | `Accept-Encoding` | Content-coding the client can process.     | `gzip, deflate, br, zstd`         |
+| 3     | `Content-Type`    | Media type of the request body (POST/PUT). | `application/json`                |
+| 4     | `Content-Length`  | Size of the request body in bytes.         | `12`                              |
 
 ![QH Message Format](./docs/images/header.svg)
 

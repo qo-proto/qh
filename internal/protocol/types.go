@@ -56,6 +56,14 @@ func (ct ContentType) String() string {
 	}
 }
 
+// Request header indices (ordered by position in wire format)
+const (
+	ReqHeaderAccept         = 0 // Media types the client can process
+	ReqHeaderAcceptEncoding = 1 // Content-coding the client can process
+	ReqHeaderContentType    = 2 // Media type of request body (POST/PUT)
+	ReqHeaderContentLength  = 3 // Size of request body in bytes
+)
+
 type Request struct {
 	Method  Method
 	Host    string
@@ -135,11 +143,11 @@ func IsRequestComplete(data []byte) (bool, error) {
 		headers = parts[2:]
 	}
 
-	// If a Content-Length header is present (index 1 in ordered headers), enforce it
-	if len(headers) > 1 && headers[1] != "" {
-		expectedLen, err := strconv.Atoi(headers[1])
+	// If a Content-Length header is present (index 3 in ordered headers), enforce it
+	if len(headers) > ReqHeaderContentLength && headers[ReqHeaderContentLength] != "" {
+		expectedLen, err := strconv.Atoi(headers[ReqHeaderContentLength])
 		if err != nil {
-			return false, fmt.Errorf("invalid Content-Length: %s", headers[1])
+			return false, fmt.Errorf("invalid Content-Length: %s", headers[ReqHeaderContentLength])
 		}
 		return len(bodyPart) >= expectedLen, nil
 	}
@@ -295,9 +303,9 @@ func ParseRequest(data []byte) (*Request, error) {
 		req.Headers = parts[2:]
 	}
 
-	// Validate Content-Length if present (header index 1)
-	if len(req.Headers) > 1 && req.Headers[1] != "" {
-		expectedLen, err := strconv.Atoi(req.Headers[1])
+	// Validate Content-Length if present (header index 3)
+	if len(req.Headers) > ReqHeaderContentLength && req.Headers[ReqHeaderContentLength] != "" {
+		expectedLen, err := strconv.Atoi(req.Headers[ReqHeaderContentLength])
 		if err == nil && len(body) < expectedLen {
 			return nil, errors.New("incomplete request: not all body data received")
 		}
