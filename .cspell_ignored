@@ -1,5 +1,9 @@
+Clickjacking
+SAMEORIGIN
+Zstandard
+abempty
+hostnames
+nosniff
 qotp
 subtag
 subtags
-abempty
-hostnames
