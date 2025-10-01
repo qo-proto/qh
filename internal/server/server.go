@@ -12,6 +12,25 @@ import (
 	"github.com/tbocek/qotp"
 )
 
+// Response header indices (for use with ResponseWithHeaders)
+// Example usage:
+//
+//	server.ResponseWithHeaders(200, protocol.JSON, body, map[int]string{
+//	    server.RespHeaderCacheControl: "max-age=3600",
+//	    server.RespHeaderCORS: "*",
+//	})
+const (
+	RespHeaderCacheControl    = 2  // Cache-Control directives
+	RespHeaderContentEncoding = 3  // Content encoding used (e.g., "gzip")
+	RespHeaderAuthorization   = 4  // Authorization info
+	RespHeaderCORS            = 5  // Access-Control-Allow-Origin
+	RespHeaderETag            = 6  // Entity tag for cache validation
+	RespHeaderDate            = 7  // Unix timestamp
+	RespHeaderCSP             = 8  // Content-Security-Policy
+	RespHeaderContentTypeOpts = 9  // X-Content-Type-Options
+	RespHeaderFrameOptions    = 10 // X-Frame-Options
+)
+
 // handles QH requests
 type Handler func(*protocol.Request) *protocol.Response
 
@@ -145,26 +164,43 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	}
 }
 
+// Minimal response
 func Response(statusCode int, contentType protocol.ContentType, body []byte) *protocol.Response {
-	// Initialize ordered headers for the response; index [1] is Content-Length and must reflect body size
-	// Fields are joined with null byte separators by protocol.Response.Format().
+	return &protocol.Response{ // required headers only
+		Version:    protocol.Version,
+		StatusCode: statusCode,
+		Headers: []string{
+			strconv.Itoa(int(contentType)), // [0] Content-Type (as code)
+			strconv.Itoa(len(body)),        // [1] Content-Length
+		},
+		Body: body,
+	}
+}
+
+func ResponseWithHeaders(statusCode int, contentType protocol.ContentType, body []byte, extraHeaders map[int]string) *protocol.Response {
+	// Find highest header index we need
+	maxIdx := 1
+	for idx := range extraHeaders {
+		if idx > maxIdx {
+			maxIdx = idx
+		}
+	}
+
+	headers := make([]string, maxIdx+1)                     // initialize with empty strings
+	headers[0] = strconv.Itoa(int(contentType))             // [0] Content-Type
+	headers[1] = strconv.Itoa(len(body))                    // [1] Content-Length
+	if _, exists := extraHeaders[RespHeaderDate]; !exists { // TODO: should we keep the Date header and also make it not overwritable?
+		headers[RespHeaderDate] = strconv.FormatInt(time.Now().Unix(), 10)
+	}
+	for idx, val := range extraHeaders {
+		headers[idx] = val
+	}
+
 	return &protocol.Response{
 		Version:    protocol.Version,
 		StatusCode: statusCode,
-		Headers: []string{ // Ordered headers by position (must match ResponseHeaderNames in protocol/types.go)
-			strconv.Itoa(int(contentType)),           // [0] Content-Type (as code)
-			strconv.Itoa(len(body)),                  // [1] Content-Length
-			"",                                       // [2] Cache-Control (empty for now, e.g., "max-age=3600", "no-cache")
-			"",                                       // [3] Content-Encoding (empty unless compression is used, e.g., "gzip")
-			"",                                       // [4] Authorization (typically in requests, not responses)
-			"",                                       // [5] Access-Control-Allow-Origin (empty unless CORS needed, e.g., "*")
-			"",                                       // [6] ETag (empty unless using cache validation, e.g., "abc123")
-			strconv.FormatInt(time.Now().Unix(), 10), // [7] Date (Unix timestamp)
-			"default-src 'self'",                     // [8] Content-Security-Policy (reasonable secure default)
-			"nosniff",                                // [9] X-Content-Type-Options (always nosniff)
-			"SAMEORIGIN",                             // [10] X-Frame-Options (allow same-origin framing)
-		},
-		Body: body,
+		Headers:    headers,
+		Body:       body,
 	}
 }
 
