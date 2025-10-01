@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 )
 
 // Response header indices (for use with ResponseWithHeaders)
+// Note: RespHeaderDate is always set automatically and cannot be overridden.
 // Example usage:
 //
 //	server.ResponseWithHeaders(200, protocol.JSON, body, map[int]string{
@@ -168,22 +170,23 @@ func Response(statusCode int, contentType protocol.ContentType, body []byte) *pr
 
 func ResponseWithHeaders(statusCode int, contentType protocol.ContentType, body []byte, extraHeaders map[int]string) *protocol.Response {
 	maxIdx := 1
-	if _, exists := extraHeaders[protocol.RespHeaderDate]; !exists && protocol.RespHeaderDate > maxIdx {
-		maxIdx = protocol.RespHeaderDate
-	}
 	for idx := range extraHeaders {
-		if idx > maxIdx {
+		if idx != protocol.RespHeaderDate && idx > maxIdx {
 			maxIdx = idx
 		}
 	}
-	headers := make([]string, maxIdx+1)                              // initialize with empty strings
-	headers[0] = strconv.Itoa(int(contentType))                      // [0] Content-Type
-	headers[1] = strconv.Itoa(len(body))                             // [1] Content-Length
-	if _, exists := extraHeaders[protocol.RespHeaderDate]; !exists { // TODO: should we keep the Date header and also make it not overwritable?
-		headers[protocol.RespHeaderDate] = strconv.FormatInt(time.Now().Unix(), 10)
+	if protocol.RespHeaderDate > maxIdx {
+		maxIdx = protocol.RespHeaderDate
 	}
+	headers := make([]string, maxIdx+1)         // initialize with empty strings
+	headers[0] = strconv.Itoa(int(contentType)) // [0] Content-Type
+	headers[1] = strconv.Itoa(len(body))        // [1] Content-Length
+	// TODO: see if it makes sense to always include the Date
+	headers[protocol.RespHeaderDate] = time.Now().UTC().Format(http.TimeFormat) // Always set Date header
 	for idx, val := range extraHeaders {
-		headers[idx] = val
+		if idx != protocol.RespHeaderDate { // Prevent user from overriding Date
+			headers[idx] = val
+		}
 	}
 
 	return &protocol.Response{
