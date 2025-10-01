@@ -62,7 +62,6 @@ type Request struct {
 	Host    string
 	Path    string
 	Version uint8
-	// TODO: Add ContentType to request headers
 	Headers []string // Ordered headers by position
 	Body    []byte
 }
