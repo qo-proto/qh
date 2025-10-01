@@ -1,10 +1,10 @@
+// Package client implements a QH protocol client over QOTP transport.
 package client
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net"
 	"strconv"
@@ -61,7 +61,7 @@ func (c *Client) Connect(addr string) error {
 		return fmt.Errorf("failed to connect to %s: %w", ipAddr, err)
 	}
 	c.conn = conn
-	log.Printf("Connected to QH server at %s (resolved to %s)", addr, ipAddr)
+	slog.Info("Connected to QH server", "addr", addr, "resolved", ipAddr)
 	return nil
 }
 
