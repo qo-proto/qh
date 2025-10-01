@@ -288,12 +288,12 @@ The following table defines the order and meaning of request headers.
 
 Note: `Host` is not included as it appears in the start-line of the request, not as a header.
 
-| Order | Header            | Description                                | Example                           |
+| Index | Header            | Description                                | Example                           |
 | ----- | ----------------- | ------------------------------------------ | --------------------------------- |
-| 1     | `Accept`          | Media types the client can process.        | `text/html,application/xhtml+xml` |
-| 2     | `Accept-Encoding` | Content-coding the client can process.     | `gzip, deflate, br, zstd`         |
-| 3     | `Content-Type`    | Media type of the request body (POST/PUT). | `application/json`                |
-| 4     | `Content-Length`  | Size of the request body in bytes.         | `12`                              |
+| 0     | `Accept`          | Media types the client can process.        | `text/html,application/xhtml+xml` |
+| 1     | `Accept-Encoding` | Content-coding the client can process.     | `gzip, deflate, br, zstd`         |
+| 2     | `Content-Type`    | Media type of the request body (POST/PUT). | `application/json`                |
+| 3     | `Content-Length`  | Size of the request body in bytes.         | `12`                              |
 
 ![QH Message Format](./docs/images/header.svg)
 
