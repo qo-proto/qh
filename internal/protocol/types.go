@@ -3,6 +3,7 @@ package protocol
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -197,15 +198,8 @@ func ParseRequest(data []byte) (*Request, error) {
 		return nil, errors.New("invalid request: missing body separator")
 	}
 
-<<<<<<< HEAD
 	body := []byte(bodyPart)
 
-	parts := strings.Split(headerPart, "\x00")
-	if len(parts) < 3 { // host, path, version
-||||||| a4399a4
-	parts := strings.Split(headerPart, "\x00")
-	if len(parts) < 3 { // host, path, version
-=======
 	if len(headerPart) == 0 {
 		return nil, errors.New("invalid request: empty header part")
 	}
@@ -223,7 +217,6 @@ func ParseRequest(data []byte) (*Request, error) {
 	stringHeaderPart := headerPart[1:]
 	parts := strings.Split(stringHeaderPart, "\x00")
 	if len(parts) < 2 { // host, path
->>>>>>> main
 		return nil, errors.New("invalid request: not enough parts in header")
 	}
 

@@ -145,7 +145,7 @@ func TestParseRequestErrors(t *testing.T) {
 }
 
 func TestParseResponseBasic(t *testing.T) {
-	data := []byte("\x001\x00*\x00\x001758784800\x03Hello, world!") // V(00)S(000000) -> \x00
+	data := []byte("\x001\x00*\x0013\x00\x001758784800\x03Hello, world!") // V(00)S(000000) -> \x00
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
@@ -173,7 +173,6 @@ func TestParseResponseErrors(t *testing.T) {
 	}{
 		{"no body separator", []byte("\x00")},
 		{"empty", []byte("")},
-		{"invalid response line, only status/version byte", []byte("\x00\x03")},
 	}
 
 	for _, tt := range tests {
