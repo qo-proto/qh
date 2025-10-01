@@ -1,6 +1,6 @@
 # QH Protocol
 
-**Request for Comments: QH/1.0**
+**Request for Comments: QH/0**
 Category: Experimental
 Status: Draft
 
@@ -140,7 +140,7 @@ Resources made available via the "qh" scheme have no shared identity with resour
 
 ### 4.1 Methods
 
-QH Versoin 0 defines the following methods. The version and method are encoded in the first byte of the request message as follows:
+QH Version 0 defines the following methods. The version and method are encoded in the first byte of the request message as follows:
 
 - **Bits 6-7 (upper 2 bits):** Version
 - **Bits 3-5 (middle 3 bits):** Method
@@ -181,7 +181,7 @@ TODO: Add mermaid diagrams for simple get request, with/without headers, with bo
 
 ### 5.1 Status Codes
 
-QH/1.0 uses HTTP-compatible status codes but encodes them in a compact wire format for efficiency. Status codes are mapped to single-byte compact codes ordered by frequency of use.
+QH/0 uses HTTP-compatible status codes but encodes them in a compact wire format for efficiency. Status codes are mapped to single-byte compact codes ordered by frequency of use.
 
 The protocol supports standard HTTP status code categories:
 
