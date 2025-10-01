@@ -22,7 +22,7 @@ type Server struct {
 
 func NewServer() *Server {
 	return &Server{
-		handlers: make(map[string]map[protocol.Method]Handler), // path -> method -> handler
+		handlers: make(map[string]map[protocol.Method]Handler),
 	}
 }
 
