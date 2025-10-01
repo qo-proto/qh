@@ -16,7 +16,6 @@ const (
 	POST Method = 1
 )
 
-// String returns the string representation of the QH protocols method. Implements fmt.Stringer interface, used for logging and debugging.
 func (m Method) String() string {
 	switch m {
 	case GET:
@@ -278,11 +277,11 @@ func ParseRequest(data []byte) (*Request, error) {
 // ResponseHeaderNames maps the positional index of a response header to its name.
 // Most important headers for SPA functionality.
 var ResponseHeaderNames = map[int]string{
-	0:  "Content-Type",   // Required: How to parse the body
-	1:  "Content-Length", // Required: When response is complete
-	2:  "Cache-Control",  // Critical: Browser caching strategy for assets
+	0:  "Content-Type",
+	1:  "Content-Length",
+	2:  "Cache-Control",
 	3:  "Content-Encoding",
-	4:  "Authorization",               // JWT/Bearer tokens for API auth
+	4:  "Authorization",               // JWT/Bearer tokens
 	5:  "Access-Control-Allow-Origin", // CORS
 	6:  "ETag",                        // Optimization: Conditional requests
 	7:  "Date",                        // TODO: see if it makes sense to keep for debugging and logging
