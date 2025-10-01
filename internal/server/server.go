@@ -167,20 +167,15 @@ func Response(statusCode int, contentType protocol.ContentType, body []byte) *pr
 }
 
 func ResponseWithHeaders(statusCode int, contentType protocol.ContentType, body []byte, extraHeaders map[int]string) *protocol.Response {
-	// Find highest header index we need
 	maxIdx := 1
+	if _, exists := extraHeaders[protocol.RespHeaderDate]; !exists && protocol.RespHeaderDate > maxIdx {
+		maxIdx = protocol.RespHeaderDate
+	}
 	for idx := range extraHeaders {
 		if idx > maxIdx {
 			maxIdx = idx
 		}
 	}
-
-	if _, exists := extraHeaders[protocol.RespHeaderDate]; !exists {
-		if protocol.RespHeaderDate > maxIdx {
-			maxIdx = protocol.RespHeaderDate
-		}
-	}
-
 	headers := make([]string, maxIdx+1)                              // initialize with empty strings
 	headers[0] = strconv.Itoa(int(contentType))                      // [0] Content-Type
 	headers[1] = strconv.Itoa(len(body))                             // [1] Content-Length
