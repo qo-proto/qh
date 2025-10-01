@@ -125,6 +125,7 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 
 func (c *Client) GET(host, path string, contentType protocol.ContentType, otherHeaders ...string) (*protocol.Response, error) {
 	req := &protocol.Request{
+		Method:  protocol.GET,
 		Host:    host,
 		Path:    path,
 		Version: protocol.Version,
@@ -135,6 +136,7 @@ func (c *Client) GET(host, path string, contentType protocol.ContentType, otherH
 
 func (c *Client) POST(host, path, body string, contentType protocol.ContentType, otherHeaders ...string) (*protocol.Response, error) {
 	req := &protocol.Request{
+		Method:  protocol.POST,
 		Host:    host,
 		Path:    path,
 		Version: protocol.Version,

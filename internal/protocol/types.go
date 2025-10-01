@@ -3,17 +3,16 @@ package protocol
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
-const Version = "1.0"
+const Version = 0
 
 type Method int
 
 const (
-	GET  Method = 1
-	POST Method = 2
+	GET  Method = 0
+	POST Method = 1
 )
 
 // String returns the string representation of the QH protocols method. Implements fmt.Stringer interface, used for logging and debugging.
@@ -41,16 +40,17 @@ const (
 )
 
 type Request struct {
+	Method  Method
 	Host    string
 	Path    string
-	Version string
+	Version uint8
 	// TODO: Add ContentType to request headers
 	Headers []string // Ordered headers by position
 	Body    []byte
 }
 
 type Response struct {
-	Version    string
+	Version    uint8
 	StatusCode int
 	Headers    []string // Ordered headers by position
 	Body       []byte
@@ -58,16 +58,13 @@ type Response struct {
 
 // format QH request into wire format
 func (r *Request) Format() []byte {
-	var parts []string
+	// The first byte contains: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
+	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
+	firstByte := (r.Version << 6) | (byte(r.Method) << 3)
 
-	// Request line: <Host>\0<Path>\0<Version>
-	requestLine := fmt.Sprintf("%s\x00%s\x00%s", r.Host, r.Path, r.Version)
-	parts = append(parts, requestLine)
-
-	parts = append(parts, r.Headers...)
-
-	// Join header parts with null byte, and separate from body with End of Text char.
-	headerPart := strings.Join(parts, "\x00")
+	otherParts := []string{r.Host, r.Path}
+	otherParts = append(otherParts, r.Headers...)
+	headerPart := string(firstByte) + strings.Join(otherParts, "\x00")
 
 	// Build message: headers + ETX + body
 	result := []byte(headerPart)
@@ -78,15 +75,11 @@ func (r *Request) Format() []byte {
 
 // format QH response into wire format
 func (r *Response) Format() []byte {
-	var parts []string
-
 	compactStatus := EncodeStatusCode(r.StatusCode)
-	responseLine := fmt.Sprintf("%s\x00%d", r.Version, compactStatus)
-	parts = append(parts, responseLine)
+	// First byte: Version (upper 2 bits) + Status Code (lower 6 bits)
+	firstByte := (r.Version << 6) | compactStatus
 
-	parts = append(parts, r.Headers...)
-
-	headerPart := strings.Join(parts, "\x00")
+	headerPart := string(firstByte) + strings.Join(r.Headers, "\x00")
 
 	// Build message: headers + ETX + body
 	result := []byte(headerPart)
@@ -151,39 +144,38 @@ func ParseResponse(data []byte) (*Response, error) {
 
 	body := []byte(bodyPart)
 
-	parts := strings.Split(headerPart, "\x00")
-	if len(parts) < 2 { // version, status
-		return nil, errors.New("invalid response: empty")
+	if len(headerPart) == 0 {
+		return nil, errors.New("invalid response: empty header part")
 	}
 
-	// Validate required fields are not empty
-	if parts[0] == "" {
-		return nil, errors.New("invalid response: empty version")
-	}
-	if parts[1] == "" {
-		return nil, errors.New("invalid response: empty status code")
+	// First byte contains status and version
+	firstByte := headerPart[0]
+	version := firstByte >> 6               // Upper 2 bits
+	compactStatus := firstByte & 0b00111111 // Lower 6 bits
+
+	if version > 3 { // 2 bits can hold values 0-3
+		return nil, fmt.Errorf("invalid version: %d", version)
 	}
 
-	compactStatus, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return nil, fmt.Errorf("invalid status code: %s", parts[1])
-	}
+	httpStatusCode := DecodeStatusCode(compactStatus)
 
-	if compactStatus < 0 || compactStatus > 255 {
-		return nil, fmt.Errorf("compact status code out of range: %d", compactStatus)
+	// The rest of the header part is null-separated strings.
+	stringHeaderPart := headerPart[1:]
+	var parts []string
+	// Only split if there's content, otherwise parts will be `[""]` which is not what we want.
+	// We want an empty slice if there are no headers.
+	if stringHeaderPart != "" {
+		parts = strings.Split(stringHeaderPart, "\x00")
 	}
-
-	httpStatusCode := DecodeStatusCode(uint8(compactStatus))
 
 	resp := &Response{
-		Version:    parts[0],
+		Version:    version,
 		StatusCode: httpStatusCode,
 		Body:       body,
 	}
 
-	// The rest of the parts are headers
-	if len(parts) > 2 {
-		resp.Headers = parts[2:]
+	if len(parts) > 0 {
+		resp.Headers = parts
 	}
 
 	// Validate Content-Length if present (header index 2)
@@ -205,19 +197,39 @@ func ParseRequest(data []byte) (*Request, error) {
 		return nil, errors.New("invalid request: missing body separator")
 	}
 
+<<<<<<< HEAD
 	body := []byte(bodyPart)
 
 	parts := strings.Split(headerPart, "\x00")
 	if len(parts) < 3 { // host, path, version
+||||||| a4399a4
+	parts := strings.Split(headerPart, "\x00")
+	if len(parts) < 3 { // host, path, version
+=======
+	if len(headerPart) == 0 {
+		return nil, errors.New("invalid request: empty header part")
+	}
+
+	// The first byte contains the method (lower 3 bits) and version (upper 5 bits).
+	firstByte := headerPart[0]
+	version := firstByte >> 6                       // Extract upper 2 bits
+	method := Method((firstByte >> 3) & 0b00000111) // Extract middle 3 bits
+
+	if method != GET && method != POST {
+		return nil, fmt.Errorf("invalid method value: %d", method)
+	}
+
+	// The rest of the header part is null-separated strings.
+	stringHeaderPart := headerPart[1:]
+	parts := strings.Split(stringHeaderPart, "\x00")
+	if len(parts) < 2 { // host, path
+>>>>>>> main
 		return nil, errors.New("invalid request: not enough parts in header")
 	}
 
 	// Validate required fields are not empty
 	if parts[0] == "" {
 		return nil, errors.New("invalid request: empty host")
-	}
-	if parts[2] == "" {
-		return nil, errors.New("invalid request: empty version")
 	}
 
 	// Default empty path to root
@@ -227,16 +239,46 @@ func ParseRequest(data []byte) (*Request, error) {
 	}
 
 	req := &Request{
+		Method:  method,
 		Host:    parts[0],
 		Path:    path,
-		Version: parts[2],
+		Version: version,
 		Body:    body,
 	}
 
 	// The rest of the parts are headers
-	if len(parts) > 3 {
-		req.Headers = parts[3:]
+	if len(parts) > 2 {
+		req.Headers = parts[2:]
 	}
 
 	return req, nil
+}
+
+// ResponseHeaderNames maps the positional index of a response header to its name.
+var ResponseHeaderNames = map[int]string{
+	0: "Access-Control-Allow-Origin",
+	1: "Content-Length",
+	2: "Content-Encoding",
+	3: "Content-Type",
+	4: "Date",
+	5: "Content-Language",
+	6: "Fragment-Offset",
+	7: "Fragment-Request-ID",
+	8: "Connection",
+}
+
+// FormatHeaders takes a slice of response header values and returns a formatted string for logging.
+func (r *Response) FormatHeaders() string {
+	if len(r.Headers) == 0 {
+		return "  (no headers)"
+	}
+	var builder strings.Builder
+	for i, value := range r.Headers {
+		name, ok := ResponseHeaderNames[i]
+		if !ok {
+			name = fmt.Sprintf("Unknown-Header-%d", i)
+		}
+		builder.WriteString(fmt.Sprintf("  %s: %q\n", name, value))
+	}
+	return strings.TrimSuffix(builder.String(), "\n")
 }
