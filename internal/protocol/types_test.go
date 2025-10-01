@@ -28,11 +28,11 @@ func TestRequestFormatWithBody(t *testing.T) {
 		Host:    "example.com",
 		Path:    "/submit",
 		Version: 0,
-		Headers: []string{"2"},
+		Headers: []string{"2", "16"},
 		Body:    []byte(`{"name": "test"}`),
 	}
 
-	expected := []byte("\x08example.com\x00/submit\x002\x03{\"name\": \"test\"}") // V(00)M(001)R(000) -> 00001000 -> \x08
+	expected := []byte("\x08example.com\x00/submit\x002\x0016\x03{\"name\": \"test\"}") // V(00)M(001)R(000) -> 00001000 -> \x08
 	actual := req.Format()
 
 	require.Equal(t, expected, actual)
@@ -42,11 +42,11 @@ func TestResponseFormat(t *testing.T) {
 	resp := &Response{
 		Version:    0,
 		StatusCode: 200,
-		Headers:    []string{"1", "*", "", "1758784800"},
+		Headers:    []string{"1", "13", "", "1758784800"},
 		Body:       []byte("Hello, world!"),
 	}
 
-	expected := []byte("\x001\x00*\x00\x001758784800\x03Hello, world!") // V(00)S(000000) -> 00000000 -> \x00
+	expected := []byte("\x001\x0013\x00\x001758784800\x03Hello, world!") // V(00)S(000000) -> 00000000 -> \x00
 	actual := resp.Format()
 
 	require.Equal(t, expected, actual)
@@ -79,7 +79,7 @@ func TestParseRequestBasic(t *testing.T) {
 }
 
 func TestParseRequestWithBody(t *testing.T) {
-	data := []byte("\x08example.com\x00/submit\x002\x03{\"name\": \"test\"}") // V(00)M(001)R(000) -> \x08
+	data := []byte("\x08example.com\x00/submit\x002\x0016\x03{\"name\": \"test\"}") // V(00)M(001)R(000) -> \x08
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -88,7 +88,7 @@ func TestParseRequestWithBody(t *testing.T) {
 	require.Equal(t, "example.com", req.Host)
 	require.Equal(t, "/submit", req.Path)
 	require.Equal(t, uint8(0), req.Version)
-	require.Equal(t, []string{"2"}, req.Headers)
+	require.Equal(t, []string{"2", "16"}, req.Headers)
 	require.JSONEq(t, `{"name": "test"}`, string(req.Body))
 }
 
@@ -145,13 +145,13 @@ func TestParseRequestErrors(t *testing.T) {
 }
 
 func TestParseResponseBasic(t *testing.T) {
-	data := []byte("\x001\x00*\x0013\x00\x001758784800\x03Hello, world!") // V(00)S(000000) -> \x00
+	data := []byte("\x001\x0013\x00\x001758784800\x03Hello, world!") // V(00)S(000000) -> \x00
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
 	require.Equal(t, uint8(0), resp.Version)
 	require.Equal(t, 200, resp.StatusCode)
-	require.Equal(t, []string{"1", "*", "13", "", "1758784800"}, resp.Headers)
+	require.Equal(t, []string{"1", "13", "", "1758784800"}, resp.Headers)
 	require.Equal(t, []byte("Hello, world!"), resp.Body)
 }
 

@@ -112,15 +112,39 @@ func IsRequestComplete(data []byte) (bool, error) {
 		return false, nil
 	}
 
-	parts := strings.Split(headerPart, "\x00")
-	if len(parts) < 3 {
+	if len(headerPart) == 0 {
 		return false, nil
 	}
 
-	if len(bodyPart) == 0 {
-		return true, nil
+	// Skip first byte (version + method), then split remaining header fields
+	stringHeaderPart := headerPart[1:]
+	if stringHeaderPart == "" {
+		// Need at least host and path, which can't be present if header part after first byte is empty
+		return false, nil
 	}
 
+	parts := strings.Split(stringHeaderPart, "\x00")
+	// Expect at least host and path
+	if len(parts) < 2 {
+		return false, nil
+	}
+
+	// Headers follow host and path
+	var headers []string
+	if len(parts) > 2 {
+		headers = parts[2:]
+	}
+
+	// If a Content-Length header is present (index 1 in ordered headers), enforce it
+	if len(headers) > 1 && headers[1] != "" {
+		expectedLen, err := strconv.Atoi(headers[1])
+		if err != nil {
+			return false, fmt.Errorf("invalid Content-Length: %s", headers[1])
+		}
+		return len(bodyPart) >= expectedLen, nil
+	}
+
+	// No Content-Length provided; treat as complete once headers and separator are present
 	return true, nil
 }
 
@@ -269,6 +293,14 @@ func ParseRequest(data []byte) (*Request, error) {
 	// The rest of the parts are headers
 	if len(parts) > 2 {
 		req.Headers = parts[2:]
+	}
+
+	// Validate Content-Length if present (header index 1)
+	if len(req.Headers) > 1 && req.Headers[1] != "" {
+		expectedLen, err := strconv.Atoi(req.Headers[1])
+		if err == nil && len(body) < expectedLen {
+			return nil, errors.New("incomplete request: not all body data received")
+		}
 	}
 
 	return req, nil

@@ -135,14 +135,22 @@ func (c *Client) GET(host, path string, contentType protocol.ContentType, otherH
 }
 
 func (c *Client) POST(host, path, body string, contentType protocol.ContentType, otherHeaders ...string) (*protocol.Response, error) {
+	bodyBytes := []byte(body)
+	headers := []string{
+		strconv.Itoa(int(contentType)), // [0] Content-Type
+		strconv.Itoa(len(bodyBytes)),   // [1] Content-Length
+	}
+	if len(otherHeaders) > 0 {
+		headers = append(headers, otherHeaders...)
+	}
+
 	req := &protocol.Request{
 		Method:  protocol.POST,
 		Host:    host,
 		Path:    path,
 		Version: protocol.Version,
-		// The first header for a POST request is the Content-Type of the body.
-		Headers: append([]string{strconv.Itoa(int(contentType))}, otherHeaders...),
-		Body:    []byte(body),
+		Headers: headers,
+		Body:    bodyBytes,
 	}
 	return c.Request(req)
 }

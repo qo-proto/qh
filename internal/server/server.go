@@ -17,7 +17,7 @@ type Handler func(*protocol.Request) *protocol.Response
 
 type Server struct {
 	listener *qotp.Listener
-	handlers map[string]map[protocol.Method]Handler // path -> method -> handler, where method is inferred
+	handlers map[string]map[protocol.Method]Handler // path -> method -> handler (method parsed from request first byte)
 }
 
 func NewServer() *Server {
@@ -146,10 +146,10 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 }
 
 func Response(statusCode int, contentType protocol.ContentType, body []byte) *protocol.Response {
-	// Initialize headers slice with fixed size, filling with empty strings
-	// Using a null byte separator for the start-line components.
+	// Initialize ordered headers for the response; index [1] is Content-Length and must reflect body size
+	// Fields are joined with null byte separators by protocol.Response.Format().
 	return &protocol.Response{
-		Version:    0,
+		Version:    protocol.Version,
 		StatusCode: statusCode,
 		Headers: []string{ // Ordered headers by position (must match ResponseHeaderNames in protocol/types.go)
 			strconv.Itoa(int(contentType)),           // [0] Content-Type (as code)

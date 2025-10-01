@@ -160,7 +160,7 @@ For QH/0, the version number is `0`. So, a GET request uses `\x00` (00000000) an
 A request message has the following structure:
 
 ```text
-<1-byte-field><Host>\0<Path>\0<Header-Value-1>\0...<Header-Value-N>\x03<Body>\x04
+<1-byte-field><Host>\0<Path>\0<Header-Value-1>\0...<Header-Value-N>\x03<Body>
 ```
 
 Where:
@@ -171,14 +171,16 @@ Where:
 - `Header-Value-N`: Header values in a predefined order.
 - The separator for all string-based fields is a null byte (`\0`).
 - The separator between headers and body is the End of Text character (`\x03`)
-- The end of the entire message is marked by the End of Transmission character (`\x04`)
+- Content-Length: When a request includes a body, the Content-Length header (header index 1) MUST specify the exact number of bytes in the body.
+- Requests without a body (e.g., GET) SHOULD omit Content-Length and the body is considered empty.
+- Completeness: A request is considered complete once headers and the ETX (`\x03`) separator are received; if Content-Length is present, the receiver waits until the body size matches Content-Length.
 
 ### 4.3 Request Examples
 
 **Simple GET request:**
 
 ```text
-\x00example.com\0/hello.txt\x03\x04
+\x00example.com\0/hello.txt\x03
 ```
 
 **GET request with headers:**
@@ -187,17 +189,17 @@ Where:
 example.com\0/hello.txt\01.0\0
 text/html,application/xhtml+xml\0
 en-US,en;q=0.5\0
-\x03\x04
+\x03
 ```
 
 **POST request with body:**
 
 ```text
-example.com\0/submit\01.0\0
+example.com\0/submit\0
 application/json\0
+12\0
 \x03
 {"name": "test"}
-\x04
 ```
 
 ## 5. Response
@@ -285,7 +287,7 @@ The following status codes are supported with their compact wire format encoding
 A response message has the following structure:
 
 ```text
-<1-byte-field><Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>\x04
+<1-byte-field><Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>
 ```
 
 Where:
@@ -293,7 +295,7 @@ Where:
 - `Header-Value-N`: Header values in predefined order
 - The separator for all fields is a null byte (`\0`)
 - The separator between headers and body is the End of Text character (`\x03`)
-- The end of the entire message is marked by the End of Transmission character (`\x04`)
+- Content-Length: When a response includes a body, the Content-Length header (header index 1) MUST specify the exact number of bytes in the body. Receivers use Content-Length to determine completeness.
 
 ### 5.3 Response Examples
 
@@ -303,7 +305,6 @@ Where:
 1.0\01\0
 \x03
 Hello, world!
-\x04
 ```
 
 **Response with headers:**
@@ -314,7 +315,6 @@ Hello, world!
 text/plain\0
 \x03
 Hello, world!
-\x04
 ```
 
 **Empty response (No Content):**
@@ -322,7 +322,6 @@ Hello, world!
 ```text
 1.0\013\0
 \x03
-\x04
 ```
 
 **Error response:**
@@ -331,7 +330,6 @@ Hello, world!
 1.0\02\0
 \x03
 Page not found
-\x04
 ```
 
 ## 6. Headers
