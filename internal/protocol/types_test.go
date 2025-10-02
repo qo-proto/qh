@@ -202,3 +202,5 @@ func TestMethodString(t *testing.T) {
 		})
 	}
 }
+
+// TODO: add tests for IsRequestComplete and IsResponseComplete
