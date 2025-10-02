@@ -72,9 +72,16 @@ func main() {
 
 		logResponse(req.method, req.path, response)
 
-		// save image
-		if req.path == "/image" {
-			filename := "downloaded_cloud.jpeg"
+		// save files
+		var filename string
+		switch req.path {
+		case "/file":
+			filename = "examples/client/downloaded_files/file_response.txt"
+		case "/image":
+			filename = "examples/client/downloaded_files/downloaded_cloud.jpeg"
+		}
+
+		if filename != "" {
 			if err := os.WriteFile(filename, response.Body, 0o600); err != nil {
 				slog.Error("Failed to save file", "path", filename, "error", err)
 			} else {
