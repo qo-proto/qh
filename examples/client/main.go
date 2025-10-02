@@ -23,6 +23,8 @@ func main() {
 	// ptr is a helper to create a pointer to a string literal.
 	ptr := func(s string) *string { return &s }
 
+	largePayload := strings.Repeat("LARGE_DATA_", 20000) // ~200KB
+
 	requests := []struct {
 		method string
 		path   string
@@ -33,6 +35,7 @@ func main() {
 		{method: "GET", path: "/api/user"}, // JSON response
 		{method: "POST", path: "/echo", body: ptr("Hello QH World!")},
 		{method: "POST", path: "/data", body: ptr("Updated data!")},
+		{method: "POST", path: "/large-post", body: &largePayload},
 		{method: "GET", path: "/file"},
 		{method: "GET", path: "/image"},
 		{method: "GET", path: "/not-found"}, // This will trigger a 404

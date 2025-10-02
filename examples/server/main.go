@@ -42,6 +42,12 @@ func main() {
 		return server.TextResponse(200, response)
 	})
 
+	srv.HandleFunc("/large-post", protocol.POST, func(req *protocol.Request) *protocol.Response {
+		slog.Info("Handling large POST request", "method", "POST", "path", "/large-post", "body_size", len(req.Body))
+		response := fmt.Sprintf("Received %d bytes successfully", len(req.Body))
+		return server.TextResponse(200, response)
+	})
+
 	srv.HandleFunc("/file", protocol.GET, func(_ *protocol.Request) *protocol.Response {
 		slog.Info("Handling request", "method", "GET", "path", "/file")
 		content, err := os.ReadFile("examples/server/files/text.txt")
