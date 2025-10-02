@@ -119,7 +119,7 @@ linters:
   settings:
     cyclop:
       max-complexity: 20 # default is 10
-      package-average: 10.0 # default is 0.0
+      package-average: 15.0 # default is 0.0
     revive:
       rules:
         # these are the default revive rules

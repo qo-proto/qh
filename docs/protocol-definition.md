@@ -319,6 +319,9 @@ Note: `Host` is not included as it appears in the start-line of the request, not
 | 2     | `Content-Type`    | Media type of the request body (POST/PUT). | `application/json`                |
 | 3     | `Content-Length`  | Size of the request body in bytes.         | `12`                              |
 
+- For GET requests, `Content-Type` and `Content-Length` are empty and not needed.
+- For POST requests, `Content-Type` is required and `Content-Length` is calculated from the body.
+
 ![QH Message Format](./docs/images/header.svg)
 
 ### 6.2 Response Headers
