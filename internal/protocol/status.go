@@ -1,6 +1,6 @@
 package protocol
 
-// TODO: default print error messages in the body like in http?
+// TODO: default print error messages in the body like in http (no need to set body message manually for statusCodes)
 
 // map common HTTP status codes to a compact wire format, ordered by frequency
 var StatusToCompact = map[int]uint8{

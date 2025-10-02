@@ -147,6 +147,9 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	}
 }
 
+// TODO: determine content type and convert body to bytes if needed
+// so no need to manually write []byte: server.Response(404, protocol.TextPlain, []byte("Not Found"))
+
 // Minimal response
 func Response(statusCode int, contentType protocol.ContentType, body []byte) *protocol.Response {
 	return &protocol.Response{ // required headers only
