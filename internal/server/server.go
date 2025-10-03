@@ -147,7 +147,7 @@ func (s *Server) validateContentType(request *protocol.Request, stream *qotp.Str
 		// Content-Type missing or empty, default to octet-stream
 		slog.Debug("Content-Type missing for POST, defaulting to octet-stream")
 		s.ensureHeadersSize(request, protocol.ReqHeaderContentType)
-		request.Headers[protocol.ReqHeaderContentType] = "4" // octet-stream (default)
+		request.Headers[protocol.ReqHeaderContentType] = strconv.Itoa(int(protocol.OctetStream)) // default
 		return nil
 	}
 

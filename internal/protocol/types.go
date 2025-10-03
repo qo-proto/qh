@@ -262,8 +262,8 @@ func ParseResponse(data []byte) (*Response, error) {
 	// Validate Content-Length if present (header index 1)
 	if len(resp.Headers) > 1 && resp.Headers[1] != "" {
 		expectedLen, err := strconv.Atoi(resp.Headers[1])
-		if err == nil && len(body) < expectedLen {
-			return nil, errors.New("incomplete response: not all body data received")
+		if err == nil && len(body) != expectedLen {
+			return nil, errors.New("invalid response: body length does not match Content-Length")
 		}
 	}
 
@@ -327,8 +327,8 @@ func ParseRequest(data []byte) (*Request, error) {
 	// Validate Content-Length if present (header index 3)
 	if len(req.Headers) > ReqHeaderContentLength && req.Headers[ReqHeaderContentLength] != "" {
 		expectedLen, err := strconv.Atoi(req.Headers[ReqHeaderContentLength])
-		if err == nil && len(body) < expectedLen {
-			return nil, errors.New("incomplete request: not all body data received")
+		if err == nil && len(body) != expectedLen {
+			return nil, errors.New("invalid request: body length does not match Content-Length")
 		}
 	}
 
