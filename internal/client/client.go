@@ -92,7 +92,11 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 		}
 
 		chunk, err := s.Read()
-		if err != nil || len(chunk) == 0 {
+		if err != nil {
+			slog.Debug("Read error in response loop", "error", err)
+			return true
+		}
+		if len(chunk) == 0 {
 			return true
 		}
 

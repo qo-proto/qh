@@ -194,10 +194,7 @@ func IsResponseComplete(data []byte) (bool, error) {
 		return false, nil
 	}
 
-	var headers []string
-	if len(parts) > 0 {
-		headers = parts
-	}
+	headers := parts
 
 	// If Content-Length header is present (index 1 in ordered headers), enforce it
 	if len(headers) > RespHeaderContentLength && headers[RespHeaderContentLength] != "" {
