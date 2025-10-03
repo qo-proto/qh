@@ -56,13 +56,13 @@ func main() {
 		var err error
 		switch req.method {
 		case "GET":
-			response, err = c.GET(hostname, req.path, "text/html,application/json,text/plain", "")
+			response, err = c.GET(hostname, req.path, "3,2,1", "") // Accept: HTML, JSON, text/plain
 		case "POST":
 			body := ""
 			if req.body != nil {
 				body = *req.body
 			}
-			response, err = c.POST(hostname, req.path, body, "application/json,text/plain", "", protocol.TextPlain)
+			response, err = c.POST(hostname, req.path, body, "2,1", "", protocol.TextPlain) // Accept: JSON, text/plain
 		default:
 			slog.Error("Unsupported method", "method", req.method, "path", req.path)
 			continue
@@ -116,8 +116,7 @@ func logResponse(method, path string, response *protocol.Response) {
 	if len(response.Headers) > 0 && response.Headers[0] != "" {
 		contentTypeCode, err := strconv.Atoi(response.Headers[0])
 		if err == nil {
-			contentType := protocol.ContentType(contentTypeCode)
-			sb.WriteString(fmt.Sprintf("Content:    %s\n", contentType.String()))
+			sb.WriteString(fmt.Sprintf("Content:    %s\n", protocol.ContentType(contentTypeCode).String()))
 		}
 	}
 

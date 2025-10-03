@@ -101,6 +101,12 @@ Content types are encoded as single-digit numeric codes (0-15, using 4 bits) in 
 
 The numeric code is transmitted as an ASCII digit string in the Content-Type header field (e.g., `"2"` for JSON).
 
+**Content-Type Header Behavior:**
+
+- Following HTTP conventions, Content-Type is **recommended but not mandatory** for POST requests
+- If missing, the server defaults to code 4 (application/octet-stream)
+- If present, the value must be a valid code (0-15), otherwise the server returns 415 Unsupported Media Type
+
 ### 2.3 Content Encoding
 
 QH supports content encoding negotiation via the `Accept-Encoding` request header. This allows clients to indicate which compression algorithms they support for response bodies.
@@ -327,15 +333,18 @@ The following table defines the order and meaning of request headers.
 
 Note: `Host` is not included as it appears in the start-line of the request, not as a header.
 
-| Index | Header            | Description                                 | Example                           |
-| ----- | ----------------- | ------------------------------------------- | --------------------------------- |
-| 0     | `Accept`          | Media types the client can process.         | `text/html,application/xhtml+xml` |
-| 1     | `Accept-Encoding` | Content-coding the client can process.      | `gzip, deflate, br, zstd`         |
-| 2     | `Content-Type`    | Numeric content type code (see Section 2.2) | `2` (for JSON)                    |
-| 3     | `Content-Length`  | Size of the request body in bytes.          | `12`                              |
+| Index | Header            | Description                                                     | Example                    |
+| ----- | ----------------- | --------------------------------------------------------------- | -------------------------- |
+| 0     | `Accept`          | Comma-separated numeric codes of media types client can process | `3,2,1` (HTML, JSON, text) |
+| 1     | `Accept-Encoding` | Content-coding the client can process                           | `gzip, deflate, br, zstd`  |
+| 2     | `Content-Type`    | Numeric content type code (see Section 2.2)                     | `2` (for JSON)             |
+| 3     | `Content-Length`  | Size of the request body in bytes                               | `12`                       |
+
+**Notes:**
 
 - For GET requests, `Content-Type` and `Content-Length` are empty and not needed.
-- For POST requests, `Content-Type` is required (as a numeric code) and `Content-Length` is calculated from the body.
+- For POST requests, `Content-Type` is recommended but not required (defaults to code 4 - octet-stream if missing). `Content-Length` is calculated from the body.
+- Accept header uses numeric codes (e.g., `3,2,1`) instead of MIME strings for compactness. `text/html,application/json,text/plain` becomes `3,2,1`.
 
 ![QH Message Format](./docs/images/header.svg)
 

@@ -27,6 +27,8 @@ func (m Method) String() string {
 	}
 }
 
+// TODO: maybe add a helper method protocol.AcceptHeader() to use types directly in the client
+// e.g. protocol.AcceptHeader(protocol.JSON, protocol.TextPlain) and not "1,2"
 type ContentType int
 
 const (
@@ -38,6 +40,10 @@ const (
 	OctetStream ContentType = 4
 	// ... up to 15
 )
+
+func IsValidContentType(code int) bool {
+	return code >= 0 && code <= 15
+}
 
 func (ct ContentType) String() string {
 	switch ct {

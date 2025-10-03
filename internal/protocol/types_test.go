@@ -203,4 +203,28 @@ func TestMethodString(t *testing.T) {
 	}
 }
 
+func TestIsValidContentType(t *testing.T) {
+	tests := []struct {
+		name  string
+		code  int
+		valid bool
+	}{
+		{"Custom", 0, true},
+		{"TextPlain", 1, true},
+		{"JSON", 2, true},
+		{"HTML", 3, true},
+		{"OctetStream", 4, true},
+		{"MaxValid", 15, true},
+		{"TooHigh", 16, false},
+		{"Invalid99", 99, false},
+		{"Negative", -1, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.valid, IsValidContentType(tt.code))
+		})
+	}
+}
+
 // TODO: add tests for IsRequestComplete and IsResponseComplete
