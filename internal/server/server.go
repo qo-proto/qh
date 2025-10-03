@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -186,7 +185,7 @@ func ResponseWithHeaders(statusCode int, contentType protocol.ContentType, body 
 	headers[0] = strconv.Itoa(int(contentType)) // [0] Content-Type
 	headers[1] = strconv.Itoa(len(body))        // [1] Content-Length
 	// TODO: see if it makes sense to always include the Date
-	headers[protocol.RespHeaderDate] = time.Now().UTC().Format(http.TimeFormat) // Always set Date header
+	headers[protocol.RespHeaderDate] = strconv.FormatInt(time.Now().Unix(), 10) // Unix timestamp
 	for idx, val := range extraHeaders {
 		if idx != protocol.RespHeaderDate { // Prevent user from overriding Date
 			headers[idx] = val
