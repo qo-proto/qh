@@ -23,7 +23,8 @@ func main() {
 	// ptr is a helper to create a pointer to a string literal.
 	ptr := func(s string) *string { return &s }
 
-	largePayload := strings.Repeat("LARGE_DATA_", 20000) // ~200KB
+	largePayload := strings.Repeat("LARGE_DATA_", 20000) // ~220KB
+	slog.Info("Prepared large payload", "size_bytes", len(largePayload))
 
 	requests := []struct {
 		method string
@@ -99,9 +100,8 @@ func main() {
 func logResponse(method, path string, response *protocol.Response) {
 	// Format the successful response for better readability
 	var formattedDate string
-	// The date is the 8th header (index 7)
-	if len(response.Headers) > 7 && response.Headers[7] != "" {
-		unixTime, err := strconv.ParseInt(response.Headers[7], 10, 64)
+	if len(response.Headers) > protocol.RespHeaderDate && response.Headers[protocol.RespHeaderDate] != "" {
+		unixTime, err := strconv.ParseInt(response.Headers[protocol.RespHeaderDate], 10, 64)
 		if err == nil {
 			// Format to DD.MM.YYYY HH:MM
 			formattedDate = time.Unix(unixTime, 0).Format("02.01.2006 15:04")
