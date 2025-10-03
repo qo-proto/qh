@@ -143,6 +143,7 @@ func (c *Client) GET(host, path string, accept, acceptEncoding string) (*protoco
 	return c.Request(req)
 }
 
+// TODO: implement accept & acceptEncoding
 func (c *Client) POST(host, path, body string, accept, acceptEncoding string, contentType protocol.ContentType) (*protocol.Response, error) {
 	bodyBytes := []byte(body)
 	headers := make([]string, 4)
