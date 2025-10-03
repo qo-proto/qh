@@ -55,7 +55,6 @@ var StatusToCompact = map[int]uint8{
 
 var CompactToStatus map[uint8]int // reverse mapping for decoding
 
-// TODO: maybe use manual reverse map over init method
 func init() {
 	CompactToStatus = make(map[uint8]int, len(StatusToCompact))
 	for httpCode, compactCode := range StatusToCompact {

@@ -31,7 +31,6 @@ linters:
     - canonicalheader # checks whether net/http.Header uses canonical header
     - copyloopvar # detects places where loop variables are copied (Go 1.22+)
     - cyclop # checks function and package cyclomatic complexity
-    - dupl # tool for code clone detection
     - dupword # checks for duplicate words in the source code
     - durationcheck # checks for two durations multiplied together
     - embeddedstructfieldcheck # checks embedded types in structs
@@ -97,6 +96,7 @@ linters:
     ## other linters, that could make sense
     #- arangolint # opinionated best practices for arangodb client
     #- decorder # checks declaration order and count of types, constants, variables and functions
+    #- dupl # tool for code clone detection
     #- exhaustruct # [highly recommend to enable] checks if all structure fields are initialized
     #- funlen # tool for detection of long functions
     #- ginkgolinter # [if you use ginkgo/gomega] enforces standards of using ginkgo and gomega
