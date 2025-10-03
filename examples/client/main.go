@@ -24,7 +24,6 @@ func main() {
 	ptr := func(s string) *string { return &s }
 
 	largePayload := strings.Repeat("LARGE_DATA_", 20000) // ~220KB
-	slog.Info("Prepared large payload", "size_bytes", len(largePayload))
 
 	requests := []struct {
 		method string
