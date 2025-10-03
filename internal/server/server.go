@@ -117,28 +117,9 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 		return
 	}
 
-	// Validate Content-Type for POST requests (HTTP behavior)
-	if request.Method == protocol.POST {
-		// if content-type header is missing or empty, default to octet-stream
-		if len(request.Headers) <= protocol.ReqHeaderContentType || request.Headers[protocol.ReqHeaderContentType] == "" {
-			slog.Debug("Content-Type missing for POST, defaulting to octet-stream")
-			// Ensure headers array is large enough
-			if len(request.Headers) <= protocol.ReqHeaderContentType {
-				newHeaders := make([]string, protocol.ReqHeaderContentType+1)
-				copy(newHeaders, request.Headers)
-				request.Headers = newHeaders
-			}
-			request.Headers[protocol.ReqHeaderContentType] = "4" // octet-stream (default)
-		} else {
-			// If Content-Type is present, validate it's in valid range (0-15)
-			contentTypeStr := request.Headers[protocol.ReqHeaderContentType]
-			contentType, parseErr := strconv.Atoi(contentTypeStr)
-			if parseErr != nil || !protocol.IsValidContentType(contentType) {
-				slog.Error("Invalid Content-Type", "value", contentTypeStr)
-				s.sendErrorResponse(stream, 415, "Unsupported Media Type")
-				return
-			}
-		}
+	// Validate and normalize Content-Type for POST requests
+	if request.Method == protocol.POST && s.validateContentType(request, stream) != nil {
+		return // error response already sent
 	}
 
 	response := s.routeRequest(request) // execute according handler
@@ -155,6 +136,39 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	}
 
 	slog.Debug("Response sent, stream kept open for reuse")
+}
+
+func (s *Server) validateContentType(request *protocol.Request, stream *qotp.Stream) error {
+	// Check if Content-Type header exists and is not empty
+	hasContentType := len(request.Headers) > protocol.ReqHeaderContentType &&
+		request.Headers[protocol.ReqHeaderContentType] != ""
+
+	if !hasContentType {
+		// Content-Type missing or empty, default to octet-stream
+		slog.Debug("Content-Type missing for POST, defaulting to octet-stream")
+		s.ensureHeadersSize(request, protocol.ReqHeaderContentType)
+		request.Headers[protocol.ReqHeaderContentType] = "4" // octet-stream (default)
+		return nil
+	}
+
+	// Validate Content-Type is in valid range (0-15)
+	contentTypeStr := request.Headers[protocol.ReqHeaderContentType]
+	contentType, parseErr := strconv.Atoi(contentTypeStr)
+	if parseErr != nil || !protocol.IsValidContentType(contentType) {
+		slog.Error("Invalid Content-Type", "value", contentTypeStr)
+		s.sendErrorResponse(stream, 415, "Unsupported Media Type")
+		return fmt.Errorf("invalid content-type: %s", contentTypeStr)
+	}
+
+	return nil
+}
+
+func (s *Server) ensureHeadersSize(request *protocol.Request, minIndex int) {
+	if len(request.Headers) <= minIndex {
+		newHeaders := make([]string, minIndex+1)
+		copy(newHeaders, request.Headers)
+		request.Headers = newHeaders
+	}
 }
 
 func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
