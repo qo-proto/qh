@@ -56,6 +56,8 @@ func (s *Server) Serve() error {
 
 	slog.Info("Starting QH server loop")
 
+	streamBuffers := make(map[*qotp.Stream][]byte)
+
 	s.listener.Loop(func(stream *qotp.Stream) bool {
 		if stream == nil {
 			return true
@@ -64,12 +66,31 @@ func (s *Server) Serve() error {
 		data, err := stream.Read()
 		if err != nil {
 			slog.Error("Stream read error", "error", err)
+			delete(streamBuffers, stream) // Clean up buffer on error
 			return true
 		}
 
 		if len(data) > 0 {
-			slog.Info("Complete request received", "bytes", len(data))
-			s.handleRequest(stream, data)
+			// Get or create buffer for this stream
+			buffer := streamBuffers[stream]
+			buffer = append(buffer, data...)
+			streamBuffers[stream] = buffer
+
+			slog.Debug("Received data fragment", "fragment_bytes", len(data), "total_bytes", len(buffer))
+
+			complete, checkErr := protocol.IsRequestComplete(buffer)
+			if checkErr != nil {
+				slog.Error("Request validation error", "error", checkErr)
+				s.sendErrorResponse(stream, 400, "Bad Request")
+				delete(streamBuffers, stream) // Clear buffer on error
+				return true
+			}
+
+			if complete {
+				slog.Info("Complete request received", "bytes", len(buffer))
+				s.handleRequest(stream, buffer)
+				delete(streamBuffers, stream) // Clear buffer
+			}
 		}
 
 		return true
@@ -102,18 +123,6 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	// send response
 	responseData := response.Format()
 	slog.Debug("Sending response", "bytes", len(responseData))
-
-	complete, validateErr := protocol.IsResponseComplete(responseData)
-	if validateErr != nil {
-		slog.Error("Response validation error", "error", validateErr)
-		s.sendErrorResponse(stream, 500, "Internal Server Error")
-		return
-	}
-	if !complete {
-		slog.Error("Response is incomplete")
-		s.sendErrorResponse(stream, 500, "Internal Server Error")
-		return
-	}
 
 	_, err = stream.Write(responseData)
 	if err != nil {

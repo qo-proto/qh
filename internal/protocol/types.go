@@ -189,25 +189,27 @@ func IsResponseComplete(data []byte) (bool, error) {
 	}
 
 	parts := strings.Split(stringHeaderPart, "\x00")
-	// Content-Length is at header position 1 (parts[1])
-	// parts[0] = Content-Type, parts[1] = Content-Length, parts[2-10] = other headers
+	// Expect at least Content-Type and Content-Length headers
 	if len(parts) < 2 {
 		return false, nil
 	}
 
-	contentLengthStr := parts[1]
-
-	// If Content-Length is empty, treat response as complete (no body expected)
-	if contentLengthStr == "" {
-		return true, nil
+	var headers []string
+	if len(parts) > 0 {
+		headers = parts
 	}
 
-	expectedLen, err := strconv.Atoi(contentLengthStr)
-	if err != nil {
-		return false, fmt.Errorf("invalid Content-Length: %s", contentLengthStr)
+	// If Content-Length header is present (index 1 in ordered headers), enforce it
+	if len(headers) > RespHeaderContentLength && headers[RespHeaderContentLength] != "" {
+		expectedLen, err := strconv.Atoi(headers[RespHeaderContentLength])
+		if err != nil {
+			return false, fmt.Errorf("invalid Content-Length: %s", headers[RespHeaderContentLength])
+		}
+		return len(bodyPart) >= expectedLen, nil
 	}
 
-	return len(bodyPart) >= expectedLen, nil
+	// No Content-Length provided; treat response as complete (no body expected)
+	return true, nil
 }
 
 func ParseResponse(data []byte) (*Response, error) {
