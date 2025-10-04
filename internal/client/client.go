@@ -1,22 +1,22 @@
+// Package client implements a QH protocol client over QOTP transport.
 package client
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net"
-	"qh/internal/protocol"
 	"strconv"
-	"strings"
+
+	"qh/internal/protocol"
 
 	"github.com/tbocek/qotp"
 )
 
 type Client struct {
 	listener *qotp.Listener
-	conn     *qotp.Connection
+	conn     *qotp.Conn
 	streamID uint32
 }
 
@@ -61,7 +61,7 @@ func (c *Client) Connect(addr string) error {
 		return fmt.Errorf("failed to connect to %s: %w", ipAddr, err)
 	}
 	c.conn = conn
-	log.Printf("Connected to QH server at %s (resolved to %s)", addr, ipAddr)
+	slog.Info("Connected to QH server", "addr", addr, "resolved", ipAddr)
 	return nil
 }
 
@@ -76,45 +76,47 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 
 	stream := c.conn.Stream(currentStreamID)
 
-	// send request
 	requestData := req.Format()
-	slog.Debug("Sending request", "stream_id", currentStreamID, "bytes", len(requestData), "data", requestData)
+	slog.Debug("Sending request", "stream_id", currentStreamID, "bytes", len(requestData))
 
-	_, err := stream.Write([]byte(requestData))
+	_, err := stream.Write(requestData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 
-	// wait for response by reading directly from stream
-	var response *protocol.Response
-	var parseErr error
-	var responseBuffer strings.Builder
+	var responseBuffer []byte
 
 	c.listener.Loop(func(s *qotp.Stream) bool {
-		if s != stream {
-			return true // continue waiting
+		if s == nil {
+			return true
 		}
 
-		// Loop to read all available data from the stream until we have a complete message.
-		for {
-			responseData, err := s.Read()
-			if err != nil || len(responseData) == 0 {
-				return true // No more data right now, continue listening.
-			}
-
-			slog.Info("Received frame from server", "stream_id", currentStreamID, "bytes", len(responseData))
-
-			responseBuffer.Write(responseData)
-
-			// Check if we have received the end-of-transmission character.
-			if strings.HasSuffix(responseBuffer.String(), "\x04") {
-				slog.Debug("Reassembled full response", "bytes", responseBuffer.Len())
-				response, parseErr = protocol.ParseResponse(responseBuffer.String())
-				return false // We have the complete message, exit the listener loop.
-			}
+		chunk, err := s.Read()
+		if err != nil {
+			slog.Debug("Read error in response loop", "error", err)
+			return true
 		}
+		if len(chunk) == 0 {
+			return true
+		}
+
+		slog.Debug("Received chunk from server", "bytes", len(chunk))
+		responseBuffer = append(responseBuffer, chunk...)
+
+		complete, checkErr := protocol.IsResponseComplete(responseBuffer)
+		if checkErr != nil {
+			slog.Error("Error checking response completeness", "error", checkErr)
+			return false
+		}
+
+		if complete {
+			return false
+		}
+
+		return true
 	})
 
+	response, parseErr := protocol.ParseResponse(responseBuffer)
 	if parseErr != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", parseErr)
 	}
@@ -125,36 +127,48 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 	return response, nil
 }
 
-func (c *Client) GET(host, path string, contentType protocol.ContentType, otherHeaders ...string) (*protocol.Response, error) {
+func (c *Client) GET(host, path string, accept, acceptEncoding string) (*protocol.Response, error) {
+	headers := make([]string, 4) // 4 headers in a Request
+	headers[protocol.ReqHeaderAccept] = accept
+	headers[protocol.ReqHeaderAcceptEncoding] = acceptEncoding
+	// Content-Type and Content-Length are empty for GET requests
+
 	req := &protocol.Request{
 		Method:  protocol.GET,
 		Host:    host,
 		Path:    path,
 		Version: protocol.Version,
-		Headers: append([]string{strconv.Itoa(int(contentType))}, otherHeaders...),
+		Headers: headers,
 	}
 	return c.Request(req)
 }
 
-func (c *Client) POST(host, path, body string, contentType protocol.ContentType, otherHeaders ...string) (*protocol.Response, error) {
+// TODO: implement accept & acceptEncoding
+func (c *Client) POST(host, path, body string, accept, acceptEncoding string, contentType protocol.ContentType) (*protocol.Response, error) {
+	bodyBytes := []byte(body)
+	headers := make([]string, 4)
+	headers[protocol.ReqHeaderAccept] = accept
+	headers[protocol.ReqHeaderAcceptEncoding] = acceptEncoding
+	headers[protocol.ReqHeaderContentType] = strconv.Itoa(int(contentType))
+	headers[protocol.ReqHeaderContentLength] = strconv.Itoa(len(bodyBytes))
+
 	req := &protocol.Request{
 		Method:  protocol.POST,
 		Host:    host,
 		Path:    path,
 		Version: protocol.Version,
-		// The first header for a POST request is the Content-Type of the body.
-		Headers: append([]string{strconv.Itoa(int(contentType))}, otherHeaders...),
-		Body:    body,
+		Headers: headers,
+		Body:    bodyBytes,
 	}
 	return c.Request(req)
 }
 
 func (c *Client) Close() error {
 	if c.conn != nil {
-		c.conn.Close()
+		c.conn.CloseNow()
 	}
 	if c.listener != nil {
-		return c.listener.Close()
+		return c.listener.CloseNow()
 	}
 	return nil
 }

@@ -3,6 +3,7 @@ package protocol
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -15,7 +16,6 @@ const (
 	POST Method = 1
 )
 
-// String returns the string representation of the QH protocols method. Implements fmt.Stringer interface, used for logging and debugging.
 func (m Method) String() string {
 	switch m {
 	case GET:
@@ -27,6 +27,8 @@ func (m Method) String() string {
 	}
 }
 
+// TODO: maybe add a helper method protocol.AcceptHeader() to use types directly in the client
+// e.g. protocol.AcceptHeader(protocol.JSON, protocol.TextPlain) and not "1,2"
 type ContentType int
 
 const (
@@ -39,60 +41,189 @@ const (
 	// ... up to 15
 )
 
+func IsValidContentType(code int) bool {
+	return code >= 0 && code <= 15
+}
+
+func (ct ContentType) String() string {
+	switch ct {
+	case Custom:
+		return "custom"
+	case TextPlain:
+		return "text/plain"
+	case JSON:
+		return "application/json"
+	case HTML:
+		return "text/html"
+	case OctetStream:
+		return "application/octet-stream"
+	default:
+		return "unknown"
+	}
+}
+
+// Request header indices (ordered by position in wire format)
+const (
+	ReqHeaderAccept         = 0 // Media types the client can process
+	ReqHeaderAcceptEncoding = 1 // Content-coding the client can process
+	ReqHeaderContentType    = 2 // Media type of request body (POST/PUT)
+	ReqHeaderContentLength  = 3 // Size of request body in bytes
+)
+
+// Response header indices (ordered by position in wire format)
+const (
+	RespHeaderContentType     = 0  // Content type (as code)
+	RespHeaderContentLength   = 1  // Size of response body in bytes
+	RespHeaderCacheControl    = 2  // Cache-Control directives
+	RespHeaderContentEncoding = 3  // Content encoding used (e.g., "gzip")
+	RespHeaderAuthorization   = 4  // Authorization info
+	RespHeaderCORS            = 5  // Access-Control-Allow-Origin
+	RespHeaderETag            = 6  // Entity tag for cache validation
+	RespHeaderDate            = 7  // Unix timestamp
+	RespHeaderCSP             = 8  // Content-Security-Policy
+	RespHeaderContentTypeOpts = 9  // X-Content-Type-Options
+	RespHeaderFrameOptions    = 10 // X-Frame-Options
+)
+
 type Request struct {
 	Method  Method
 	Host    string
 	Path    string
 	Version uint8
-	// TODO: Add ContentType to request headers
 	Headers []string // Ordered headers by position
-	Body    string
+	Body    []byte
 }
 
 type Response struct {
 	Version    uint8
 	StatusCode int
 	Headers    []string // Ordered headers by position
-	Body       string
+	Body       []byte
 }
 
 // format QH request into wire format
-func (r *Request) Format() string {
+func (r *Request) Format() []byte {
 	// The first byte contains: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
 	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
 	firstByte := (r.Version << 6) | (byte(r.Method) << 3)
 
 	otherParts := []string{r.Host, r.Path}
 	otherParts = append(otherParts, r.Headers...)
-	headerPart := string(firstByte) + strings.Join(otherParts, "\x00")
 
-	// Per the protocol spec, the body separator and EOT are always present.
-	return headerPart + "\x03" + r.Body + "\x04"
+	// Build message: first byte + headers + ETX + body
+	result := []byte{firstByte}
+	result = append(result, []byte(strings.Join(otherParts, "\x00"))...)
+	result = append(result, '\x03')
+	result = append(result, r.Body...)
+	return result
 }
 
 // format QH response into wire format
-func (r *Response) Format() string {
+func (r *Response) Format() []byte {
 	compactStatus := EncodeStatusCode(r.StatusCode)
 	// First byte: Version (upper 2 bits) + Status Code (lower 6 bits)
 	firstByte := (r.Version << 6) | compactStatus
 
-	headerPart := string(firstByte) + strings.Join(r.Headers, "\x00")
-
-	return headerPart + "\x03" + r.Body + "\x04"
+	// Build message: first byte + headers + ETX + body
+	result := []byte{firstByte}
+	result = append(result, []byte(strings.Join(r.Headers, "\x00"))...)
+	result = append(result, '\x03')
+	result = append(result, r.Body...)
+	return result
 }
 
-func ParseResponse(data string) (*Response, error) {
-	// The EOT character (\x04) marks the end of the message.
-	// It should be trimmed before parsing.
-	data, found := strings.CutSuffix(data, "\x04")
+// IsRequestComplete checks if we have received a complete request
+func IsRequestComplete(data []byte) (bool, error) {
+	dataStr := string(data)
+	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
 	if !found {
-		return nil, errors.New("invalid response: missing EOT terminator")
+		return false, nil
 	}
+
+	if len(headerPart) == 0 {
+		return false, nil
+	}
+
+	// Skip first byte (version + method), then split remaining header fields
+	stringHeaderPart := headerPart[1:]
+	if stringHeaderPart == "" {
+		// Need at least host and path, which can't be present if header part after first byte is empty
+		return false, nil
+	}
+
+	parts := strings.Split(stringHeaderPart, "\x00")
+	// Expect at least host and path
+	if len(parts) < 2 {
+		return false, nil
+	}
+
+	// Headers follow host and path
+	var headers []string
+	if len(parts) > 2 {
+		headers = parts[2:]
+	}
+
+	// If a Content-Length header is present (index 3 in ordered headers), enforce it
+	if len(headers) > ReqHeaderContentLength && headers[ReqHeaderContentLength] != "" {
+		expectedLen, err := strconv.Atoi(headers[ReqHeaderContentLength])
+		if err != nil {
+			return false, fmt.Errorf("invalid Content-Length: %s", headers[ReqHeaderContentLength])
+		}
+		return len(bodyPart) >= expectedLen, nil
+	}
+
+	// No Content-Length provided; treat as complete once headers and separator are present
+	return true, nil
+}
+
+// IsResponseComplete checks if we have received a complete response based on Content-Length
+func IsResponseComplete(data []byte) (bool, error) {
+	dataStr := string(data)
+	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
+	if !found {
+		return false, nil
+	}
+
+	if len(headerPart) == 0 {
+		return false, nil
+	}
+
+	// Skip first byte (version + status), then split remaining headers
+	stringHeaderPart := headerPart[1:]
+	if stringHeaderPart == "" {
+		return false, nil
+	}
+
+	parts := strings.Split(stringHeaderPart, "\x00")
+	// Expect at least Content-Type and Content-Length headers
+	if len(parts) < 2 {
+		return false, nil
+	}
+
+	headers := parts
+
+	// If Content-Length header is present (index 1 in ordered headers), enforce it
+	if len(headers) > RespHeaderContentLength && headers[RespHeaderContentLength] != "" {
+		expectedLen, err := strconv.Atoi(headers[RespHeaderContentLength])
+		if err != nil {
+			return false, fmt.Errorf("invalid Content-Length: %s", headers[RespHeaderContentLength])
+		}
+		return len(bodyPart) >= expectedLen, nil
+	}
+
+	// No Content-Length provided; treat response as complete (no body expected)
+	return true, nil
+}
+
+func ParseResponse(data []byte) (*Response, error) {
 	// Split headers from body using the End of Text character
-	headerPart, body, found := strings.Cut(data, "\x03")
+	dataStr := string(data)
+	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
 	if !found {
 		return nil, errors.New("invalid response: missing body separator")
 	}
+
+	body := []byte(bodyPart)
 
 	if len(headerPart) == 0 {
 		return nil, errors.New("invalid response: empty header part")
@@ -128,22 +259,26 @@ func ParseResponse(data string) (*Response, error) {
 		resp.Headers = parts
 	}
 
+	// Validate Content-Length if present (header index 1)
+	if len(resp.Headers) > 1 && resp.Headers[1] != "" {
+		expectedLen, err := strconv.Atoi(resp.Headers[1])
+		if err == nil && len(body) != expectedLen {
+			return nil, errors.New("invalid response: body length does not match Content-Length")
+		}
+	}
+
 	return resp, nil
 }
 
-func ParseRequest(data string) (*Request, error) {
-	// The EOT character (\x04) marks the end of the message.
-	// It should be trimmed before parsing.
-	data, found := strings.CutSuffix(data, "\x04")
-	if !found {
-		return nil, errors.New("invalid request: missing EOT terminator")
-	}
-	// Split headers from body using the End of Text character.
-	// This is now consistent with ParseResponse.
-	headerPart, body, found := strings.Cut(data, "\x03")
+func ParseRequest(data []byte) (*Request, error) {
+	// Split headers from body using the End of Text character
+	dataStr := string(data)
+	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
 	if !found {
 		return nil, errors.New("invalid request: missing body separator")
 	}
+
+	body := []byte(bodyPart)
 
 	if len(headerPart) == 0 {
 		return nil, errors.New("invalid request: empty header part")
@@ -189,34 +324,13 @@ func ParseRequest(data string) (*Request, error) {
 		req.Headers = parts[2:]
 	}
 
-	return req, nil
-}
-
-// ResponseHeaderNames maps the positional index of a response header to its name.
-var ResponseHeaderNames = map[int]string{
-	0: "Access-Control-Allow-Origin",
-	1: "Content-Length",
-	2: "Content-Encoding",
-	3: "Content-Type",
-	4: "Date",
-	5: "Content-Language",
-	6: "Fragment-Offset",
-	7: "Fragment-Request-ID",
-	8: "Connection",
-}
-
-// FormatHeaders takes a slice of response header values and returns a formatted string for logging.
-func (r *Response) FormatHeaders() string {
-	if len(r.Headers) == 0 {
-		return "  (no headers)"
-	}
-	var builder strings.Builder
-	for i, value := range r.Headers {
-		name, ok := ResponseHeaderNames[i]
-		if !ok {
-			name = fmt.Sprintf("Unknown-Header-%d", i)
+	// Validate Content-Length if present (header index 3)
+	if len(req.Headers) > ReqHeaderContentLength && req.Headers[ReqHeaderContentLength] != "" {
+		expectedLen, err := strconv.Atoi(req.Headers[ReqHeaderContentLength])
+		if err == nil && len(body) != expectedLen {
+			return nil, errors.New("invalid request: body length does not match Content-Length")
 		}
-		builder.WriteString(fmt.Sprintf("  %s: %q\n", name, value))
 	}
-	return strings.TrimSuffix(builder.String(), "\n")
+
+	return req, nil
 }

@@ -13,10 +13,10 @@ func TestRequestFormat(t *testing.T) {
 		Path:    "/hello.txt",
 		Version: 0,
 		Headers: []string{"1", "en-US,en;q=0.5"},
-		Body:    "",
+		Body:    []byte(""),
 	}
 
-	expected := "\x00example.com\x00/hello.txt\x001\x00en-US,en;q=0.5\x03\x04" // V(00)M(000)R(000) -> 00000000 -> \x00
+	expected := []byte("\x00example.com\x00/hello.txt\x001\x00en-US,en;q=0.5\x03") // V(00)M(000)R(000) -> 00000000 -> \x00
 	actual := req.Format()
 
 	require.Equal(t, expected, actual)
@@ -28,11 +28,11 @@ func TestRequestFormatWithBody(t *testing.T) {
 		Host:    "example.com",
 		Path:    "/submit",
 		Version: 0,
-		Headers: []string{"2"},
-		Body:    `{"name": "test"}`,
+		Headers: []string{"2", "16"},
+		Body:    []byte(`{"name": "test"}`),
 	}
 
-	expected := "\x08example.com\x00/submit\x002\x03{\"name\": \"test\"}\x04" // V(00)M(001)R(000) -> 00001000 -> \x08
+	expected := []byte("\x08example.com\x00/submit\x002\x0016\x03{\"name\": \"test\"}") // V(00)M(001)R(000) -> 00001000 -> \x08
 	actual := req.Format()
 
 	require.Equal(t, expected, actual)
@@ -42,11 +42,11 @@ func TestResponseFormat(t *testing.T) {
 	resp := &Response{
 		Version:    0,
 		StatusCode: 200,
-		Headers:    []string{"1", "*", "", "1758784800"},
-		Body:       "Hello, world!",
+		Headers:    []string{"1", "13", "", "1758784800"},
+		Body:       []byte("Hello, world!"),
 	}
 
-	expected := "\x001\x00*\x00\x001758784800\x03Hello, world!\x04" // V(00)S(000000) -> 00000000 -> \x00
+	expected := []byte("\x001\x0013\x00\x001758784800\x03Hello, world!") // V(00)S(000000) -> 00000000 -> \x00
 	actual := resp.Format()
 
 	require.Equal(t, expected, actual)
@@ -57,15 +57,15 @@ func TestResponseFormatEmpty(t *testing.T) {
 		Version:    0,
 		StatusCode: 204,
 		Headers:    []string{"0"},
-		Body:       "",
+		Body:       []byte(""),
 	}
 
-	expected := "\x0c0\x03\x04" // V(00)S(001100) -> 00001100 -> \x0c
+	expected := []byte("\x0c0\x03") // V(00)S(001100) -> 00001100 -> \x0c
 	require.Equal(t, expected, resp.Format())
 }
 
 func TestParseRequestBasic(t *testing.T) {
-	data := "\x00example.com\x00/hello.txt\x001\x00en-US,en;q=0.5\x03\x04" // V(00)M(000)R(000) -> \x00
+	data := []byte("\x00example.com\x00/hello.txt\x001\x00en-US,en;q=0.5\x03") // V(00)M(000)R(000) -> \x00
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -79,7 +79,7 @@ func TestParseRequestBasic(t *testing.T) {
 }
 
 func TestParseRequestWithBody(t *testing.T) {
-	data := "\x08example.com\x00/submit\x002\x03{\"name\": \"test\"}\x04" // V(00)M(001)R(000) -> \x08
+	data := []byte("\x08example.com\x00/submit\x002\x0016\x03{\"name\": \"test\"}") // V(00)M(001)R(000) -> \x08
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -88,31 +88,31 @@ func TestParseRequestWithBody(t *testing.T) {
 	require.Equal(t, "example.com", req.Host)
 	require.Equal(t, "/submit", req.Path)
 	require.Equal(t, uint8(0), req.Version)
-	require.Equal(t, []string{"2"}, req.Headers)
-	require.JSONEq(t, `{"name": "test"}`, req.Body)
+	require.Equal(t, []string{"2", "16"}, req.Headers)
+	require.JSONEq(t, `{"name": "test"}`, string(req.Body))
 }
 
 func TestParseRequestWithMultilineBody(t *testing.T) {
-	data := "\x08example.com\x00/submit\x03line1\nline2\nline3\x04"
+	data := []byte("\x08example.com\x00/submit\x03line1\nline2\nline3")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, POST, req.Method)
-	require.Equal(t, "line1\nline2\nline3", req.Body)
+	require.Equal(t, []byte("line1\nline2\nline3"), req.Body)
 }
 
 func TestParseRequestNoHeaders(t *testing.T) {
-	data := "\x08example.com\x00/path\x03test body\x04"
+	data := []byte("\x08example.com\x00/path\x03test body")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, POST, req.Method)
 	require.Empty(t, req.Headers)
-	require.Equal(t, "test body", req.Body)
+	require.Equal(t, []byte("test body"), req.Body)
 }
 
 func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
-	data := "\x00example.com\x00\x03\x04"
+	data := []byte("\x00example.com\x00\x03")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -127,13 +127,13 @@ func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
 func TestParseRequestErrors(t *testing.T) {
 	tests := []struct {
 		name string
-		data string
+		data []byte
 	}{
-		{"no body separator", "example.com\x00/path\x001.0"},
-		{"empty", ""},
-		{"invalid request line, too few parts", "\x00example.com"},
-		{"invalid request line, too few parts with separator", "\x00example.com\x03"},
-		{"host missing", "\x00\x00/path\x03"},
+		{"no body separator", []byte("example.com\x00/path\x001.0")},
+		{"empty", []byte("")},
+		{"invalid request line, too few parts", []byte("\x00example.com")},
+		{"invalid request line, too few parts with separator", []byte("\x00example.com\x03")},
+		{"host missing", []byte("\x00\x00/path\x03")},
 	}
 
 	for _, tt := range tests {
@@ -145,35 +145,34 @@ func TestParseRequestErrors(t *testing.T) {
 }
 
 func TestParseResponseBasic(t *testing.T) {
-	data := "\x001\x00*\x00\x001758784800\x03Hello, world!\x04" // V(00)S(000000) -> \x00
+	data := []byte("\x001\x0013\x00\x001758784800\x03Hello, world!") // V(00)S(000000) -> \x00
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
 	require.Equal(t, uint8(0), resp.Version)
 	require.Equal(t, 200, resp.StatusCode)
-	require.Equal(t, []string{"1", "*", "", "1758784800"}, resp.Headers)
-	require.Equal(t, "Hello, world!", resp.Body)
+	require.Equal(t, []string{"1", "13", "", "1758784800"}, resp.Headers)
+	require.Equal(t, []byte("Hello, world!"), resp.Body)
 }
 
 func TestParseResponseSingleHeader(t *testing.T) {
-	data := "\x001\x03Response body\x04" // V(00)S(000000) -> \x00
+	data := []byte("\x001\x03Response body") // V(00)S(000000) -> \x00
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
 	require.Equal(t, uint8(0), resp.Version)
 	require.Equal(t, 200, resp.StatusCode)
 	require.Equal(t, []string{"1"}, resp.Headers)
-	require.Equal(t, "Response body", resp.Body)
+	require.Equal(t, []byte("Response body"), resp.Body)
 }
 
 func TestParseResponseErrors(t *testing.T) {
 	tests := []struct {
 		name string
-		data string
+		data []byte
 	}{
-		{"no body separator", "\x00"},
-		{"empty", ""},
-		{"invalid response line, only status/version byte", "\x00\x03"},
+		{"no body separator", []byte("\x00")},
+		{"empty", []byte("")},
 	}
 
 	for _, tt := range tests {
@@ -203,3 +202,29 @@ func TestMethodString(t *testing.T) {
 		})
 	}
 }
+
+func TestIsValidContentType(t *testing.T) {
+	tests := []struct {
+		name  string
+		code  int
+		valid bool
+	}{
+		{"Custom", 0, true},
+		{"TextPlain", 1, true},
+		{"JSON", 2, true},
+		{"HTML", 3, true},
+		{"OctetStream", 4, true},
+		{"MaxValid", 15, true},
+		{"TooHigh", 16, false},
+		{"Invalid99", 99, false},
+		{"Negative", -1, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.valid, IsValidContentType(tt.code))
+		})
+	}
+}
+
+// TODO: add tests for IsRequestComplete and IsResponseComplete

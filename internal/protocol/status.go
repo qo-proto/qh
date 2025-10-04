@@ -1,5 +1,7 @@
 package protocol
 
+// TODO: default print error messages in the body like in http (no need to set body message manually for statusCodes)
+
 // map common HTTP status codes to a compact wire format, ordered by frequency
 var StatusToCompact = map[int]uint8{
 	200: 0,  // OK
@@ -53,7 +55,6 @@ var StatusToCompact = map[int]uint8{
 
 var CompactToStatus map[uint8]int // reverse mapping for decoding
 
-// TODO: maybe use manual reverse map over init method
 func init() {
 	CompactToStatus = make(map[uint8]int, len(StatusToCompact))
 	for httpCode, compactCode := range StatusToCompact {

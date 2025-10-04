@@ -4,7 +4,7 @@ go 1.25.1
 
 require (
 	github.com/stretchr/testify v1.11.1
-	github.com/tbocek/qotp v0.0.4
+	github.com/tbocek/qotp v0.1.1
 )
 
 require (

@@ -1,6 +1,6 @@
 # QH Protocol
 
-**Request for Comments: QH/1.0**
+**Request for Comments: QH/0**
 Category: Experimental
 Status: Draft
 
@@ -14,7 +14,7 @@ Status: Draft
   - [2. Protocol Parameters](#2-protocol-parameters)
     - [2.1 QH Version](#21-qh-version)
     - [2.2 Media Types](#22-media-types)
-    - [2.3 Language Tags](#23-language-tags)
+    - [2.3 Content Encoding](#23-content-encoding)
     - [2.4 qh URI Scheme](#24-qh-uri-scheme)
   - [3. Message Format](#3-message-format)
     - [3.1 Message Types](#31-message-types)
@@ -46,16 +46,16 @@ Status: Draft
 
 ## 1. Introduction
 
-The QH Protocol (Quite Ok HTTP Protocol) is a client-server, text-based communication protocol inspired by HTTP. It defines a simple, extensible mechanism for exchanging structured requests and responses over qotp.
+The QH Protocol (Quite Ok HTTP Protocol) is a client-server, binary communication protocol inspired by HTTP. It defines a simple, extensible mechanism for exchanging structured requests and responses over qotp.
 
-QH is designed to be machine readable.
+QH is designed to be compact and machine-efficient.
 
 QH uses a **request/response model**.
 
 - The client sends a request message to the server.
 - The server replies with a response message.
-- Each message is encoded in UTF-8 text unless otherwise specified.
-- The header section is separated from the body by a special character.
+- Messages use binary encoding for metadata (version, method, status codes) and UTF-8 for text content.
+- The header section is separated from the body by the End of Text (ETX) character `\x03`.
 
 ### 1.1 Purpose
 
@@ -84,27 +84,41 @@ A server that receives a request with a major version higher than what it suppor
 
 ### 2.2 Media Types
 
-QH uses Internet Media Types (MIME types) to specify the format of a message body. This is communicated via headers like `Content-Type` and `Accept`.
+QH uses a compact numeric encoding for content types instead of traditional MIME type strings. This reduces bandwidth while supporting the most common types needed for Single Page Applications.
 
-The format is `type/subtype`, optionally followed by parameters.
+Content types are encoded as single-digit numeric codes (0-15, using 4 bits) in the wire format. The following content types are defined:
 
-```text
-media-type = type "/" subtype *( ";" parameter )
-```
+| Code | MIME Type Equivalent     | Description                 |
+| ---- | ------------------------ | --------------------------- |
+| 0    | custom                   | Custom/application-specific |
+| 1    | text/plain               | Plain text                  |
+| 2    | application/json         | JSON data                   |
+| 3    | text/html                | HTML documents              |
+| 4    | application/octet-stream | Binary data                 |
+| 5-15 | (reserved)               | Reserved for future use     |
 
-For example: `text/html; charset=utf-8`. The `type`, `subtype`, and parameter names are case-insensitive. Media types are registered with the Internet Assigned Number Authority (IANA).
+**Note:** Code 0 (custom) allows applications to define their own content type.
 
-### 2.3 Language Tags
+The numeric code is transmitted as an ASCII digit string in the Content-Type header field (e.g., `"2"` for JSON).
 
-A language tag, as defined in [RFC5646], identifies a natural language spoken, written, or otherwise conveyed by human beings for communication of information to other human beings. Computer languages are explicitly excluded.
+**Content-Type Header Behavior:**
 
-QH uses language tags within the `Accept-Language` header.
+- Following HTTP conventions, Content-Type is **recommended but not mandatory** for POST requests
+- If missing, the server defaults to code 4 (application/octet-stream)
+- If present, the value must be a valid code (0-15), otherwise the server returns 415 Unsupported Media Type
 
-```text
-language-tag = <Language-Tag, see [RFC5646], Section 2.1>
-```
+### 2.3 Content Encoding
 
-Tags are case-insensitive. Examples include `en` (English), `en-US` (American English), and `fr` (French).
+QH supports content encoding negotiation via the `Accept-Encoding` request header. This allows clients to indicate which compression algorithms they support for response bodies.
+
+Common encoding values include:
+
+- `gzip` - GNU zip compression
+- `br` - Brotli compression
+- `zstd` - Zstandard compression
+- `deflate` - DEFLATE compression
+
+Multiple encodings can be specified as a comma-separated list (e.g., `gzip,br,zstd`).
 
 ### 2.4 qh URI Scheme
 
@@ -128,25 +142,53 @@ Resources made available via the "qh" scheme have no shared identity with resour
 
 ### 3.1 Message Types
 
+QH defines two message types:
+
+- **Request** - sent from client to server
+- **Response** - sent from server to client
+
+Both message types follow a similar structure with a first byte encoding version and method/status, followed by structured header fields and an optional body.
+
 ### 3.2 Message Headers
+
+Headers in QH are sent as ordered, null-terminated values without field names. The meaning of each header is determined by its position in the message.
+
+This approach eliminates the overhead of sending header names, resulting in a more compact wire format compared to traditional HTTP.
 
 ### 3.3 Message Body
 
+The message body is optional and contains the actual content being transferred (e.g., JSON data, HTML, images).
+
+The body is separated from headers by the End of Text (ETX) character `\x03`.
+
 ### 3.4 Message Length
+
+Message completeness is determined by the Content-Length header:
+
+- For requests: Content-Length is at header index 3
+- For responses: Content-Length is at header index 1
+
+When Content-Length is present and non-empty, the receiver continues reading until the body reaches the specified length.
+
+If Content-Length is absent or empty, the message is considered complete immediately after the ETX separator (`\x03`) is received.
 
 ### 3.5 General Header Fields
 
----
+Headers use null byte `\0` as field separators. Empty headers are represented by consecutive null bytes (e.g., `field1\0\0field3` where the header at index 1 is empty).
+
+If a header is omitted but a subsequent header is present, an empty value (represented by consecutive `\0` bytes) MUST be used as a placeholder to maintain positional ordering.
 
 ## 4. Request
 
 ### 4.1 Methods
 
-QH/1.0 defines the following methods. The version and method are encoded in the first byte of the request message as follows:
+QH Version 0 defines the following methods. The version and method are encoded in the first byte of the request message as follows:
 
-- **Bits 6-7 (upper 2 bits):** Version
-- **Bits 3-5 (middle 3 bits):** Method
-- **Bits 0-2 (lower 3 bits):** Reserved
+- **Bits 7-6 (upper 2 bits):** Version
+- **Bits 5-3 (middle 3 bits):** Method
+- **Bits 2-0 (lower 3 bits):** Reserved
+
+Bit layout: `[Version][Version][Method][Method][Method][Reserved][Reserved][Reserved]` (bit 7 to bit 0)
 
 | Method | Code | Description                |
 | ------ | ---- | -------------------------- |
@@ -160,51 +202,28 @@ For QH/0, the version number is `0`. So, a GET request uses `\x00` (00000000) an
 A request message has the following structure:
 
 ```text
-<1-byte-field><Host>\0<Path>\0<Header-Value-1>\0...<Header-Value-N>\x03<Body>\x04
+<1-byte-field><Host>\0<Path>\0<Header-Value-1>\0...<Header-Value-N>\x03<Body>
 ```
 
 Where:
 
-- `1-byte-field`: A single byte encoding the version (upper 2 bits) and method (middle 3 bits).
+- `1-byte-field`: First byte encoding (see [Section 4.1](#41-methods) for bit layout).
 - `Host`: Target hostname.
-- `Path`: Resource path
-- `Header-Value-N`: Header values in a predefined order.
-- The separator for all string-based fields is a null byte (`\0`).
-- The separator between headers and body is the End of Text character (`\x03`)
-- The end of the entire message is marked by the End of Transmission character (`\x04`)
+- `Path`: Resource path. If empty, it will use `/` (root path).
+- `Header-Value-N`: Header values in a predefined order (see [Section 6.1](#61-request-headers)).
+- `Body`: Optional request body (present for POST/PUT requests).
+
+For general formatting rules (separators, Content-Length, message completeness), see [Section 3](#3-message-format).
 
 ### 4.3 Request Examples
 
-**Simple GET request:**
-
-```text
-\x00example.com\0/hello.txt\x03\x04
-```
-
-**GET request with headers:**
-
-```text
-example.com\0/hello.txt\01.0\0
-text/html,application/xhtml+xml\0
-en-US,en;q=0.5\0
-\x03\x04
-```
-
-**POST request with body:**
-
-```text
-example.com\0/submit\01.0\0
-application/json\0
-\x03
-{"name": "test"}
-\x04
-```
+TODO: Add mermaid diagrams for simple get request, with/without headers, with body, ...
 
 ## 5. Response
 
 ### 5.1 Status Codes
 
-QH/1.0 uses HTTP-compatible status codes but encodes them in a compact wire format for efficiency. Status codes are mapped to single-byte compact codes ordered by frequency of use.
+QH/0 uses HTTP-compatible status codes but encodes them in a compact wire format for efficiency. Status codes are mapped to single-byte compact codes ordered by frequency of use.
 
 The protocol supports standard HTTP status code categories:
 
@@ -218,8 +237,10 @@ The protocol supports standard HTTP status code categories:
 
 For wire efficiency, the response version and status code are encoded into a single byte:
 
-- **Bits 6-7 (upper 2 bits):** Version
-- **Bits 0-5 (lower 6 bits):** Compact Status Code
+- **Bits 7-6 (upper 2 bits):** Version
+- **Bits 5-0 (lower 6 bits):** Compact Status Code
+
+Bit layout: `[Version][Version][Status][Status][Status][Status][Status][Status]` (bit 7 to bit 0)
 
 #### 5.1.1 Supported Status Codes
 
@@ -285,60 +306,26 @@ The following status codes are supported with their compact wire format encoding
 A response message has the following structure:
 
 ```text
-<1-byte-field><Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>\x04
+<1-byte-field><Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>
 ```
 
 Where:
 
-- `Header-Value-N`: Header values in predefined order
-- The separator for all fields is a null byte (`\0`)
-- The separator between headers and body is the End of Text character (`\x03`)
-- The end of the entire message is marked by the End of Transmission character (`\x04`)
+- `1-byte-field`: First byte encoding (see [Section 5.1](#51-status-codes) for bit layout).
+- `Header-Value-N`: Header values in predefined order (see [Section 6.2](#62-response-headers)).
+- `Body`: Optional response body.
+
+For general formatting rules (separators, Content-Length, message completeness), see [Section 3](#3-message-format).
 
 ### 5.3 Response Examples
 
-**Simple successful response:**
-
-```text
-1.0\01\0
-\x03
-Hello, world!
-\x04
-```
-
-**Response with headers:**
-
-```text
-1.0\01\0
-*\0
-text/plain\0
-\x03
-Hello, world!
-\x04
-```
-
-**Empty response (No Content):**
-
-```text
-1.0\013\0
-\x03
-\x04
-```
-
-**Error response:**
-
-```text
-1.0\02\0
-\x03
-Page not found
-\x04
-```
+TODO: Add mermaid diagrams for simple success response, response with headers, empty response, etc.
 
 ## 6. Headers
 
 In QH, headers are transmitted as a sequence of values, with their meaning determined by their order in the message. This eliminates the need to send header names, reducing message size.
 
-An empty line still marks the end of the header section. If a header is omitted but a subsequent one is present, an empty line MUST be used as a placeholder.
+If a header is omitted but a subsequent one is present, an empty value (consecutive null bytes) MUST be used as a placeholder to maintain position.
 
 ### 6.1 Request Headers
 
@@ -346,13 +333,18 @@ The following table defines the order and meaning of request headers.
 
 Note: `Host` is not included as it appears in the start-line of the request, not as a header.
 
-| Order | Header            | Description                                 | Example                           |
-| ----- | ----------------- | ------------------------------------------- | --------------------------------- |
-| 1     | `Accept`          | Media types the client can process.         | `text/html,application/xhtml+xml` |
-| 2     | `Accept-Language` | The preferred language for the response.    | `en-US,en;q=0.5`                  |
-| 3     | `Accept-Encoding` | Content-coding the client can process.      | `gzip, deflate, br`               |
-| 4     | `Fragment-Offset` | The byte offset for a fragmented body.      | `1200`                            |
-| 5     | `Connection`      | Control options for the current connection. | `close`                           |
+| Index | Header            | Description                                                     | Example                    |
+| ----- | ----------------- | --------------------------------------------------------------- | -------------------------- |
+| 0     | `Accept`          | Comma-separated numeric codes of media types client can process | `3,2,1` (HTML, JSON, text) |
+| 1     | `Accept-Encoding` | Content-coding the client can process                           | `gzip, deflate, br, zstd`  |
+| 2     | `Content-Type`    | Numeric content type code (see Section 2.2)                     | `2` (for JSON)             |
+| 3     | `Content-Length`  | Size of the request body in bytes                               | `12`                       |
+
+**Notes:**
+
+- For GET requests, `Content-Type` and `Content-Length` are empty and not needed.
+- For POST requests, `Content-Type` is recommended but not required (defaults to code 4 - octet-stream if missing). `Content-Length` is calculated from the body.
+- Accept header uses numeric codes (e.g., `3,2,1`) instead of MIME strings for compactness. `text/html,application/json,text/plain` becomes `3,2,1`.
 
 ![QH Message Format](./docs/images/header.svg)
 
@@ -360,18 +352,19 @@ Note: `Host` is not included as it appears in the start-line of the request, not
 
 The following table defines the order and meaning of response headers.
 
-| Order | Header                        | Description                                            | Example                       |
-| ----- | ----------------------------- | ------------------------------------------------------ | ----------------------------- |
-| 1     | `Access-Control-Allow-Origin` | Specifies which origins can access the resource.       | `*`                           |
-| 2     | `Content-Length`              | The size of the message body in octets (8-bit bytes).  | `1234`                        |
-| 3     | `Content-Encoding`            | The encoding format of the content.                    | `gzip`                        |
-| 4     | `Content-Type`                | The MIME type of the resource.                         | `text/html; charset=utf-8`    |
-| 5     | `Date`                        | The date and time at which the message was originated. | `1468857960` (Unix timestamp) |
-| 6     | `Content-Language`            | The preferred language for the response.               | `en-US,en;q=0.5`              |
-| 7     | `Fragment-Offset`             | The byte offset for a fragmented body.                 | `1200`                        |
-| 8     | `Fragment-Request-ID`         | A unique ID to correlate fragments.                    | `42`                          |
-| 9     | `Date`                        | The date and time at which the message was originated. | `1468857960` (Unix timestamp) |
-| 10    | `Connection`                  | Control options for the current connection.            | `close`                       |
+| Index | Header                      | Description                                 | Example              |
+| ----- | --------------------------- | ------------------------------------------- | -------------------- |
+| 0     | Content-Type                | Numeric content type code (see Section 2.2) | `1` (for text/plain) |
+| 1     | Content-Length              | Size of the message body in bytes           | `13`                 |
+| 2     | Cache-Control               | Caching directives                          | `max-age=3600`       |
+| 3     | Content-Encoding            | Content encoding used                       | `gzip`               |
+| 4     | Authorization               | Authentication information                  | `Bearer <token>`     |
+| 5     | Access-Control-Allow-Origin | CORS allowed origins                        | `*`                  |
+| 6     | ETag                        | Entity tag for cache validation             | `abc123`             |
+| 7     | Date                        | Unix timestamp                              | `1758784800`         |
+| 8     | Content-Security-Policy     | CSP directives                              | `default-src 'self'` |
+| 9     | X-Content-Type-Options      | MIME sniffing protection                    | `nosniff`            |
+| 10    | X-Frame-Options             | Clickjacking protection                     | `SAMEORIGIN`         |
 
 ## 7. Transport
 
@@ -404,8 +397,6 @@ Clients SHOULD NOT open more than one QH connection to a given IP address and UD
 A single connection to a server endpoint MAY be reused for requests to different origins (i.e., different hostnames) if they resolve to the same IP address. To do this securely, the client MUST validate that the server is authoritative for the new origin. This involves verifying the server's public key against the expected key for the new origin (e.g., by fetching it from a DNS TXT record).
 
 If the server's identity cannot be verified for the new origin, the client MUST NOT reuse the connection for that origin and SHOULD establish a new connection instead.
-
-A server that receives a request for an origin it is not authoritative for can indicate this by sending a `421 (Misdirected Request)` status code.
 
 ## 8. Security Considerations
 
