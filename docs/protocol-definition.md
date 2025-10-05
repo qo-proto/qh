@@ -211,27 +211,21 @@ Host: example.com
 
 **Wire format structure:**
 
-```mermaid
----
-title: QH GET Request Structure
----
-packet-beta
-0-7: "First Byte"
-8-95: "Host (example.com)"
-96-103: "NULL (\\x00)"
-104-167: "Path (/hello)"
-168-175: "NULL (\\x00)"
-176-183: "Accept"
-184-191: "NULL (\\x00)"
-192-199: "Accept-Enc"
-200-207: "NULL (\\x00)"
-208-215: "Content-Type"
-216-223: "NULL (\\x00)"
-224-231: "Content-Len"
-232-239: "ETX (\\x03)"
+```
+┌──────┐  ┌─────────────┐  ┌────────┐  ┌──────┐
+│ 0x00 │──│ example.com │──│ /hello │──│ \x03 │
+└──────┘  └─────────────┘  └────────┘  └──────┘
+   │            │              │          │
+   │            │              │          └─ ETX separator
+   │            │              └──────────── Path
+   │            └─────────────────────────── Host
+   └──────────────────────────────────────── First byte (V=0, Method=GET)
+
+Note: All optional headers (Accept, Accept-Encoding, Content-Type, Content-Length)
+      are empty, represented by consecutive \0 separators between Path and ETX.
 ```
 
-**Hexadecimal wire format:**
+**Complete byte sequence:**
 
 ```
 0x00 example.com\0/hello\0\0\0\0\0\x03
@@ -258,28 +252,24 @@ Body: "Hello QH World!"
 
 **Wire format structure:**
 
-```mermaid
----
-title: QH POST Request with Body
----
-packet-beta
-0-7: "First Byte"
-8-95: "Host (example.com)"
-96-103: "NULL (\\x00)"
-104-167: "Path (/echo)"
-168-175: "NULL (\\x00)"
-176-191: "Accept (2,1)"
-192-199: "NULL (\\x00)"
-200-207: "Accept-Enc"
-208-215: "NULL (\\x00)"
-216-223: "Content-Type (1)"
-224-231: "NULL (\\x00)"
-232-247: "Content-Len (15)"
-248-255: "ETX (\\x03)"
-256-375: "Body (Hello QH World!)"
+```
+┌──────┐  ┌─────────────┐  ┌───────┐  ┌─────┐  ┌───┐  ┌────┐  ┌──────┐  ┌──────────────────┐
+│ 0x08 │──│ example.com │──│ /echo │──│ 2,1 │──│ 1 │──│ 15 │──│ \x03 │──│ Hello QH World!  │
+└──────┘  └─────────────┘  └───────┘  └─────┘  └───┘  └────┘  └──────┘  └──────────────────┘
+   │            │              │         │       │      │       │              │
+   │            │              │         │       │      │       │              └─ Body (15 bytes)
+   │            │              │         │       │      │       └──────────────── ETX separator
+   │            │              │         │       │      └──────────────────────── Content-Length
+   │            │              │         │       └─────────────────────────────── Content-Type: 1 (text/plain)
+   │            │              │         └─────────────────────────────────────── Accept: 2,1 (JSON, text)
+   │            │              └───────────────────────────────────────────────── Path
+   │            └──────────────────────────────────────────────────────────────── Host
+   └─────────────────────────────────────────────────────────────────────────── First byte (V=0, Method=POST)
+
+Note: \0 separators between each field; Accept-Encoding is empty (consecutive \0).
 ```
 
-**Hexadecimal wire format:**
+**Complete byte sequence:**
 
 ```
 0x08 example.com\0/echo\02,1\0\01\015\0\x03Hello QH World!
@@ -424,20 +414,21 @@ Body: "Hello from QH Protocol!"
 
 **Wire format structure:**
 
-```mermaid
----
-title: QH 200 OK Response
----
-packet-beta
-0-7: "First Byte"
-8-15: "Content-Type (1)"
-16-23: "NULL (\\x00)"
-24-39: "Content-Len (23)"
-40-47: "ETX (\\x03)"
-48-231: "Body (Hello from QH Protocol!)"
+```
+┌──────┐  ┌───┐  ┌────┐  ┌──────┐  ┌──────────────────────────┐
+│ 0x00 │──│ 1 │──│ 23 │──│ \x03 │──│ Hello from QH Protocol!  │
+└──────┘  └───┘  └────┘  └──────┘  └──────────────────────────┘
+   │       │      │        │                   │
+   │       │      │        │                   └─ Body (23 bytes)
+   │       │      │        └─────────────────────── ETX separator
+   │       │      └──────────────────────────────── Content-Length: 23
+   │       └─────────────────────────────────────── Content-Type: 1 (text/plain)
+   └─────────────────────────────────────────────── First byte (V=0, Status=0 → HTTP 200)
+
+Note: \0 separators between each field.
 ```
 
-**Hexadecimal wire format:**
+**Complete byte sequence:**
 
 ```
 0x00 1\023\0\x03Hello from QH Protocol!
@@ -485,26 +476,25 @@ Body: {"name":"John Doe","id":123,"active":true}
 
 **Wire format structure:**
 
-```mermaid
----
-title: QH JSON Response with Headers
----
-packet-beta
-0-7: "First Byte"
-8-15: "Content-Type (2)"
-16-23: "NULL (\\x00)"
-24-39: "Content-Len (47)"
-40-47: "NULL (\\x00)"
-48-95: "Cache-Control (max-age=3600)"
-96-103: "NULL (\\x00)"
-104-111: "Content-Enc"
-112-119: "NULL (\\x00)"
-120-207: "Date (1758784800)"
-208-215: "ETX (\\x03)"
-216-583: "Body (JSON)"
+```
+┌──────┐  ┌───┐  ┌────┐  ┌──────────────┐  ┌────────────┐  ┌──────┐  ┌────────────────────────────────────────┐
+│ 0x00 │──│ 2 │──│ 47 │──│ max-age=3600 │──│ 1758784800 │──│ \x03 │──│ {"name":"John Doe","id":123,"act...}  │
+└──────┘  └───┘  └────┘  └──────────────┘  └────────────┘  └──────┘  └────────────────────────────────────────┘
+   │       │      │             │                  │           │                         │
+   │       │      │             │                  │           │                         └─ Body (JSON)
+   │       │      │             │                  │           └───────────────────────────── ETX separator
+   │       │      │             │                  └───────────────────────────────────────── Date: 1758784800 (idx 7)
+   │       │      │             └──────────────────────────────────────────────────────────── Cache-Control (idx 2)
+   │       │      └────────────────────────────────────────────────────────────────────────── Content-Length: 47
+   │       └───────────────────────────────────────────────────────────────────────────────── Content-Type: 2 (JSON)
+   └───────────────────────────────────────────────────────────────────────────────────────── First byte (V=0, Status=0 → HTTP 200)
+
+Note: \0 separators between each field. Optional headers Content-Encoding (idx 3),
+      Authorization (idx 4), CORS (idx 5), ETag (idx 6), CSP (idx 8), X-Content-Type-Options (idx 9),
+      and X-Frame-Options (idx 10) are empty (consecutive \0).
 ```
 
-**Hexadecimal wire format:**
+**Complete byte sequence:**
 
 ```
 0x00 2\047\0max-age=3600\0\0\01758784800\0\0\0\x03{"name":"John Doe","id":123,"active":true}
