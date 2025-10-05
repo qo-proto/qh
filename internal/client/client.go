@@ -36,7 +36,8 @@ func (c *Client) Connect(addr string) error {
 	}
 
 	// Resolve hostname to IP if it's not already an IP
-	ip := net.ParseIP(host)
+	var ip net.IP
+	ip = net.ParseIP(host)
 	if ip == nil {
 		ips, err := net.DefaultResolver.LookupIPAddr(context.Background(), host)
 		if err != nil {
@@ -54,9 +55,29 @@ func (c *Client) Connect(addr string) error {
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
 	c.listener = listener
+
 	ipAddr := fmt.Sprintf("%s:%d", ip.String(), port)
-	// in-band key exchange
-	conn, err := listener.DialString(ipAddr)
+
+	// Try to get server public key from DNS for 0-RTT connection
+	txtRecords, _ := net.DefaultResolver.LookupTXT(context.Background(), "_qotp."+host)
+	var serverPubKey string
+	if len(txtRecords) > 0 {
+		// Assuming the key is in the first TXT record
+		serverPubKey = txtRecords[0]
+		slog.Info("Found QOTP public key in DNS TXT record", "host", host, "key", serverPubKey)
+	}
+
+	var conn *qotp.Conn
+	if serverPubKey != "" {
+		// Out-of-band key exchange (0-RTT)
+		slog.Info("Attempting connection with out-of-band key (0-RTT)")
+		conn, err = listener.DialWithCryptoString(ipAddr, serverPubKey)
+	} else {
+		// In-band key exchange
+		slog.Info("No DNS key found, attempting connection with in-band key exchange")
+		conn, err = listener.DialString(ipAddr)
+	}
+
 	if err != nil {
 		return fmt.Errorf("failed to connect to %s: %w", ipAddr, err)
 	}

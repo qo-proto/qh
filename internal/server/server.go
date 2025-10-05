@@ -37,8 +37,13 @@ func (s *Server) HandleFunc(path string, method protocol.Method, handler Handler
 
 // Listen starts listening on the given address.
 // It uses qotp with auto-generated keys.
-func (s *Server) Listen(addr string) error {
-	listener, err := qotp.Listen(qotp.WithListenAddr(addr))
+func (s *Server) Listen(addr string, seed ...string) error {
+	opts := []qotp.ListenFunc{qotp.WithListenAddr(addr)}
+	if len(seed) > 0 && seed[0] != "" {
+		opts = append(opts, qotp.WithSeedStr(seed[0]))
+		slog.Info("QH server listening with provided seed")
+	}
+	listener, err := qotp.Listen(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to listen on %s: %w", addr, err)
 	}
