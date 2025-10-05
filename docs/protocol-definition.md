@@ -191,7 +191,7 @@ packet-beta
 ### 4.2 Request Format
 
 ```
-<1-byte-method><Host>\0<Path>\0<Accept>\0<Accept-Encoding>\0<Content-Type>\0<Content-Length>\0\x03<Body>
+<1-byte-method><Host>\0<Path>\0<Accept>\0<Accept-Encoding>\0<Content-Type>\0<Content-Length>\x03<Body>
 ```
 
 **Fields:**
@@ -230,12 +230,12 @@ are empty, represented by consecutive \0 separators between Path and ETX.
 **Complete byte sequence:**
 
 ```
-0x00 example.com\0/hello\0\0\0\0\0\x03
+0x00 example.com\0/hello\0\0\0\0\x03
 ```
 
 **Breakdown:**
 
-- `0x00`: First byte (Version=0, Method=GET)
+- `0x00`: First byte (Version=0, Method=GET, Reserved=0)
 - `example.com\0`: Host field
 - `/hello\0`: Path field
 - `\0\0\0\0`: Four empty headers (Accept, Accept-Encoding, Content-Type, Content-Length)
@@ -261,7 +261,7 @@ Body: "Hello QH World!"
    │            │              │         │       │      │       │              │
    │            │              │         │       │      │       │              └─ Body (15 bytes)
    │            │              │         │       │      │       └──────────────── ETX separator
-   │            │              │         │       │      └──────────────────────── Content-Length
+   │            │              │         │       │      └──────────────────────── Content-Length: 15
    │            │              │         │       └─────────────────────────────── Content-Type: 1 (text/plain)
    │            │              │         └─────────────────────────────────────── Accept: 2,1 (JSON, text)
    │            │              └───────────────────────────────────────────────── Path
@@ -274,17 +274,18 @@ Note: \0 separators between each field; Accept-Encoding is empty (consecutive \0
 **Complete byte sequence:**
 
 ```
-0x08 example.com\0/echo\02,1\0\01\015\0\x03Hello QH World!
+0x08 example.com\0/echo\02,1\0\01\015\x03Hello QH World!
 ```
 
 **Breakdown:**
 
-- `0x08`: First byte (Version=0, Method=POST)
-- `example.com\0/echo\0`: Host and path
-- `2,1\0`: Accept = JSON, text/plain
+- `0x08`: First byte (Version=0, Method=POST, Reserved=0)
+- `example.com\0`: Host field
+- `/echo\0`: Path field
+- `2,1\0`: Accept = JSON, text/plain (code 2, code 1)
 - `\0`: Accept-Encoding (empty)
 - `1\0`: Content-Type = 1 (text/plain)
-- `15\0`: Content-Length = 15 bytes
+- `15`: Content-Length = 15 bytes (no trailing \0)
 - `\x03`: ETX separator
 - `Hello QH World!`: Body (15 bytes)
 
@@ -395,7 +396,7 @@ The following status codes are supported with their compact wire format encoding
 ### 5.2 Response Format
 
 ```
-<1-byte-status><Content-Type>\0<Content-Length>\0<Cache-Control>\0...<other-headers>\0\x03<Body>
+<1-byte-status><Content-Type>\0<Content-Length>\0<Cache-Control>\0...<other-headers>\x03<Body>
 ```
 
 **Fields:**
@@ -434,14 +435,14 @@ between headers and body.
 **Complete byte sequence:**
 
 ```
-0x00 1\023\0\x03Hello from QH Protocol!
+0x00 1\023\x03Hello from QH Protocol!
 ```
 
 **Breakdown:**
 
-- `0x00`: First byte (Version=0, Status=0 → HTTP 200)
+- `0x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
 - `1\0`: Content-Type = 1 (text/plain)
-- `23\0`: Content-Length = 23 bytes
+- `23`: Content-Length = 23 bytes (no trailing \0)
 - `\x03`: ETX separator
 - `Hello from QH Protocol!`: Body (23 bytes)
 
@@ -453,17 +454,17 @@ Content-Type: text/plain (code 1)
 Body: "Not Found"
 ```
 
-**Hexadecimal wire format:**
+**Wire format:**
 
 ```
-0x01 1\09\0\x03Not Found
+0x01 1\09\x03Not Found
 ```
 
 **Breakdown:**
 
-- `0x01`: First byte (Version=0, Status=1 → HTTP 404)
+- `0x01`: First byte (Version=0, Compact Status=1 → HTTP 404)
 - `1\0`: Content-Type = 1 (text/plain)
-- `9\0`: Content-Length = 9 bytes
+- `9`: Content-Length = 9 bytes (no trailing \0)
 - `\x03`: ETX separator
 - `Not Found`: Body (9 bytes)
 
@@ -481,14 +482,14 @@ Body: {"name":"John Doe","id":123,"active":true}
 
 ```
 ┌──────┐  ┌───┐  ┌────┐  ┌──────────────┐  ┌────────────┐  ┌──────┐  ┌────────────────────────────────────────┐
-│ 0x00 │──│ 2 │──│ 47 │──│ max-age=3600 │──│ 1758784800 │──│ \x03 │──│ {"name":"John Doe","id":123,"act...}   │
+│ 0x00 │──│ 2 │──│ 42 │──│ max-age=3600 │──│ 1758784800 │──│ \x03 │──│ {"name":"John Doe","id":123,"act...}   │
 └──────┘  └───┘  └────┘  └──────────────┘  └────────────┘  └──────┘  └────────────────────────────────────────┘
    │       │      │             │                  │           │                         │
-   │       │      │             │                  │           │                         └─── Body (JSON)
+   │       │      │             │                  │           │                         └─── Body (JSON, 42 bytes)
    │       │      │             │                  │           └───────────────────────────── ETX separator (headers/body boundary)
    │       │      │             │                  └───────────────────────────────────────── Date: 1758784800 (idx 7)
    │       │      │             └──────────────────────────────────────────────────────────── Cache-Control (idx 2)
-   │       │      └────────────────────────────────────────────────────────────────────────── Content-Length: 47
+   │       │      └────────────────────────────────────────────────────────────────────────── Content-Length: 42
    │       └───────────────────────────────────────────────────────────────────────────────── Content-Type: 2 (JSON)
    └───────────────────────────────────────────────────────────────────────────────────────── First byte (V=0, Status=0 → HTTP 200)
 ```
@@ -500,14 +501,14 @@ and X-Frame-Options (idx 10) are empty (consecutive \0 between populated fields)
 **Complete byte sequence:**
 
 ```
-0x00 2\047\0max-age=3600\0\0\01758784800\0\0\0\x03{"name":"John Doe","id":123,"active":true}
+0x00 2\042\0max-age=3600\0\0\0\0\01758784800\0\0\0\x03{"name":"John Doe","id":123,"active":true}
 ```
 
 **Breakdown:**
 
-- `0x00`: First byte (Version=0, Status=0 → HTTP 200)
+- `0x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
 - `2\0`: Content-Type = 2 (JSON)
-- `47\0`: Content-Length = 47 bytes
+- `42\0`: Content-Length = 42 bytes
 - `max-age=3600\0`: Cache-Control (index 2)
 - `\0`: Content-Encoding (empty, index 3)
 - `\0`: Authorization (empty, index 4)
@@ -516,8 +517,9 @@ and X-Frame-Options (idx 10) are empty (consecutive \0 between populated fields)
 - `1758784800\0`: Date (index 7)
 - `\0`: CSP (empty, index 8)
 - `\0`: X-Content-Type-Options (empty, index 9)
+- (last header is empty, no trailing \0 after the final empty header at index 10)
 - `\x03`: ETX separator
-- `{"name":"John Doe","id":123,"active":true}`: Body (47 bytes)
+- `{"name":"John Doe","id":123,"active":true}`: Body (42 bytes)
 
 #### Response Wire Format Legend
 
