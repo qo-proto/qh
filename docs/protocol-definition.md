@@ -420,12 +420,13 @@ Body: "Hello from QH Protocol!"
 └──────┘  └───┘  └────┘  └──────┘  └──────────────────────────┘
    │       │      │        │                   │
    │       │      │        │                   └─ Body (23 bytes)
-   │       │      │        └─────────────────────── ETX separator
+   │       │      │        └─────────────────────── ETX separator (headers/body boundary)
    │       │      └──────────────────────────────── Content-Length: 23
    │       └─────────────────────────────────────── Content-Type: 1 (text/plain)
    └─────────────────────────────────────────────── First byte (V=0, Status=0 → HTTP 200)
 
-Note: \0 separators between each field.
+Note: Each field shown is separated by \0 (null byte). \x03 marks the boundary
+      between headers and body.
 ```
 
 **Complete byte sequence:**
@@ -482,16 +483,16 @@ Body: {"name":"John Doe","id":123,"active":true}
 └──────┘  └───┘  └────┘  └──────────────┘  └────────────┘  └──────┘  └────────────────────────────────────────┘
    │       │      │             │                  │           │                         │
    │       │      │             │                  │           │                         └─ Body (JSON)
-   │       │      │             │                  │           └───────────────────────────── ETX separator
+   │       │      │             │                  │           └───────────────────────────── ETX separator (headers/body boundary)
    │       │      │             │                  └───────────────────────────────────────── Date: 1758784800 (idx 7)
    │       │      │             └──────────────────────────────────────────────────────────── Cache-Control (idx 2)
    │       │      └────────────────────────────────────────────────────────────────────────── Content-Length: 47
    │       └───────────────────────────────────────────────────────────────────────────────── Content-Type: 2 (JSON)
    └───────────────────────────────────────────────────────────────────────────────────────── First byte (V=0, Status=0 → HTTP 200)
 
-Note: \0 separators between each field. Optional headers Content-Encoding (idx 3),
+Note: Each field shown is separated by \0 (null byte). Optional headers Content-Encoding (idx 3),
       Authorization (idx 4), CORS (idx 5), ETag (idx 6), CSP (idx 8), X-Content-Type-Options (idx 9),
-      and X-Frame-Options (idx 10) are empty (consecutive \0).
+      and X-Frame-Options (idx 10) are empty (consecutive \0 between populated fields).
 ```
 
 **Complete byte sequence:**
