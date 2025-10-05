@@ -53,9 +53,9 @@ func main() {
 		content, err := os.ReadFile("examples/server/files/text.txt")
 		if err != nil {
 			slog.Error("Failed to read file", "error", err)
-			return server.ErrorResponse(500, "Internal Server Error")
+			return server.TextResponse(500, "Internal Server Error")
 		}
-		return server.Response(200, protocol.TextPlain, content)
+		return server.Response(200, protocol.TextPlain, content, nil)
 	})
 
 	srv.HandleFunc("/image", protocol.GET, func(_ *protocol.Request) *protocol.Response {
@@ -63,10 +63,10 @@ func main() {
 		content, err := os.ReadFile("examples/server/files/cloud.jpeg")
 		if err != nil {
 			slog.Error("Failed to read image", "error", err)
-			return server.ErrorResponse(500, "Internal Server Error")
+			return server.TextResponse(500, "Internal Server Error")
 		}
 		slog.Info("Serving image", "bytes", len(content))
-		return server.Response(200, protocol.OctetStream, content)
+		return server.Response(200, protocol.OctetStream, content, nil)
 	})
 
 	// listening with auto-generated keys

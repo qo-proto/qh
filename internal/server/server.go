@@ -182,11 +182,11 @@ func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
 	}
 
 	// no handler found, return 404
-	return ErrorResponse(404, "Not Found")
+	return TextResponse(404, "Not Found")
 }
 
 func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message string) {
-	response := ErrorResponse(statusCode, message)
+	response := TextResponse(statusCode, message)
 	responseData := response.Format()
 	if _, err := stream.Write(responseData); err != nil {
 		slog.Error("Failed to write error response", "error", err)
@@ -195,67 +195,62 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 
 // TODO: determine content type and convert body to bytes if needed
 // so no need to manually write []byte: server.Response(404, protocol.TextPlain, []byte("Not Found"))
-
-// Minimal response
-func Response(statusCode int, contentType protocol.ContentType, body []byte) *protocol.Response {
-	return &protocol.Response{ // required headers only
-		Version:    protocol.Version,
-		StatusCode: statusCode,
-		Headers: []string{
-			strconv.Itoa(int(contentType)), // [0] Content-Type (as code)
-			strconv.Itoa(len(body)),        // [1] Content-Length
-		},
-		Body: body,
+// TODO: make content-type optional like in http?
+func Response(statusCode int, contentType protocol.ContentType, body []byte, headers map[int]string) *protocol.Response {
+	// For minimal responses (no optional headers), just return Content-Type and Content-Length
+	if headers == nil || len(headers) == 0 {
+		return &protocol.Response{
+			Version:    protocol.Version,
+			StatusCode: statusCode,
+			Headers: []string{
+				strconv.Itoa(int(contentType)), // [0] Content-Type
+				strconv.Itoa(len(body)),        // [1] Content-Length
+			},
+			Body: body,
+		}
 	}
-}
 
-func ResponseWithHeaders(statusCode int, contentType protocol.ContentType, body []byte, extraHeaders map[int]string) *protocol.Response {
-	maxIdx := 1
-	for idx := range extraHeaders {
-		if idx != protocol.RespHeaderDate && idx > maxIdx {
+	// Calculate max header index needed
+	maxIdx := 1 // At minimum we need Content-Type (0) and Content-Length (1)
+	for idx := range headers {
+		if idx > maxIdx {
 			maxIdx = idx
 		}
 	}
+
+	// Ensure room for date header
 	if protocol.RespHeaderDate > maxIdx {
 		maxIdx = protocol.RespHeaderDate
 	}
-	headers := make([]string, maxIdx+1)         // initialize with empty strings
-	headers[0] = strconv.Itoa(int(contentType)) // [0] Content-Type
-	headers[1] = strconv.Itoa(len(body))        // [1] Content-Length
-	// TODO: see if it makes sense to always include the Date
-	headers[protocol.RespHeaderDate] = strconv.FormatInt(time.Now().Unix(), 10) // Unix timestamp
-	for idx, val := range extraHeaders {
-		if idx != protocol.RespHeaderDate { // Prevent user from overriding Date
-			headers[idx] = val
+
+	// Build header array (auto-fills with empty strings)
+	headerArray := make([]string, maxIdx+1)
+	headerArray[0] = strconv.Itoa(int(contentType)) // [0] Content-Type
+	headerArray[1] = strconv.Itoa(len(body))        // [1] Content-Length
+
+	// Add user headers (and prevent overriding Date)
+	for idx, val := range headers {
+		if idx > 1 && idx != protocol.RespHeaderDate {
+			headerArray[idx] = val
 		}
 	}
+
+	// Auto add Date when optional headers are present
+	headerArray[protocol.RespHeaderDate] = strconv.FormatInt(time.Now().Unix(), 10)
 
 	return &protocol.Response{
 		Version:    protocol.Version,
 		StatusCode: statusCode,
-		Headers:    headers,
+		Headers:    headerArray,
 		Body:       body,
 	}
 }
 
-// convenience methods, e.g. write: server.TextResponse(200, "Hello")  instead of server.Response(200, "text/plain", "Hello")
-
-func OKResponse(contentType protocol.ContentType, body []byte) *protocol.Response {
-	return Response(200, contentType, body)
-}
-
-func ErrorResponse(statusCode int, message string) *protocol.Response {
-	return Response(statusCode, protocol.TextPlain, []byte(message))
+// Convenience methods for common response types
+func TextResponse(statusCode int, body string) *protocol.Response {
+	return Response(statusCode, protocol.TextPlain, []byte(body), nil)
 }
 
 func JSONResponse(statusCode int, body string) *protocol.Response {
-	return Response(statusCode, protocol.JSON, []byte(body))
-}
-
-func TextResponse(statusCode int, body string) *protocol.Response {
-	return Response(statusCode, protocol.TextPlain, []byte(body))
-}
-
-func HTMLResponse(statusCode int, body string) *protocol.Response {
-	return Response(statusCode, protocol.HTML, []byte(body))
+	return Response(statusCode, protocol.JSON, []byte(body), nil)
 }

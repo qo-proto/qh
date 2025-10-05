@@ -11,3 +11,4 @@
 - [QH Protocol definition](./docs/protocol-definition.md)
 - [Architecture](./docs/architecture.md)
 - [API](./docs/api.md)
+- [DNS](./docs/dns.md)
