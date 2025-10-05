@@ -20,7 +20,7 @@ jobs:
               '^build\\b': 'build',
               '^chore\\b': 'chore',
               '^ci\\b': 'pipeline',
-              '^doc\\b': 'documentation',
+              '^docs\\b': 'documentation',
               '^feat\\b': 'feature',
               '^fix\\b': 'fix',
               '^perf\\b': 'performance',

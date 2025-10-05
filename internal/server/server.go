@@ -198,7 +198,7 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 // TODO: make content-type optional like in http?
 func Response(statusCode int, contentType protocol.ContentType, body []byte, headers map[int]string) *protocol.Response {
 	// For minimal responses (no optional headers), just return Content-Type and Content-Length
-	if headers == nil || len(headers) == 0 {
+	if len(headers) == 0 {
 		return &protocol.Response{
 			Version:    protocol.Version,
 			StatusCode: statusCode,

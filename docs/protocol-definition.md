@@ -17,21 +17,23 @@ Status: Draft
     - [2.3 Content Encoding](#23-content-encoding)
     - [2.4 qh URI Scheme](#24-qh-uri-scheme)
   - [3. Message Format](#3-message-format)
-    - [3.1 Message Types](#31-message-types)
-    - [3.2 Message Headers](#32-message-headers)
-    - [3.3 Message Body](#33-message-body)
-    - [3.4 Message Length](#34-message-length)
-    - [3.5 General Header Fields](#35-general-header-fields)
   - [4. Request](#4-request)
     - [4.1 Methods](#41-methods)
     - [4.2 Request Format](#42-request-format)
     - [4.3 Request Examples](#43-request-examples)
+      - [Example 1: Simple GET Request](#example-1-simple-get-request)
+      - [Example 2: POST Request with Body](#example-2-post-request-with-body)
+      - [Request Wire Format Legend](#request-wire-format-legend)
   - [5. Response](#5-response)
     - [5.1 Status Codes](#51-status-codes)
       - [Status Code Encoding](#status-code-encoding)
       - [5.1.1 Supported Status Codes](#511-supported-status-codes)
     - [5.2 Response Format](#52-response-format)
     - [5.3 Response Examples](#53-response-examples)
+      - [Example 1: Simple 200 OK Response](#example-1-simple-200-ok-response)
+      - [Example 2: 404 Not Found Response](#example-2-404-not-found-response)
+      - [Example 3: JSON Response with Headers](#example-3-json-response-with-headers)
+      - [Response Wire Format Legend](#response-wire-format-legend)
   - [6. Headers](#6-headers)
     - [6.1 Request Headers](#61-request-headers)
     - [6.2 Response Headers](#62-response-headers)
@@ -140,84 +142,164 @@ Resources made available via the "qh" scheme have no shared identity with resour
 
 ## 3. Message Format
 
-### 3.1 Message Types
+All QH messages follow this structure:
 
-QH defines two message types:
+```
+<1-byte-header><field1>\0<field2>\0...<fieldN>\0\x03<optional-body>
+```
 
-- **Request** - sent from client to server
-- **Response** - sent from server to client
+**Key principles:**
 
-Both message types follow a similar structure with a first byte encoding version and method/status, followed by structured header fields and an optional body.
+- **First byte**: Encodes version + method/status (see sections 4.1 and 5.1)
+- **Headers**: Null-separated values (`\0`), meaning determined by position
+- **Separator**: End-of-Text (`\x03`) separates headers from body
+- **Body**: Optional content (JSON, HTML, binary data, etc.)
 
-### 3.2 Message Headers
+**Message completeness:**
 
-Headers in QH are sent as ordered, null-terminated values without field names. The meaning of each header is determined by its position in the message.
+- If `Content-Length` is present (request index 3, response index 1), read until body reaches specified length
+- If absent or empty, message is complete after `\x03` separator
 
-This approach eliminates the overhead of sending header names, resulting in a more compact wire format compared to traditional HTTP.
-
-### 3.3 Message Body
-
-The message body is optional and contains the actual content being transferred (e.g., JSON data, HTML, images).
-
-The body is separated from headers by the End of Text (ETX) character `\x03`.
-
-### 3.4 Message Length
-
-Message completeness is determined by the Content-Length header:
-
-- For requests: Content-Length is at header index 3
-- For responses: Content-Length is at header index 1
-
-When Content-Length is present and non-empty, the receiver continues reading until the body reaches the specified length.
-
-If Content-Length is absent or empty, the message is considered complete immediately after the ETX separator (`\x03`) is received.
-
-### 3.5 General Header Fields
-
-Headers use null byte `\0` as field separators. Empty headers are represented by consecutive null bytes (e.g., `field1\0\0field3` where the header at index 1 is empty).
-
-If a header is omitted but a subsequent header is present, an empty value (represented by consecutive `\0` bytes) MUST be used as a placeholder to maintain positional ordering.
+**Empty headers:** Use consecutive null bytes to maintain position (e.g., `field1\0\0field3` has empty header at index 1).
 
 ## 4. Request
 
 ### 4.1 Methods
 
-QH Version 0 defines the following methods. The version and method are encoded in the first byte of the request message as follows:
+QH Version 0 defines the following methods, encoded in the first byte:
 
-- **Bits 7-6 (upper 2 bits):** Version
-- **Bits 5-3 (middle 3 bits):** Method
-- **Bits 2-0 (lower 3 bits):** Reserved
+```mermaid
+---
+config:
+  packet:
+    bitsPerRow: 8
+---
+packet-beta
+  0-2: "Reserved"
+  3-5: "Method"
+  6-7: "Version"
+  title Request First Byte Layout
+```
 
-Bit layout: `[Version][Version][Method][Method][Method][Reserved][Reserved][Reserved]` (bit 7 to bit 0)
+| Method | Code | First Byte | Description                |
+| ------ | ---- | ---------- | -------------------------- |
+| GET    | 000  | `\x00`     | Retrieve a resource.       |
+| POST   | 001  | `\x08`     | Submit data to the server. |
 
-| Method | Code | Description                |
-| ------ | ---- | -------------------------- |
-| GET    | 000  | Retrieve a resource.       |
-| POST   | 001  | Submit data to the server. |
-
-For QH/0, the version number is `0`. So, a GET request uses `\x00` (00000000) and a POST request uses `\x08` (00001000).
+**Encoding:** Version is `0` for QH/0. Method bits: GET=000, POST=001. Reserved bits must be 0.
 
 ### 4.2 Request Format
 
-A request message has the following structure:
-
-```text
-<1-byte-field><Host>\0<Path>\0<Header-Value-1>\0...<Header-Value-N>\x03<Body>
+```
+<1-byte-method><Host>\0<Path>\0<Accept>\0<Accept-Encoding>\0<Content-Type>\0<Content-Length>\0\x03<Body>
 ```
 
-Where:
+**Fields:**
 
-- `1-byte-field`: First byte encoding (see [Section 4.1](#41-methods) for bit layout).
-- `Host`: Target hostname.
-- `Path`: Resource path. If empty, it will use `/` (root path).
-- `Header-Value-N`: Header values in a predefined order (see [Section 6.1](#61-request-headers)).
-- `Body`: Optional request body (present for POST/PUT requests).
-
-For general formatting rules (separators, Content-Length, message completeness), see [Section 3](#3-message-format).
+- **First byte**: Version + Method encoding (see [4.1](#41-methods))
+- **Host**: Target hostname (required, non-empty)
+- **Path**: Resource path (defaults to `/` if empty)
+- **Headers**: Accept, Accept-Encoding, Content-Type, Content-Length (see [6.1](#61-request-headers))
+- **Body**: Optional (typically used with POST)
 
 ### 4.3 Request Examples
 
-TODO: Add mermaid diagrams for simple get request, with/without headers, with body, ...
+#### Example 1: Simple GET Request
+
+```
+GET /hello
+Host: example.com
+```
+
+**Wire format structure:**
+
+```
+┌──────┐  ┌─────────────┐  ┌────────┐  ┌──────┐
+│ 0x00 │──│ example.com │──│ /hello │──│ \x03 │
+└──────┘  └─────────────┘  └────────┘  └──────┘
+   │            │              │          │
+   │            │              │          └─ ETX separator
+   │            │              └──────────── Path
+   │            └─────────────────────────── Host
+   └──────────────────────────────────────── First byte (V=0, Method=GET)
+```
+
+Note: All optional headers (Accept, Accept-Encoding, Content-Type, Content-Length)
+are empty, represented by consecutive \0 separators between Path and ETX.
+
+**Complete byte sequence:**
+
+```
+0x00 example.com\0/hello\0\0\0\0\0\x03
+```
+
+**Breakdown:**
+
+- `0x00`: First byte (Version=0, Method=GET)
+- `example.com\0`: Host field
+- `/hello\0`: Path field
+- `\0\0\0\0`: Four empty headers (Accept, Accept-Encoding, Content-Type, Content-Length)
+- `\x03`: ETX separator
+- (no body)
+
+#### Example 2: POST Request with Body
+
+```
+POST /echo
+Host: example.com
+Accept: JSON, text
+Content-Type: text/plain (code 1)
+Body: "Hello QH World!"
+```
+
+**Wire format structure:**
+
+```
+┌──────┐  ┌─────────────┐  ┌───────┐  ┌─────┐  ┌───┐  ┌────┐  ┌──────┐  ┌──────────────────┐
+│ 0x08 │──│ example.com │──│ /echo │──│ 2,1 │──│ 1 │──│ 15 │──│ \x03 │──│ Hello QH World!  │
+└──────┘  └─────────────┘  └───────┘  └─────┘  └───┘  └────┘  └──────┘  └──────────────────┘
+   │            │              │         │       │      │       │              │
+   │            │              │         │       │      │       │              └─ Body (15 bytes)
+   │            │              │         │       │      │       └──────────────── ETX separator
+   │            │              │         │       │      └──────────────────────── Content-Length
+   │            │              │         │       └─────────────────────────────── Content-Type: 1 (text/plain)
+   │            │              │         └─────────────────────────────────────── Accept: 2,1 (JSON, text)
+   │            │              └───────────────────────────────────────────────── Path
+   │            └──────────────────────────────────────────────────────────────── Host
+   └───────────────────────────────────────────────────────────────────────────── First byte (V=0, Method=POST)
+```
+
+Note: \0 separators between each field; Accept-Encoding is empty (consecutive \0).
+
+**Complete byte sequence:**
+
+```
+0x08 example.com\0/echo\02,1\0\01\015\0\x03Hello QH World!
+```
+
+**Breakdown:**
+
+- `0x08`: First byte (Version=0, Method=POST)
+- `example.com\0/echo\0`: Host and path
+- `2,1\0`: Accept = JSON, text/plain
+- `\0`: Accept-Encoding (empty)
+- `1\0`: Content-Type = 1 (text/plain)
+- `15\0`: Content-Length = 15 bytes
+- `\x03`: ETX separator
+- `Hello QH World!`: Body (15 bytes)
+
+#### Request Wire Format Legend
+
+```mermaid
+flowchart LR
+    A["First Byte<br/>(V+M+R)"] --> B["Host"]
+    B --> C["\\x00"]
+    C --> D["Path"]
+    D --> E["\\x00"]
+    E --> F["Headers<br/>(\\x00 separated)"]
+    F --> G["\\x03<br/>(ETX)"]
+    G --> H["Body<br/>(optional)"]
+```
 
 ## 5. Response
 
@@ -235,12 +317,21 @@ The protocol supports standard HTTP status code categories:
 
 #### Status Code Encoding
 
-For wire efficiency, the response version and status code are encoded into a single byte:
+Response version and status code are packed into a single byte:
 
-- **Bits 7-6 (upper 2 bits):** Version
-- **Bits 5-0 (lower 6 bits):** Compact Status Code
+```mermaid
+---
+config:
+  packet:
+    bitsPerRow: 8
+---
+packet-beta
+  0-5: "Compact Status Code"
+  6-7: "Version"
+  title Response First Byte Layout
+```
 
-Bit layout: `[Version][Version][Status][Status][Status][Status][Status][Status]` (bit 7 to bit 0)
+The 6-bit status code field supports 64 status codes (0-63), ordered by frequency.
 
 #### 5.1.1 Supported Status Codes
 
@@ -303,35 +394,145 @@ The following status codes are supported with their compact wire format encoding
 
 ### 5.2 Response Format
 
-A response message has the following structure:
-
-```text
-<1-byte-field><Header-Value-1>\0<Header-Value-2>\0...<Header-Value-N>\0\x03<Body>
+```
+<1-byte-status><Content-Type>\0<Content-Length>\0<Cache-Control>\0...<other-headers>\0\x03<Body>
 ```
 
-Where:
+**Fields:**
 
-- `1-byte-field`: First byte encoding (see [Section 5.1](#51-status-codes) for bit layout).
-- `Header-Value-N`: Header values in predefined order (see [Section 6.2](#62-response-headers)).
-- `Body`: Optional response body.
-
-For general formatting rules (separators, Content-Length, message completeness), see [Section 3](#3-message-format).
+- **First byte**: Version + Status encoding (see [5.1](#51-status-codes))
+- **Headers**: Content-Type, Content-Length, and optional headers (see [6.2](#62-response-headers))
+- **Body**: Optional response content
 
 ### 5.3 Response Examples
 
-TODO: Add mermaid diagrams for simple success response, response with headers, empty response, etc.
+#### Example 1: Simple 200 OK Response
+
+```
+Status: 200 OK
+Content-Type: text/plain (code 1)
+Body: "Hello from QH Protocol!"
+```
+
+**Wire format structure:**
+
+```
+┌──────┐  ┌───┐  ┌────┐  ┌──────┐  ┌──────────────────────────┐
+│ 0x00 │──│ 1 │──│ 23 │──│ \x03 │──│ Hello from QH Protocol!  │
+└──────┘  └───┘  └────┘  └──────┘  └──────────────────────────┘
+   │       │      │        │                   │
+   │       │      │        │                   └─── Body (23 bytes)
+   │       │      │        └─────────────────────── ETX separator (headers/body boundary)
+   │       │      └──────────────────────────────── Content-Length: 23
+   │       └─────────────────────────────────────── Content-Type: 1 (text/plain)
+   └─────────────────────────────────────────────── First byte (V=0, Status=0 → HTTP 200)
+```
+
+Note: Each field shown is separated by \0 (null byte). \x03 marks the boundary
+between headers and body.
+
+**Complete byte sequence:**
+
+```
+0x00 1\023\0\x03Hello from QH Protocol!
+```
+
+**Breakdown:**
+
+- `0x00`: First byte (Version=0, Status=0 → HTTP 200)
+- `1\0`: Content-Type = 1 (text/plain)
+- `23\0`: Content-Length = 23 bytes
+- `\x03`: ETX separator
+- `Hello from QH Protocol!`: Body (23 bytes)
+
+#### Example 2: 404 Not Found Response
+
+```
+Status: 404 Not Found
+Content-Type: text/plain (code 1)
+Body: "Not Found"
+```
+
+**Hexadecimal wire format:**
+
+```
+0x01 1\09\0\x03Not Found
+```
+
+**Breakdown:**
+
+- `0x01`: First byte (Version=0, Status=1 → HTTP 404)
+- `1\0`: Content-Type = 1 (text/plain)
+- `9\0`: Content-Length = 9 bytes
+- `\x03`: ETX separator
+- `Not Found`: Body (9 bytes)
+
+#### Example 3: JSON Response with Headers
+
+```
+Status: 200 OK
+Content-Type: application/json (code 2)
+Cache-Control: max-age=3600
+Date: 1758784800
+Body: {"name":"John Doe","id":123,"active":true}
+```
+
+**Wire format structure:**
+
+```
+┌──────┐  ┌───┐  ┌────┐  ┌──────────────┐  ┌────────────┐  ┌──────┐  ┌────────────────────────────────────────┐
+│ 0x00 │──│ 2 │──│ 47 │──│ max-age=3600 │──│ 1758784800 │──│ \x03 │──│ {"name":"John Doe","id":123,"act...}  │
+└──────┘  └───┘  └────┘  └──────────────┘  └────────────┘  └──────┘  └────────────────────────────────────────┘
+   │       │      │             │                  │           │                         │
+   │       │      │             │                  │           │                         └─── Body (JSON)
+   │       │      │             │                  │           └───────────────────────────── ETX separator (headers/body boundary)
+   │       │      │             │                  └───────────────────────────────────────── Date: 1758784800 (idx 7)
+   │       │      │             └──────────────────────────────────────────────────────────── Cache-Control (idx 2)
+   │       │      └────────────────────────────────────────────────────────────────────────── Content-Length: 47
+   │       └───────────────────────────────────────────────────────────────────────────────── Content-Type: 2 (JSON)
+   └───────────────────────────────────────────────────────────────────────────────────────── First byte (V=0, Status=0 → HTTP 200)
+```
+
+Note: Each field shown is separated by \0 (null byte). Optional headers Content-Encoding (idx 3),
+Authorization (idx 4), CORS (idx 5), ETag (idx 6), CSP (idx 8), X-Content-Type-Options (idx 9),
+and X-Frame-Options (idx 10) are empty (consecutive \0 between populated fields).
+
+**Complete byte sequence:**
+
+```
+0x00 2\047\0max-age=3600\0\0\01758784800\0\0\0\x03{"name":"John Doe","id":123,"active":true}
+```
+
+**Breakdown:**
+
+- `0x00`: First byte (Version=0, Status=0 → HTTP 200)
+- `2\0`: Content-Type = 2 (JSON)
+- `47\0`: Content-Length = 47 bytes
+- `max-age=3600\0`: Cache-Control (index 2)
+- `\0`: Content-Encoding (empty, index 3)
+- `\0`: Authorization (empty, index 4)
+- `\0`: CORS (empty, index 5)
+- `\0`: ETag (empty, index 6)
+- `1758784800\0`: Date (index 7)
+- `\0`: CSP (empty, index 8)
+- `\0`: X-Content-Type-Options (empty, index 9)
+- `\x03`: ETX separator
+- `{"name":"John Doe","id":123,"active":true}`: Body (47 bytes)
+
+#### Response Wire Format Legend
+
+```mermaid
+flowchart LR
+    A["First Byte<br/>(V+S)"] --> B["Headers<br/>(\\x00 separated)"]
+    B --> C["\\x03<br/>(ETX)"]
+    C --> D["Body<br/>(optional)"]
+```
 
 ## 6. Headers
 
-In QH, headers are transmitted as a sequence of values, with their meaning determined by their order in the message. This eliminates the need to send header names, reducing message size.
-
-If a header is omitted but a subsequent one is present, an empty value (consecutive null bytes) MUST be used as a placeholder to maintain position.
+Headers are position-dependent values without names, reducing message size. Empty headers use consecutive null bytes as placeholders.
 
 ### 6.1 Request Headers
-
-The following table defines the order and meaning of request headers.
-
-Note: `Host` is not included as it appears in the start-line of the request, not as a header.
 
 | Index | Header            | Description                                                     | Example                    |
 | ----- | ----------------- | --------------------------------------------------------------- | -------------------------- |
@@ -342,15 +543,11 @@ Note: `Host` is not included as it appears in the start-line of the request, not
 
 **Notes:**
 
-- For GET requests, `Content-Type` and `Content-Length` are empty and not needed.
-- For POST requests, `Content-Type` is recommended but not required (defaults to code 4 - octet-stream if missing). `Content-Length` is calculated from the body.
-- Accept header uses numeric codes (e.g., `3,2,1`) instead of MIME strings for compactness. `text/html,application/json,text/plain` becomes `3,2,1`.
-
-![QH Message Format](./docs/images/header.svg)
+- GET requests: `Content-Type` and `Content-Length` are empty
+- POST requests: `Content-Type` recommended but optional (defaults to code 4 - octet-stream). `Content-Length` is calculated from the body.
+- Accept uses numeric codes: `text/html,application/json,text/plain` → `3,2,1`
 
 ### 6.2 Response Headers
-
-The following table defines the order and meaning of response headers.
 
 | Index | Header                      | Description                                 | Example              |
 | ----- | --------------------------- | ------------------------------------------- | -------------------- |
