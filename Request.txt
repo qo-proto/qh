@@ -1,0 +1,45 @@
+---
+title: "QH Request"
+config:
+  packet:
+    bitsPerRow: 32
+---
+packet-beta
+    +8: "Packet Family"
+    +24: "Padding"
+    %%IP Part
+    +4: "Version"
+    +4: "Header Length"
+    +6: "Differentiated Services Codepoint"
+    +2: "Explicit Congestion Notification"
+    +16: "Total Length"
+    +16: "Identification"
+    +1: "Reserved Bit"
+    +1: "Dont Fragment"
+    +1: "More Fragments"
+    +13: "Fragment Offset"
+    +8: "Time to Live"
+    +8: "Protocol"
+    +16: "Header Checksum"
+    +32: "Source Address"
+    +32: "Destination Address"
+
+    %%UDP Part
+    +16: "Source Port"
+    +16: "Destination Port"
+    +16: "Length"
+    +16: "Checksum"
+
+    %%QOTP Part
+
+    %%QH Part
+    +2: "QH Version"
+    +3: "Request Method"
+    +3: "Reserved"
+    +24: "Hostname (Variable Lenght)"
+    +8: "Null Byte (Placeholder)"
+    +16: "Path (Variable Lenght)"
+    +8: "Null Byte (Placeholder)"
+    +8: "Accept (Variable Lenght)"
+    +8: "Null Byte (Placeholder)"
+    +8: "'\x03' Header End Character"

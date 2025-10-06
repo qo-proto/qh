@@ -1,28 +1,47 @@
 package server
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"strconv"
+	"strings"
 	"time"
+	"unsafe"
 
 	"qh/internal/protocol"
 
 	"github.com/tbocek/qotp"
 )
 
-// handles QH requests
+// Handler handles QH requests.
 type Handler func(*protocol.Request) *protocol.Response
+
+// connectionState holds the cached Host and Path for a qotp.Conn.
+type connectionState struct {
+	lastHost string
+	lastPath string
+}
 
 type Server struct {
 	listener *qotp.Listener
 	handlers map[string]map[protocol.Method]Handler // path -> method -> handler (method parsed from request first byte)
+	// connStates stores connection-specific state like cached headers.
+	connStates map[*qotp.Conn]*connectionState
+	// streamToConn maps a stream to its parent connection.
+	streamToConn map[*qotp.Stream]*qotp.Conn
+	// knownConns tracks connections that have been processed to avoid re-mapping.
+	knownConns map[*qotp.Conn]bool
 }
 
 func NewServer() *Server {
 	return &Server{
-		handlers: make(map[string]map[protocol.Method]Handler),
+		handlers:     make(map[string]map[protocol.Method]Handler),
+		connStates:   make(map[*qotp.Conn]*connectionState),
+		streamToConn: make(map[*qotp.Stream]*qotp.Conn),
+		knownConns:   make(map[*qotp.Conn]bool),
 	}
 }
 
@@ -58,8 +77,30 @@ func (s *Server) Serve() error {
 	streamBuffers := make(map[*qotp.Stream][]byte)
 
 	s.listener.Loop(func(stream *qotp.Stream) bool {
+		// On stream close, we could clean up the connection state if no other streams are active.
+		// For simplicity, we'll let them be garbage collected when the connection eventually closes.
+		// A more robust implementation might use a finalizer on the qotp.Conn.
+		// stream.Conn().OnClose(func() { delete(s.connStates, stream.Conn()) })
+
 		if stream == nil {
 			return true
+		}
+
+		// Since we cannot call stream.Conn(), we must find the parent connection
+		// by iterating through the listener's connections and their streams.
+		// We do this only once per new stream.
+		// This uses reflection as a workaround for unexported fields.
+		if _, exists := s.streamToConn[stream]; !exists {
+			// Use reflection to access the unexported 'conn' field of the stream.
+			streamVal := reflect.ValueOf(stream).Elem()
+			connVal := streamVal.FieldByName("conn")
+			if connVal.IsValid() && !connVal.IsNil() {
+				// Use unsafe to get the pointer value of the unexported field.
+				conn := (*qotp.Conn)(unsafe.Pointer(connVal.Pointer()))
+				if conn != nil {
+					s.streamToConn[stream] = conn
+				}
+			}
 		}
 
 		data, err := stream.Read()
@@ -108,13 +149,61 @@ func (s *Server) Close() error {
 
 // handleRequest parses a request from a stream, routes it, and sends a response.
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
-	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
+	// Create a binary string representation for logging
+	var binStr strings.Builder
+	for _, b := range requestData {
+		binStr.WriteString(fmt.Sprintf("%08b ", b))
+	}
+
+	slog.Info("Received request", "bytes", len(requestData),
+		"data_hex", hex.EncodeToString(requestData), "data_binary", binStr.String())
 
 	request, err := protocol.ParseRequest(requestData)
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
 		s.sendErrorResponse(stream, 400, "Bad Request")
 		return
+	}
+
+	// Get or create the state for this connection.
+	conn, ok := s.streamToConn[stream]
+	if !ok {
+		slog.Error("BUG: Could not find parent connection for stream")
+		s.sendErrorResponse(stream, 500, "Internal Server Error")
+		return
+	}
+	state, ok := s.connStates[conn]
+	if !ok {
+		state = &connectionState{}
+		s.connStates[conn] = state
+
+		// Use reflection to get the unexported connId for logging
+		connVal := reflect.ValueOf(conn).Elem()
+		connIDVal := connVal.FieldByName("connId")
+		if connIDVal.IsValid() {
+			slog.Debug("Created new connection state", "conn", connIDVal.Uint())
+		}
+
+	}
+
+	// Apply caching logic from the protocol definition.
+	if request.Host == "" {
+		if state.lastHost == "" {
+			slog.Error("Received request with empty host on a new connection")
+			s.sendErrorResponse(stream, 400, "Bad Request: Host is required on first request")
+			return
+		}
+		request.Host = state.lastHost
+		slog.Debug("Using cached host", "host", request.Host)
+	} else {
+		state.lastHost = request.Host // Update cache
+	}
+
+	if request.Path == "/" && state.lastPath != "" { // Check for empty path sentinel
+		request.Path = state.lastPath
+		slog.Debug("Using cached path", "path", request.Path)
+	} else {
+		state.lastPath = request.Path // Update cache
 	}
 
 	// Validate and normalize Content-Type for POST requests

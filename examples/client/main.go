@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"os"
@@ -12,6 +13,12 @@ import (
 	"qh/internal/protocol"
 )
 
+// requestCache holds the last used values for a connection.
+type requestCache struct {
+	hostname string
+	path     string
+}
+
 func main() {
 	slog.Info("QH Protocol Client starting")
 
@@ -21,9 +28,9 @@ func main() {
 	addr := fmt.Sprintf("%s:%d", hostname, port)
 
 	// ptr is a helper to create a pointer to a string literal.
-	ptr := func(s string) *string { return &s }
+	//ptr := func(s string) *string { return &s }
 
-	largePayload := strings.Repeat("LARGE_DATA_", 20000) // ~220KB
+	//largePayload := strings.Repeat("LARGE_DATA_", 20000) // ~220KB
 
 	requests := []struct {
 		method string
@@ -34,11 +41,11 @@ func main() {
 		{method: "GET", path: "/status"},
 		{method: "GET", path: "/api/user"}, // JSON response
 		{method: "POST", path: "/echo", body: ptr("Hello QH World!")},
-		{method: "POST", path: "/data", body: ptr("Updated data!")},
-		{method: "POST", path: "/large-post", body: &largePayload},
-		{method: "GET", path: "/file"},
-		{method: "GET", path: "/image"},
-		{method: "GET", path: "/not-found"}, // This will trigger a 404
+		//{method: "POST", path: "/data", body: ptr("Updated data!")},
+		//{method: "POST", path: "/large-post", body: &largePayload},
+		//{method: "GET", path: "/file"},
+		//{method: "GET", path: "/image"},
+		//{method: "GET", path: "/not-found"}, // This will trigger a 404
 	}
 
 	c := client.NewClient()
@@ -49,20 +56,34 @@ func main() {
 		return
 	}
 
+	// Simple cache for host and path per connection
+	cache := &requestCache{}
+
 	for _, req := range requests {
 		slog.Info("Testing request", "method", req.method, "path", req.path)
 
 		var response *protocol.Response
 		var err error
+
+		// Prepare values for request, using cache if possible
+		reqHost := hostname
+		reqPath := req.path
+		if cache.hostname == hostname {
+			reqHost = "" // Use cached host
+			if cache.path == req.path {
+				reqPath = "" // Use cached path
+			}
+		}
+
 		switch req.method {
 		case "GET":
-			response, err = c.GET(hostname, req.path, "3,2,1", "") // Accept: HTML, JSON, text/plain
+			response, err = c.GET(reqHost, reqPath, "3,2,1", "") // Accept: HTML, JSON, text/plain
 		case "POST":
 			body := ""
 			if req.body != nil {
 				body = *req.body
 			}
-			response, err = c.POST(hostname, req.path, body, "2,1", "", protocol.TextPlain) // Accept: JSON, text/plain
+			response, err = c.POST(reqHost, reqPath, body, "2,1", "", protocol.TextPlain) // Accept: JSON, text/plain
 		default:
 			slog.Error("Unsupported method", "method", req.method, "path", req.path)
 			continue
@@ -72,6 +93,10 @@ func main() {
 			slog.Error("Request failed", "method", req.method, "path", req.path, "error", err)
 			continue
 		}
+
+		// Update cache with non-empty values
+		cache.hostname = hostname
+		cache.path = req.path
 
 		logResponse(req.method, req.path, response)
 
@@ -94,6 +119,11 @@ func main() {
 	}
 
 	slog.Info("All tests completed")
+}
+
+// ptr is a helper to create a pointer to a string literal.
+func ptr(s string) *string {
+	return &s
 }
 
 func logResponse(method, path string, response *protocol.Response) {
@@ -128,6 +158,13 @@ func logResponse(method, path string, response *protocol.Response) {
 	if len(response.Body) > 100 {
 		bodyPreview = string(response.Body[:100]) + "... (truncated)"
 	}
-	sb.WriteString(fmt.Sprintf("Body (%d bytes): %s\n", len(response.Body), bodyPreview))
-	slog.Info(sb.String())
+
+	// Create a binary string representation for logging
+	var binStr strings.Builder
+	for _, b := range response.Body {
+		binStr.WriteString(fmt.Sprintf("%08b ", b))
+	}
+
+	sb.WriteString(fmt.Sprintf("Body (%d bytes): %s\n", len(response.Body), bodyPreview)) // Use response.Body directly
+	slog.Info(sb.String(), "response_hex", hex.EncodeToString(response.Format()), "body_binary", binStr.String())
 }

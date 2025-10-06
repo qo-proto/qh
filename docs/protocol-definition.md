@@ -202,6 +202,11 @@ packet-beta
 - **Headers**: Accept, Accept-Encoding, Content-Type, Content-Length (see [6.1](#61-request-headers))
 - **Body**: Optional (typically used with POST)
 
+**Header Caching:**
+
+- **Host**: On a persistent `qotp` connection, if the `Host` field is empty, the server MUST use the most recently received non-empty `Host` from the same connection. The first request on a connection MUST contain a non-empty `Host`.
+- **Path**: Similarly, if the `Path` field is empty, the server MUST use the most recently received non-empty `Path` from the same connection. This overrides the default behavior of treating an empty path as `/`. The first request on a connection for a given host SHOULD contain a non-empty `Path`.
+
 ### 4.3 Request Examples
 
 #### Example 1: Simple GET Request

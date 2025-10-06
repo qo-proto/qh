@@ -300,15 +300,10 @@ func ParseRequest(data []byte) (*Request, error) {
 		return nil, errors.New("invalid request: not enough parts in header")
 	}
 
-	// Validate required fields are not empty
-	if parts[0] == "" {
-		return nil, errors.New("invalid request: empty host")
-	}
-
-	// Default empty path to root
+	// Path defaults to "/" if empty, but can be overridden by caching logic later.
 	path := parts[1]
 	if path == "" {
-		path = "/"
+		path = "/" // Default behavior
 	}
 
 	req := &Request{
