@@ -243,7 +243,7 @@ are empty, represented by consecutive \0 separators between Path and ETX.
 - `\0`: Accept-Encoding (empty)
 - `\0`: Content-Type (empty)
 - `\0`: Content-Length (empty)
-- `\x03`: ETX separator (marks end of headers)
+- `\x03`: ETX separator
 - (no body)
 
 Note: When a header value is empty, only the separator between fields is visible in the wire format.
@@ -295,7 +295,7 @@ Note: \0 separators between each field; Accept-Encoding is empty (consecutive \0
 - `1`: Content-Type value (text/plain)
 - `\0`: Separator
 - `15`: Content-Length value
-- `\x03`: ETX separator (marks end of headers)
+- `\x03`: ETX separator
 - `Hello QH World!`: Body (15 bytes)
 
 #### Request Wire Format Legend
