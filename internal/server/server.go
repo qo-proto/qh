@@ -26,6 +26,13 @@ func NewServer() *Server {
 	}
 }
 
+func (s *Server) getPublicKeyDNS() string {
+	if s.listener == nil || s.listener.PubKey() == nil {
+		return ""
+	}
+	return fmt.Sprintf("v=%d;k=%x", qotp.ProtoVersion, s.listener.PubKey().Bytes())
+}
+
 // HandleFunc registers a handler for a given path and method.
 func (s *Server) HandleFunc(path string, method protocol.Method, handler Handler) {
 	if s.handlers[path] == nil {
@@ -48,7 +55,8 @@ func (s *Server) Listen(addr string, seed ...string) error {
 		return fmt.Errorf("failed to listen on %s: %w", addr, err)
 	}
 	s.listener = listener
-	slog.Info("QH server listening with auto-generated keys", "address", addr)
+	slog.Info("QH server listening", "address", addr)
+	slog.Info("Server public key for DNS", "pubKey", s.getPublicKeyDNS())
 	return nil
 }
 

@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net"
 	"strconv"
+	"strings"
+	"sync"
 
 	"qh/internal/protocol"
 
@@ -35,18 +37,80 @@ func (c *Client) Connect(addr string) error {
 		return fmt.Errorf("invalid port: %w", err)
 	}
 
-	// Resolve hostname to IP if it's not already an IP
+	// Concurrently resolve hostname to IP and look for a server public key in DNS.
 	var ip net.IP
-	ip = net.ParseIP(host)
-	if ip == nil {
+	var serverPubKey string
+	var ipLookupErr error
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// Goroutine for IP address lookup
+	go func() {
+		defer wg.Done()
+		// First, try parsing as an IP to avoid a DNS lookup if not needed.
+		parsedIP := net.ParseIP(host)
+		if parsedIP != nil {
+			ip = parsedIP
+			return
+		}
+		// If not an IP, resolve the hostname.
 		ips, err := net.DefaultResolver.LookupIPAddr(context.Background(), host)
 		if err != nil {
-			return fmt.Errorf("failed to resolve hostname %s: %w", host, err)
+			ipLookupErr = fmt.Errorf("failed to resolve hostname %s: %w", host, err)
+			return
 		}
 		if len(ips) == 0 {
-			return fmt.Errorf("no IP addresses found for hostname: %s", host)
+			ipLookupErr = fmt.Errorf("no IP addresses found for hostname: %s", host)
+			return
 		}
 		ip = ips[0].IP // Use the first resolved IP
+	}()
+
+	// Goroutine to get server public key from DNS for 0-RTT connection
+	go func() {
+		defer wg.Done()
+		txtRecords, err := net.DefaultResolver.LookupTXT(context.Background(), "_qotp."+host)
+		if err != nil || len(txtRecords) == 0 {
+			// No record found or an error occurred, just continue without 0-RTT.
+			return
+		}
+
+		// Parse the first TXT record, expecting "v=0;k=..."
+		record := txtRecords[0]
+		parts := strings.Split(record, ";")
+		var version = -1
+		var key string
+
+		for _, part := range parts {
+			kv := strings.SplitN(part, "=", 2)
+			if len(kv) != 2 {
+				continue
+			}
+			switch strings.TrimSpace(kv[0]) {
+			case "v":
+				v, err := strconv.Atoi(kv[1])
+				if err == nil {
+					version = v
+				}
+			case "k":
+				key = kv[1]
+			}
+		}
+
+		// Validate the found values
+		if version == qotp.ProtoVersion && key != "" {
+			serverPubKey = key
+			slog.Info("Found valid QOTP public key in DNS TXT record", "host", host, "key", serverPubKey)
+		} else {
+			slog.Warn("DNS TXT record found but is invalid or has mismatched version", "record", record, "expected_version", qotp.ProtoVersion)
+		}
+	}()
+
+	wg.Wait()
+
+	// Check for errors from the IP lookup.
+	if ipLookupErr != nil {
+		return ipLookupErr
 	}
 
 	// create local listener (auto generates keys)
@@ -57,15 +121,6 @@ func (c *Client) Connect(addr string) error {
 	c.listener = listener
 
 	ipAddr := fmt.Sprintf("%s:%d", ip.String(), port)
-
-	// Try to get server public key from DNS for 0-RTT connection
-	txtRecords, _ := net.DefaultResolver.LookupTXT(context.Background(), "_qotp."+host)
-	var serverPubKey string
-	if len(txtRecords) > 0 {
-		// Assuming the key is in the first TXT record
-		serverPubKey = txtRecords[0]
-		slog.Info("Found QOTP public key in DNS TXT record", "host", host, "key", serverPubKey)
-	}
 
 	var conn *qotp.Conn
 	if serverPubKey != "" {

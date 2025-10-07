@@ -71,9 +71,10 @@ func main() {
 
 	// listening with auto-generated keys
 	addr := "127.0.0.1:8090"
+	seed := "Start123"
 	// You can provide a seed for deterministic keys
 	//if err := srv.Listen(addr); err != nil {
-	if err := srv.Listen(addr, "my-secret-server-seed"); err != nil {
+	if err := srv.Listen(addr, seed); err != nil {
 		slog.Error("Failed to start server", "error", err)
 		os.Exit(1)
 	}
