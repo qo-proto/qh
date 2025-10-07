@@ -3,6 +3,8 @@ package client
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -126,7 +128,13 @@ func (c *Client) Connect(addr string) error {
 	if serverPubKey != "" {
 		// Out-of-band key exchange (0-RTT)
 		slog.Info("Attempting connection with out-of-band key (0-RTT)")
-		conn, err = listener.DialWithCryptoString(ipAddr, serverPubKey)
+		pubKeyBytes, decodeErr := base64.StdEncoding.DecodeString(serverPubKey)
+		if decodeErr != nil {
+			slog.Warn("Failed to decode base64 public key from DNS, falling back to in-band handshake", "error", decodeErr)
+		} else {
+			pubKeyHex := hex.EncodeToString(pubKeyBytes)
+			conn, err = listener.DialWithCryptoString(ipAddr, pubKeyHex)
+		}
 	} else {
 		// In-band key exchange
 		slog.Info("No DNS key found, attempting connection with in-band key exchange")

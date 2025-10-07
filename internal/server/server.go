@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -30,7 +31,7 @@ func (s *Server) getPublicKeyDNS() string {
 	if s.listener == nil || s.listener.PubKey() == nil {
 		return ""
 	}
-	return fmt.Sprintf("v=%d;k=%x", qotp.ProtoVersion, s.listener.PubKey().Bytes())
+	return fmt.Sprintf("v=%d;k=%s", qotp.ProtoVersion, base64.StdEncoding.EncodeToString(s.listener.PubKey().Bytes()))
 }
 
 // HandleFunc registers a handler for a given path and method.
