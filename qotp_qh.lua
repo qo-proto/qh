@@ -1,4 +1,5 @@
 -- QOTP and QH Protocol Dissector for Wireshark
+-- QOTP and QH Protocol Dissector for Wireshark with Decryption
 
 --[[
 This script decodes the QOTP (Quite Ok Transport Protocol) and the nested
@@ -8,14 +9,28 @@ To use:
 1. Save this file as `qotp_qh.lua`.
 2. Place it in your personal Wireshark plugins directory.
    (Find this via Help > About Wireshark > Folders > Personal Lua Plugins).
-3. Restart Wireshark.
-4. Capture traffic on UDP port 8090.
+3. In Wireshark, go to Edit > Preferences > Protocols > QOTP.
+4. Set the "Key Log File" path to your `qotp_keylog.log` file.
+5. Restart Wireshark and capture traffic on UDP port 8090.
 --]]
 
 -- =============================================================================
 -- QOTP Dissector
 -- =============================================================================
+
+-- Attempt to load the crypto library. This is required for decryption.
+-- If this fails, the script will still dissect unencrypted parts.
+local has_openssl, openssl = pcall(require, "openssl")
+if not has_openssl then
+    print("QOTP Dissector: 'openssl' library not found. Decryption will be disabled.")
+end
+
+-- Create a new protocol
 local qotp_protocol = Proto("QOTP", "Quite Ok Transport Protocol")
+
+-- Preferences for the protocol
+local keylog_filename_pref = Pref.string("Key Log File", "", "Path to the QOTP key log file")
+qotp_protocol.prefs.keylog_filename = keylog_filename_pref
 
 -- QOTP Header Fields
 local f_qotp_version = ProtoField.uint8("qotp.version", "Version", base.DEC)
@@ -31,10 +46,10 @@ local f_qotp_pubkey_id_snd = ProtoField.bytes("qotp.pubkey_id_snd", "Public Key 
 local f_qotp_pubkey_ep_snd = ProtoField.bytes("qotp.pubkey_ep_snd", "Public Key Ephemeral (Sender)", base.NONE)
 local f_qotp_pubkey_id_rcv = ProtoField.bytes("qotp.pubkey_id_rcv", "Public Key ID (Receiver)", base.NONE)
 local f_qotp_pubkey_ep_rcv = ProtoField.bytes("qotp.pubkey_ep_rcv", "Public Key Ephemeral (Receiver)", base.NONE)
-local f_qotp_sn_crypto = ProtoField.bytes("qotp.sn_crypto", "Encrypted SN", base.NONE)
+local f_qotp_sn_crypto = ProtoField.bytes("qotp.sn_crypto", "Crypto Sequence Number", base.NONE)
 local f_qotp_filler = ProtoField.bytes("qotp.filler", "Filler", base.NONE)
-local f_qotp_decrypted_sn = ProtoField.uint64("qotp.decrypted_sn", "Decrypted SN", base.DEC)
 local f_qotp_payload = ProtoField.bytes("qotp.payload", "Encrypted Payload", base.NONE)
+local f_qotp_decryption_error = ProtoField.string("qotp.decryption_error", "Decryption Error", base.ASCII)
 
 qotp_protocol.fields = {
     f_qotp_version,
@@ -46,13 +61,39 @@ qotp_protocol.fields = {
     f_qotp_pubkey_ep_rcv,
     f_qotp_sn_crypto,
     f_qotp_filler,
-    f_qotp_decrypted_sn,
-    f_qotp_payload
+    f_qotp_payload,
+    f_qotp_decryption_error
 }
 
--- Field extractor for the sender's ephemeral public key.
-local pubkey_ep_snd_field = Field.new("qotp.pubkey_ep_snd")
+-- Table to store session secrets
+local session_secrets = {}
 
+-- Function to load keys from the key log file
+function load_keylog_file()
+    local filename = qotp_protocol.prefs.keylog_filename
+    if filename == "" then return end
+
+    -- Clear existing keys
+    session_secrets = {}
+    local key_count = 0
+
+    local file, err = io.open(filename, "r")
+    if not file then
+        print("QOTP Dissector: Could not open keylog file: " .. filename .. " (" .. tostring(err) .. ")")
+        return
+    end
+
+    for line in file:lines() do
+        -- Expected format: QOTP_SHARED_SECRET <connId_hex> <secret_hex>
+        local _, _, conn_id_hex, secret_hex = string.find(line, "^QOTP_SHARED_SECRET%s+([0-9a-fA-F]+)%s+([0-9a-fA-F]+)")
+        if conn_id_hex and secret_hex then
+            session_secrets[conn_id_hex] = secret_hex
+            key_count = key_count + 1
+        end
+    end
+    file:close()
+    print("QOTP Dissector: Loaded " .. tostring(key_count) .. " keys from " .. filename)
+end
 
 function qotp_protocol.dissector(buffer, pinfo, tree)
     pinfo.cols.protocol = qotp_protocol.name
@@ -62,7 +103,7 @@ function qotp_protocol.dissector(buffer, pinfo, tree)
 
     -- Decode 1-byte header (Version and Type)
     local header_byte = buffer(offset, 1):uint()
-    local version = bit.band(header_byte, 0x1F) -- Lower 5 bits
+    local version = bit.band(header_byte, 0x1F) -- Lower 5 bits (as per codec.go)
     local msg_type = bit.rshift(header_byte, 5) -- Upper 3 bits
     local type_str = f_qotp_type.valuestring[msg_type] or "Unknown"
 
@@ -72,17 +113,23 @@ function qotp_protocol.dissector(buffer, pinfo, tree)
 
     pinfo.cols.info:set(string.format("Type: %s", type_str))
 
+    local conn_id_hex = ""
     -- Most messages have a Connection ID
-    if msg_type ~= 0 then -- InitSnd uses part of a key as the ConnID
-        subtree:add(f_qotp_conn_id, buffer(offset, 8))
+    if msg_type ~= 0 then -- InitSnd derives ConnID from the key
+        local conn_id_tvb = buffer(offset, 8)
+        subtree:add(f_qotp_conn_id, conn_id_tvb)
+        conn_id_hex = conn_id_tvb:string() -- Use :string() directly on the TvbRange
     end
 
     -- Dissect based on message type
     if msg_type == 0 then -- InitSnd
-        subtree:add(f_qotp_pubkey_ep_snd, buffer(offset, 32))
+        local pubkey_ep_snd_tvb = buffer(offset, 32)
+        subtree:add(f_qotp_pubkey_ep_snd, pubkey_ep_snd_tvb)
         offset = offset + 32
         subtree:add(f_qotp_pubkey_id_snd, buffer(offset, 32))
         offset = offset + 32
+        -- For InitSnd, the first 8 bytes of the ephemeral key are the ConnID
+        conn_id_hex = pubkey_ep_snd_tvb(0, 8):string()
         if buffer:len() > offset then
             subtree:add(f_qotp_filler, buffer(offset))
         end
@@ -113,10 +160,61 @@ function qotp_protocol.dissector(buffer, pinfo, tree)
         offset = offset + 6
     end
 
-    -- After dissecting the unencrypted header, try to decrypt the rest
+    -- After dissecting the unencrypted header, try to decrypt the payload
     if buffer:len() > offset then
-        local payload_tvb = buffer(offset):tvb()
-        qh_encrypted_dissector_func(payload_tvb, pinfo, tree)
+        local encrypted_payload_tvb = buffer(offset)
+        local secret_hex = session_secrets[conn_id_hex]
+
+        if secret_hex and has_openssl then
+            -- We have a key, let's try to decrypt
+            local secret_bytes = ByteArray.new(secret_hex, true)
+            local aad_tvb = buffer(0, offset) -- The header is the AAD
+
+            -- Extract the encrypted sequence number and the main payload
+            local sn_encrypted_tvb = encrypted_payload_tvb(0, 6)
+            local first_layer_ciphertext_tvb = encrypted_payload_tvb(6)
+
+            -- Step 1: Decrypt the sequence number (XChaCha20)
+            -- The nonce for this is the first 24 bytes of the main payload.
+            if first_layer_ciphertext_tvb:len() < 24 then
+                subtree:add(f_qotp_decryption_error, "Payload too short for SN decryption nonce")
+                return
+            end
+            local sn_nonce_tvb = first_layer_ciphertext_tvb(0, 24)
+            local sn_decrypted_bytes, err = pcall(openssl.aead.decrypt, 'xchacha20-poly1305', secret_bytes:raw(), sn_nonce_tvb:raw(), "", sn_encrypted_tvb:raw())
+            if not sn_decrypted_bytes then
+                subtree:add(f_qotp_decryption_error, "Failed to decrypt sequence number: " .. tostring(err))
+                return
+            end
+
+            -- Step 2: Decrypt the main payload (ChaCha20)
+            -- The nonce is derived from the decrypted sequence number.
+            local payload_nonce = ByteArray.new()
+            payload_nonce:append(ByteArray.new(sn_decrypted_bytes))
+            payload_nonce:set_len(12) -- Pad with zeros to 12 bytes
+
+            local plaintext_bytes, err = pcall(openssl.aead.decrypt, 'chacha20-poly1305', secret_bytes:raw(), payload_nonce:raw(), aad_tvb:raw(), first_layer_ciphertext_tvb:raw())
+
+            if plaintext_bytes then
+                -- Decryption successful! Call the QH sub-dissector.
+                local decrypted_tvb = ByteArray.new(plaintext_bytes):tvb("Decrypted QH Payload")
+                Dissector.get("qh"):call(decrypted_tvb, pinfo, tree)
+            else
+                -- Decryption failed
+                subtree:add(f_qotp_payload, encrypted_payload_tvb)
+                subtree:add(f_qotp_decryption_error, "Payload decryption failed: " .. tostring(err))
+            end
+
+            -- If decryption were successful, you would call the QH dissector:
+            -- Dissector.get("qh"):call(decrypted_tvb, pinfo, tree)
+
+        else
+            -- No key found, just show the encrypted payload
+            subtree:add(f_qotp_payload, encrypted_payload_tvb)
+            if not has_openssl then
+                subtree:add_expert_info(PI_COMMENT, PI_NOTE, "Decryption skipped: 'openssl' Lua library not found.")
+            end
+        end
     end
 end
 
@@ -126,115 +224,101 @@ end
 local qh_protocol = Proto("QH", "Quite Ok HTTP Protocol")
 
 -- QH Fields
-local f_qh_version = ProtoField.uint8("qh.version", "Version", base.DEC)
--- Request fields
-local f_qh_method = ProtoField.uint8("qh.method", "Method", base.DEC, { [0] = "GET", [1] = "POST" })
-local f_qh_host = ProtoField.string("qh.host", "Host", base.ASCII)
-local f_qh_path = ProtoField.string("qh.path", "Path", base.ASCII)
--- Response fields
-local f_qh_status = ProtoField.uint8("qh.status_code", "Status Code (Compact)", base.DEC)
--- Common fields
-local f_qh_headers = ProtoField.string("qh.headers", "Headers", base.ASCII)
-local f_qh_body = ProtoField.bytes("qh.body", "Body", base.NONE)
+local f_qh_payload_version = ProtoField.uint8("qh.payload.version", "Version", base.DEC)
+local f_qh_payload_type = ProtoField.uint8("qh.payload.type", "Type", base.DEC, { [0] = "DATA", [1] = "PING", [2] = "CLOSE" })
+local f_qh_payload_offset_size = ProtoField.string("qh.payload.offset_size", "Offset Size", base.ASCII)
+local f_qh_payload_has_ack = ProtoField.bool("qh.payload.has_ack", "Has ACK", base.NONE)
+
+local f_qh_ack_stream_id = ProtoField.uint32("qh.ack.stream_id", "ACK Stream ID", base.DEC)
+local f_qh_ack_offset = ProtoField.uint64("qh.ack.offset", "ACK Offset", base.DEC)
+local f_qh_ack_len = ProtoField.uint16("qh.ack.len", "ACK Length", base.DEC)
+local f_qh_ack_rcv_wnd = ProtoField.uint64("qh.ack.rcv_wnd", "ACK Receive Window", base.DEC)
+
+local f_qh_data_stream_id = ProtoField.uint32("qh.data.stream_id", "Data Stream ID", base.DEC)
+local f_qh_data_offset = ProtoField.uint64("qh.data.offset", "Data Offset", base.DEC)
+local f_qh_data_payload = ProtoField.bytes("qh.data.payload", "Data Payload", base.NONE)
 
 qh_protocol.fields = {
-    f_qh_version, f_qh_method, f_qh_host, f_qh_path, f_qh_status, f_qh_headers, f_qh_body
+    f_qh_payload_version, f_qh_payload_type, f_qh_payload_offset_size, f_qh_payload_has_ack,
+    f_qh_ack_stream_id, f_qh_ack_offset, f_qh_ack_len, f_qh_ack_rcv_wnd,
+    f_qh_data_stream_id, f_qh_data_offset, f_qh_data_payload
 }
 
 -- This is the dissector for the PLAINTEXT QH data after decryption.
 function qh_protocol.dissector(buffer, pinfo, tree)
     pinfo.cols.protocol:append("/QH")
-    local subtree = tree:add(qh_protocol, buffer, "QH Protocol Data (Decrypted)")
+    local subtree = tree:add(qh_protocol, buffer, "QH Payload (Decrypted)")
+    local offset = 0
 
-    -- Find the ETX character (\x03) which separates headers from the body
-    local etx_offset = buffer:find(string.char(3))
-    if not etx_offset then
-        subtree:add_expert_info(PI_MALFORMED, PI_ERROR, "No ETX body separator found")
+    if buffer:len() < 1 then
+        subtree:add_expert_info(PI_MALFORMED, PI_ERROR, "Payload is empty")
         return
     end
 
-    -- The body is everything after the ETX character
-    local body_offset = etx_offset + 1
-    if body_offset < buffer:len() then
-        local body_tvb = buffer(body_offset)
-        subtree:add(f_qh_body, body_tvb)
+    -- Decode payload header byte
+    local header_byte = buffer(offset, 1):uint()
+    local version = bit.band(header_byte, 0x0F) -- bits 0-3
+    local type_flag = bit.band(bit.rshift(header_byte, 4), 0x03) -- bits 4-5
+    local is_extend = bit.band(bit.rshift(header_byte, 6), 0x01) == 1 -- bit 6
+    local has_ack = bit.band(bit.rshift(header_byte, 7), 0x01) == 1 -- bit 7
+
+    local header_tree = subtree:add(buffer(offset, 1), string.format("QH Payload Header: Type=%s, %s, %s",
+        f_qh_payload_type.valuestring[type_flag],
+        is_extend and "48-bit" or "24-bit",
+        has_ack and "ACK" or "No ACK"))
+    header_tree:add(f_qh_payload_version, buffer(offset, 1), version)
+    header_tree:add(f_qh_payload_type, buffer(offset, 1), type_flag)
+    header_tree:add(f_qh_payload_offset_size, buffer(offset, 1), is_extend and "48-bit" or "24-bit")
+    header_tree:add(f_qh_payload_has_ack, buffer(offset, 1), has_ack)
+    offset = offset + 1
+
+    local offset_len = is_extend and 6 or 3
+
+    -- Decode ACK section
+    if has_ack then
+        local ack_tree = subtree:add(buffer(offset), "ACK Section")
+        ack_tree:add(f_qh_ack_stream_id, buffer(offset, 4))
+        offset = offset + 4
+        ack_tree:add(f_qh_ack_offset, buffer(offset, offset_len))
+        offset = offset + offset_len
+        ack_tree:add(f_qh_ack_len, buffer(offset, 2))
+        offset = offset + 2
+        -- The rcv_wnd is not fully implemented in the Go code, so we'll just show the byte
+        ack_tree:add(f_qh_ack_rcv_wnd, buffer(offset, 1))
+        offset = offset + 1
     end
 
-    -- The first byte determines if it's a request or response
-    local first_byte = buffer(0, 1):uint()
-    local version = bit.rshift(first_byte, 6)
+    -- Decode Data section
+    local data_tree = subtree:add(buffer(offset), "Data Section")
+    data_tree:add(f_qh_data_stream_id, buffer(offset, 4))
+    offset = offset + 4
+    data_tree:add(f_qh_data_offset, buffer(offset, offset_len))
+    offset = offset + offset_len
 
-    -- A simple heuristic: if version is 0, we can check the method/status bits.
-    -- This part can be expanded to fully parse all QH headers.
-    if version == 0 then
-        -- Check if it's a request (Method bits are in a known range)
-        local method = bit.band(bit.rshift(first_byte, 3), 0x07)
-        if method == 0 or method == 1 then -- GET or POST
-            pinfo.cols.info:append(" (Request)")
-            local header_data = buffer(1, etx_offset - 1):string()
-            local parts = {}
-            for part in header_data:gmatch("([^\0]*)") do
-                table.insert(parts, part)
-            end
-            subtree:add(f_qh_host, parts[1])
-            subtree:add(f_qh_path, parts[2])
-        else -- Assume it's a response
-            pinfo.cols.info:append(" (Response)")
-        end
+    if buffer:len() > offset then
+        local data_payload_tvb = buffer(offset)
+        data_tree:add(f_qh_data_payload, data_payload_tvb)
+        -- Here you would call the final application layer dissector (e.g., HTTP-like)
+        -- Dissector.get("http"):call(data_payload_tvb, pinfo, tree)
     end
 end
 
--- This function is called by the QOTP dissector for encrypted payloads.
--- It tells Wireshark to *try* to decrypt the data.
-function qh_encrypted_dissector_func(buffer, pinfo, tree)
-    -- This is the magic part. To trigger decryption, we must fool Wireshark's TLS dissector.
+-- Reload keys when preferences change
+function qotp_protocol.prefs_changed()
+    load_keylog_file()
+end
 
-    -- 1. Check if the client's ephemeral public key is in the CURRENT packet.
-    --    This will only be true for the first packet from the client.
-    local pubkey_ep_snd_info = pubkey_ep_snd_field()
-    if pubkey_ep_snd_info then
-        -- This is the initial client packet. We must construct a fake "Client Hello"
-        -- to prime the TLS dissector with the session identifier ("Client Random").
-
-        -- Create the "Client Random" by hashing the ephemeral key.
-        -- Use ssl_md5_sha1_hash for compatibility with very old Wireshark versions.
-        -- Despite its name, it can compute a standalone SHA256 hash.
-        -- The first two arguments are nil because we are not computing a TLS-PRF.
-        local hash_bytes_str = ssl_md5_sha1_hash(nil, nil, pubkey_ep_snd_info.range, "SHA256")
-        local hash_bytes = ByteArray.new(hash_bytes_str)
-
-        -- Create a fake "Client Hello" message containing this "Client Random".
-        local client_hello = ByteArray.new("01000026" .. "0303") -- Handshake Type: Client Hello (1), Length: 38, Version: TLS 1.2 (0x0303)
-        client_hello:append(hash_bytes)
-
-        -- Create a fake TLS record containing BOTH the fake Client Hello and the real encrypted data.
-        local tls_record = ByteArray.new()
-        tls_record:append(ByteArray.new("1603030026"))
-        tls_record:append(client_hello)
-        tls_record:append(ByteArray.new("170303" .. string.format("%04x", buffer:len()))) -- App Data record header
-        tls_record:append(buffer:bytes())
-
-        local tvb = tls_record:tvb("QOTP as TLS")
-        Dissector.get("tls"):call(tvb, pinfo, tree)
-    else
-        -- This is a subsequent packet (e.g., a server reply). The TLS session is already
-        -- established in Wireshark's memory. We just need to tell the TLS dissector
-        -- to decrypt this buffer as application data.
-        local tls_dissector = Dissector.get("tls.decrypted_data")
-        if tls_dissector then
-            tls_dissector:call(buffer(), pinfo, tree)
-        else
-            -- Optionally log or handle the missing dissector
-            print("tls.decrypted_data dissector not available")
-        end
-
-    end
+-- Load keys on init
+function qotp_protocol.init()
+    load_keylog_file()
 end
 
 -- Register QOTP to handle UDP traffic on port 8090
 local udp_dissector_table = DissectorTable.get("udp.port")
 udp_dissector_table:add(8090, qotp_protocol)
 
--- Register our QH dissector to be called for decrypted TLS/QOTP application data.
-local tls_dissector_table = DissectorTable.get("tls.port")
-tls_dissector_table:add(8090, qh_protocol)
+-- This is a placeholder. To actually decrypt and dissect, you would
+-- register the QH dissector to be called from the QOTP dissector.
+-- For example, by creating a new dissector table:
+-- local qotp_payload_table = DissectorTable.new("qotp.payload", "QOTP Payload")
+-- qotp_payload_table:add(4, qh_protocol) -- Assuming '4' is the type for Data
