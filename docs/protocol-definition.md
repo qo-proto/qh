@@ -230,17 +230,23 @@ are empty, represented by consecutive \0 separators between Path and ETX.
 **Complete byte sequence:**
 
 ```
-0x00 example.com\0/hello\0\0\0\0\x03
+\x00example.com\0/hello\0\0\0\0\x03
 ```
 
 **Breakdown:**
 
-- `0x00`: First byte (Version=0, Method=GET, Reserved=0)
-- `example.com\0`: Host field
-- `/hello\0`: Path field
-- `\0\0\0\0`: Four empty headers (Accept, Accept-Encoding, Content-Type, Content-Length)
-- `\x03`: ETX separator
+- `\x00`: First byte (Version=0, Method=GET, Reserved=0)
+- `example.com`: Host value
+- `\0`: Separator
+- `/hello`: Path value
+- `\0`: Accept (empty)
+- `\0`: Accept-Encoding (empty)
+- `\0`: Content-Type (empty)
+- `\0`: Content-Length (empty)
+- `\x03`: ETX separator (marks end of headers)
 - (no body)
+
+Note: When a header value is empty, only the separator between fields is visible in the wire format.
 
 #### Example 2: POST Request with Body
 
@@ -274,19 +280,22 @@ Note: \0 separators between each field; Accept-Encoding is empty (consecutive \0
 **Complete byte sequence:**
 
 ```
-0x08 example.com\0/echo\02,1\0\01\015\x03Hello QH World!
+\x08example.com\0/echo\02,1\0\01\015\x03Hello QH World!
 ```
 
 **Breakdown:**
 
-- `0x08`: First byte (Version=0, Method=POST, Reserved=0)
-- `example.com\0`: Host field
-- `/echo\0`: Path field
-- `2,1\0`: Accept = JSON, text/plain (code 2, code 1)
+- `\x08`: First byte (Version=0, Method=POST, Reserved=0)
+- `example.com`: Host value
+- `\0`: Separator
+- `/echo`: Path value
+- `\0`: Separator
+- `2,1`: Accept value (JSON, text/plain codes)
 - `\0`: Accept-Encoding (empty)
-- `1\0`: Content-Type = 1 (text/plain)
-- `15`: Content-Length = 15 bytes (no trailing \0)
-- `\x03`: ETX separator
+- `1`: Content-Type value (text/plain)
+- `\0`: Separator
+- `15`: Content-Length value
+- `\x03`: ETX separator (marks end of headers)
 - `Hello QH World!`: Body (15 bytes)
 
 #### Request Wire Format Legend
@@ -435,14 +444,15 @@ between headers and body.
 **Complete byte sequence:**
 
 ```
-0x00 1\023\x03Hello from QH Protocol!
+\x001\023\x03Hello from QH Protocol!
 ```
 
 **Breakdown:**
 
-- `0x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
-- `1\0`: Content-Type = 1 (text/plain)
-- `23`: Content-Length = 23 bytes (no trailing \0)
+- `\x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
+- `1`: Content-Type value (text/plain)
+- `\0`: Separator
+- `23`: Content-Length value
 - `\x03`: ETX separator
 - `Hello from QH Protocol!`: Body (23 bytes)
 
@@ -457,14 +467,15 @@ Body: "Not Found"
 **Wire format:**
 
 ```
-0x01 1\09\x03Not Found
+\x011\09\x03Not Found
 ```
 
 **Breakdown:**
 
-- `0x01`: First byte (Version=0, Compact Status=1 → HTTP 404)
-- `1\0`: Content-Type = 1 (text/plain)
-- `9`: Content-Length = 9 bytes (no trailing \0)
+- `\x01`: First byte (Version=0, Compact Status=1 → HTTP 404)
+- `1`: Content-Type value (text/plain)
+- `\0`: Separator
+- `9`: Content-Length value
 - `\x03`: ETX separator
 - `Not Found`: Body (9 bytes)
 
@@ -501,23 +512,26 @@ and X-Frame-Options (idx 10) are empty (consecutive \0 between populated fields)
 **Complete byte sequence:**
 
 ```
-0x00 2\042\0max-age=3600\0\0\0\0\01758784800\0\0\0\x03{"name":"John Doe","id":123,"active":true}
+\x002\042\0max-age=3600\0\0\0\0\01758784800\0\0\0\x03{"name":"John Doe","id":123,"active":true}
 ```
 
 **Breakdown:**
 
-- `0x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
-- `2\0`: Content-Type = 2 (JSON)
-- `42\0`: Content-Length = 42 bytes
-- `max-age=3600\0`: Cache-Control (index 2)
+- `\x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
+- `2`: Content-Type value (JSON)
+- `\0`: Separator
+- `42`: Content-Length value
+- `\0`: Separator
+- `max-age=3600`: Cache-Control value (index 2)
 - `\0`: Content-Encoding (empty, index 3)
 - `\0`: Authorization (empty, index 4)
 - `\0`: CORS (empty, index 5)
 - `\0`: ETag (empty, index 6)
-- `1758784800\0`: Date (index 7)
+- `\0`: Separator
+- `1758784800`: Date value (index 7)
 - `\0`: CSP (empty, index 8)
 - `\0`: X-Content-Type-Options (empty, index 9)
-- (last header is empty, no trailing \0 after the final empty header at index 10)
+- `\0`: X-Frame-Options (empty, index 10)
 - `\x03`: ETX separator
 - `{"name":"John Doe","id":123,"active":true}`: Body (42 bytes)
 

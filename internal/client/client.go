@@ -128,10 +128,10 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 }
 
 func (c *Client) GET(host, path string, accept, acceptEncoding string) (*protocol.Response, error) {
-	headers := make([]string, 4) // 4 headers in a Request
-	headers[protocol.ReqHeaderAccept] = accept
-	headers[protocol.ReqHeaderAcceptEncoding] = acceptEncoding
-	// Content-Type and Content-Length are empty for GET requests
+	var headers []string
+	if accept != "" || acceptEncoding != "" {
+		headers = []string{accept, acceptEncoding}
+	}
 
 	req := &protocol.Request{
 		Method:  protocol.GET,
