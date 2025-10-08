@@ -11,6 +11,7 @@ Status: Draft
   - [1. Introduction](#1-introduction)
     - [1.1 Purpose](#11-purpose)
     - [1.2 Terminology](#12-terminology)
+    - [1.3 Protocol Stack](#13-protocol-stack)
   - [2. Protocol Parameters](#2-protocol-parameters)
     - [2.1 QH Version](#21-qh-version)
     - [2.2 Media Types](#22-media-types)
@@ -519,14 +520,14 @@ Body: {"name":"John Doe","id":123,"active":true}
 
 ```
 ┌──────┐  ┌──────┐  ┌───┐  ┌──────┐  ┌────┐  ┌──────┐  ┌──────────────┐  ┌──────┐  ┌────────────┐  ┌──────┐  ┌───────────────────────────────────┐
-│ 0x00 │──│ \x01 │──│ 2 │──│ \x02 │──│ 42 │──│ \x03 │──│ max-age=3600 │──│ \x05 │──│ 1758784800 │──│ \x03 │──│ {"name":"John Doe","id":123,...} │
+│ 0x00 │──│ \x01 │──│ 2 │──│ \x02 │──│ 42 │──│ \x04 │──│ max-age=3600 │──│ \x06 │──│ 1758784800 │──│ \x03 │──│ {"name":"John Doe","id":123,...} │
 └──────┘  └──────┘  └───┘  └──────┘  └────┘  └──────┘  └──────────────┘  └──────┘  └────────────┘  └──────┘  └───────────────────────────────────┘
 ```
 
 **Complete byte sequence:**
 
 ```
-\x00\x01\02\0\x02\042\0\x03\0max-age=3600\0\x05\01758784800\0\x03{"name":"John Doe","id":123,"active":true}
+\x00\x01\02\0\x02\042\0\x04\0max-age=3600\0\x06\01758784800\0\x03{"name":"John Doe","id":123,"active":true}
 ```
 
 **Breakdown:**
@@ -540,11 +541,11 @@ Body: {"name":"John Doe","id":123,"active":true}
 - `\0`: Separator
 - `42`: Header value
 - `\0`: Separator
-- `\x03`: Header ID 3 (Cache-Control)
+- `\x04`: Header ID 4 (Cache-Control)
 - `\0`: Separator
 - `max-age=3600`: Header value
 - `\0`: Separator
-- `\x05`: Header ID 5 (Date)
+- `\x06`: Header ID 6 (Date)
 - `\0`: Separator
 - `1758784800`: Header value
 - `\0`: Separator

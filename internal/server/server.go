@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
-	"time"
 
 	"qh/internal/protocol"
 
@@ -139,20 +138,14 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 }
 
 func (s *Server) validateContentType(request *protocol.Request, stream *qotp.Stream) error {
-	// Check if Content-Type header exists and is not empty
-	hasContentType := len(request.Headers) > protocol.ReqHeaderContentType &&
-		request.Headers[protocol.ReqHeaderContentType] != ""
+	contentTypeStr, hasContentType := request.Headers["Content-Type"]
 
-	if !hasContentType {
-		// Content-Type missing or empty, default to octet-stream
+	if !hasContentType || contentTypeStr == "" {
 		slog.Debug("Content-Type missing for POST, defaulting to octet-stream")
-		s.ensureHeadersSize(request, protocol.ReqHeaderContentType)
-		request.Headers[protocol.ReqHeaderContentType] = strconv.Itoa(int(protocol.OctetStream)) // default
+		request.Headers["Content-Type"] = strconv.Itoa(int(protocol.OctetStream))
 		return nil
 	}
 
-	// Validate Content-Type is in valid range (0-15)
-	contentTypeStr := request.Headers[protocol.ReqHeaderContentType]
 	contentType, parseErr := strconv.Atoi(contentTypeStr)
 	if parseErr != nil || !protocol.IsValidContentType(contentType) {
 		slog.Error("Invalid Content-Type", "value", contentTypeStr)
@@ -161,14 +154,6 @@ func (s *Server) validateContentType(request *protocol.Request, stream *qotp.Str
 	}
 
 	return nil
-}
-
-func (s *Server) ensureHeadersSize(request *protocol.Request, minIndex int) {
-	if len(request.Headers) <= minIndex {
-		newHeaders := make([]string, minIndex+1)
-		copy(newHeaders, request.Headers)
-		request.Headers = newHeaders
-	}
 }
 
 func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
@@ -193,55 +178,19 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	}
 }
 
-// TODO: determine content type and convert body to bytes if needed
-// so no need to manually write []byte: server.Response(404, protocol.TextPlain, []byte("Not Found"))
-// TODO: make content-type optional like in http?
-func Response(statusCode int, contentType protocol.ContentType, body []byte, headers map[int]string) *protocol.Response {
-	// For minimal responses (no optional headers), just return Content-Type and Content-Length
-	if len(headers) == 0 {
-		return &protocol.Response{
-			Version:    protocol.Version,
-			StatusCode: statusCode,
-			Headers: []string{
-				strconv.Itoa(int(contentType)), // [0] Content-Type
-				strconv.Itoa(len(body)),        // [1] Content-Length
-			},
-			Body: body,
-		}
+func Response(statusCode int, contentType protocol.ContentType, body []byte, headers map[string]string) *protocol.Response {
+	headerMap := make(map[string]string)
+	headerMap["Content-Type"] = strconv.Itoa(int(contentType))
+	headerMap["Content-Length"] = strconv.Itoa(len(body))
+
+	for key, value := range headers {
+		headerMap[key] = value
 	}
-
-	// Calculate max header index needed
-	maxIdx := 1 // At minimum we need Content-Type (0) and Content-Length (1)
-	for idx := range headers {
-		if idx > maxIdx {
-			maxIdx = idx
-		}
-	}
-
-	// Ensure room for date header
-	if protocol.RespHeaderDate > maxIdx {
-		maxIdx = protocol.RespHeaderDate
-	}
-
-	// Build header array (auto-fills with empty strings)
-	headerArray := make([]string, maxIdx+1)
-	headerArray[0] = strconv.Itoa(int(contentType)) // [0] Content-Type
-	headerArray[1] = strconv.Itoa(len(body))        // [1] Content-Length
-
-	// Add user headers (and prevent overriding Date)
-	for idx, val := range headers {
-		if idx > 1 && idx != protocol.RespHeaderDate {
-			headerArray[idx] = val
-		}
-	}
-
-	// Auto add Date when optional headers are present
-	headerArray[protocol.RespHeaderDate] = strconv.FormatInt(time.Now().Unix(), 10)
 
 	return &protocol.Response{
 		Version:    protocol.Version,
 		StatusCode: statusCode,
-		Headers:    headerArray,
+		Headers:    headerMap,
 		Body:       body,
 	}
 }

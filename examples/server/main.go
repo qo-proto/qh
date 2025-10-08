@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"qh/internal/protocol"
 	"qh/internal/server"
@@ -33,7 +35,12 @@ func main() {
 
 	srv.HandleFunc("/api/user", protocol.GET, func(_ *protocol.Request) *protocol.Response {
 		slog.Info("Handling request", "method", "GET", "path", "/api/user")
-		return server.JSONResponse(200, `{"name": "John Doe", "id": 123, "active": true}`)
+		headers := map[string]string{
+			"Cache-Control": "max-age=3600",
+			"Date":          strconv.FormatInt(time.Now().Unix(), 10),
+		}
+		body := `{"name": "John Doe", "id": 123, "active": true}`
+		return server.Response(200, protocol.JSON, []byte(body), headers)
 	})
 
 	srv.HandleFunc("/data", protocol.POST, func(req *protocol.Request) *protocol.Response {

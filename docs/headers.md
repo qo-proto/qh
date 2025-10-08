@@ -20,19 +20,20 @@ QH uses 1-byte header IDs instead of full header names, with separate lookup tab
 | ------ | ----------------- | ----------------------------------- | -------------------------- |
 | 1      | Accept            | Media types client can process      | `3,2,1` (HTML, JSON, text) |
 | 2      | Accept-Encoding   | Content encoding client supports    | `gzip, br, zstd`           |
-| 3      | Accept-Language   | Language preferences                | `en-US,en;q=0.9`           |
-| 4      | Content-Type      | Numeric content type code           | `2` (for JSON)             |
-| 5      | Content-Length    | Request body size in bytes          | `42`                       |
-| 6      | Authorization     | Authentication credentials          | `Bearer <token>`           |
-| 7      | Cookie            | HTTP cookies                        | `session=abc123`           |
-| 8      | User-Agent        | Client identification               | `QH-Client/1.0`            |
-| 9      | Referer           | Referring page URL                  | `qh://example.com/page`    |
-| 10     | Origin            | Request origin for CORS             | `qh://example.com`         |
-| 11     | If-None-Match     | Conditional request ETag            | `"abc123"`                 |
-| 12     | If-Modified-Since | Conditional request timestamp       | `1758784800`               |
-| 13     | Range             | Request partial content             | `bytes=0-1023`             |
-| 14     | X-Payment         | x402 payment protocol payload       | `<base64-encoded-json>`    |
-| 15-127 | (reserved)        | Reserved for future request headers |                            |
+| 3      | (reserved)        | Reserved (conflicts with ETX \x03)  |                            |
+| 4      | Accept-Language   | Language preferences                | `en-US,en;q=0.9`           |
+| 5      | Content-Type      | Numeric content type code           | `2` (for JSON)             |
+| 6      | Content-Length    | Request body size in bytes          | `42`                       |
+| 7      | Authorization     | Authentication credentials          | `Bearer <token>`           |
+| 8      | Cookie            | HTTP cookies                        | `session=abc123`           |
+| 9      | User-Agent        | Client identification               | `QH-Client/1.0`            |
+| 10     | Referer           | Referring page URL                  | `qh://example.com/page`    |
+| 11     | Origin            | Request origin for CORS             | `qh://example.com`         |
+| 12     | If-None-Match     | Conditional request ETag            | `"abc123"`                 |
+| 13     | If-Modified-Since | Conditional request timestamp       | `1758784800`               |
+| 14     | Range             | Request partial content             | `bytes=0-1023`             |
+| 15     | X-Payment         | x402 payment protocol payload       | `<base64-encoded-json>`    |
+| 16-127 | (reserved)        | Reserved for future request headers |                            |
 
 ## Response Headers (IDs 1-127)
 
@@ -40,23 +41,24 @@ QH uses 1-byte header IDs instead of full header names, with separate lookup tab
 | ------ | ---------------------------- | --------------------------- | ----------------------- |
 | 1      | Content-Type                 | Numeric content type code   | `1` (text/plain)        |
 | 2      | Content-Length               | Response body size in bytes | `42`                    |
-| 3      | Cache-Control                | Caching directives          | `max-age=3600`          |
-| 4      | Content-Encoding             | Content encoding used       | `gzip`                  |
-| 5      | Date                         | Unix timestamp              | `1758784800`            |
-| 6      | ETag                         | Entity tag for validation   | `"abc123"`              |
-| 7      | Expires                      | Response expiration time    | `1758788400`            |
-| 8      | Last-Modified                | Resource modification time  | `1758780000`            |
-| 9      | Access-Control-Allow-Origin  | CORS allowed origins        | `*`                     |
-| 10     | Access-Control-Allow-Methods | CORS allowed methods        | `GET, POST, PUT`        |
-| 11     | Access-Control-Allow-Headers | CORS allowed headers        | `Content-Type`          |
-| 12     | Set-Cookie                   | Set HTTP cookie             | `session=abc; Secure`   |
-| 13     | Location                     | Redirect location           | `/new-path`             |
-| 14     | Content-Security-Policy      | CSP directives              | `default-src 'self'`    |
-| 15     | X-Content-Type-Options       | MIME sniffing protection    | `nosniff`               |
-| 16     | X-Frame-Options              | Clickjacking protection     | `SAMEORIGIN`            |
-| 17     | Vary                         | Response variance           | `Accept-Encoding`       |
-| 18     | X-Payment-Response           | x402 settlement response    | `<base64-encoded-json>` |
-| 19-127 | (reserved)                   | Reserved for future headers |                         |
+| 3      | (reserved)                   | Reserved (conflicts with ETX \x03) |                  |
+| 4      | Cache-Control                | Caching directives          | `max-age=3600`          |
+| 5      | Content-Encoding             | Content encoding used       | `gzip`                  |
+| 6      | Date                         | Unix timestamp              | `1758784800`            |
+| 7      | ETag                         | Entity tag for validation   | `"abc123"`              |
+| 8      | Expires                      | Response expiration time    | `1758788400`            |
+| 9      | Last-Modified                | Resource modification time  | `1758780000`            |
+| 10     | Access-Control-Allow-Origin  | CORS allowed origins        | `*`                     |
+| 11     | Access-Control-Allow-Methods | CORS allowed methods        | `GET, POST, PUT`        |
+| 12     | Access-Control-Allow-Headers | CORS allowed headers        | `Content-Type`          |
+| 13     | Set-Cookie                   | Set HTTP cookie             | `session=abc; Secure`   |
+| 14     | Location                     | Redirect location           | `/new-path`             |
+| 15     | Content-Security-Policy      | CSP directives              | `default-src 'self'`    |
+| 16     | X-Content-Type-Options       | MIME sniffing protection    | `nosniff`               |
+| 17     | X-Frame-Options              | Clickjacking protection     | `SAMEORIGIN`            |
+| 18     | Vary                         | Response variance           | `Accept-Encoding`       |
+| 19     | X-Payment-Response           | x402 settlement response    | `<base64-encoded-json>` |
+| 20-127 | (reserved)                   | Reserved for future headers |                         |
 
 ## Custom Headers
 
