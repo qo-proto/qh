@@ -493,6 +493,11 @@ func ParseRequest(data []byte) (*Request, error) {
 		offset++
 	}
 	host := string(headerBytes[hostStart:offset])
+
+	// Check if we found a null terminator or reached the end
+	if offset >= len(headerBytes) {
+		return nil, errors.New("invalid request: missing null terminator after host")
+	}
 	offset++ // Skip \x00 separator
 
 	if host == "" {
