@@ -73,6 +73,26 @@ While HTTP is a feature-rich protocol for hypermedia systems, QH focuses on prov
 - **Message**: Either a request or a response, consisting of a start line, headers, and an optional body.
 - **Header**: A key-value pair providing metadata about a message.
 
+### 1.3 Protocol Stack
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│            Application Layer: qh:// Protocol                │
+│  • HTTP-inspired request/response semantics                 │
+│  • Compact binary encoding                                  │
+│  • DNS-based certificate distribution via TXT records       │
+├─────────────────────────────────────────────────────────────┤
+│            Transport Layer: QOTP                            │
+│  • 0-RTT connection establishment                           │
+│  • Built-in encryption (curve25519/chacha20-poly1305)       │
+│  • UDP-based communication                                  │
+│  • Stream multiplexing                                      │
+├─────────────────────────────────────────────────────────────┤
+│               Network Layer: UDP/IP                         │
+│  • Standard network layer                                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
 ## 2. Protocol Parameters
 
 ### 2.1 QH Version
