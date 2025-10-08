@@ -42,7 +42,8 @@ Status: Draft
       - [7.2.1 Connection Reuse](#721-connection-reuse)
       - [7.2.2 Reusing Connections for Multiple Origins](#722-reusing-connections-for-multiple-origins)
   - [8. Security Considerations](#8-security-considerations)
-  - [9. Versioning](#9-versioning)
+  - [9. Domain Name System](#9-domain-name-system)
+  - [10. Versioning](#10-versioning)
 
 ## 1. Introduction
 
@@ -594,7 +595,11 @@ While the transport is secure, implementations MUST still validate input to avoi
 
 Future specifications MAY define authentication headers or security extensions.
 
-## 9. Versioning
+## 9. Domain Name System
+
+- See [DNS](./dns.md)
+
+## 10. Versioning
 
 This document specifies QH/0.
 
