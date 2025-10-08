@@ -178,9 +178,8 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	}
 }
 
-func Response(statusCode int, contentType protocol.ContentType, body []byte, headers map[string]string) *protocol.Response {
+func Response(statusCode int, body []byte, headers map[string]string) *protocol.Response {
 	headerMap := make(map[string]string)
-	headerMap["Content-Type"] = strconv.Itoa(int(contentType))
 	headerMap["Content-Length"] = strconv.Itoa(len(body))
 
 	for key, value := range headers {
@@ -197,9 +196,15 @@ func Response(statusCode int, contentType protocol.ContentType, body []byte, hea
 
 // Convenience methods for common response types
 func TextResponse(statusCode int, body string) *protocol.Response {
-	return Response(statusCode, protocol.TextPlain, []byte(body), nil)
+	headers := map[string]string{
+		"Content-Type": strconv.Itoa(int(protocol.TextPlain)),
+	}
+	return Response(statusCode, []byte(body), headers)
 }
 
 func JSONResponse(statusCode int, body string) *protocol.Response {
-	return Response(statusCode, protocol.JSON, []byte(body), nil)
+	headers := map[string]string{
+		"Content-Type": strconv.Itoa(int(protocol.JSON)),
+	}
+	return Response(statusCode, []byte(body), headers)
 }
