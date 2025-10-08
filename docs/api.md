@@ -4,49 +4,65 @@
 
 ### Response Function
 
-QH uses a single `Response()` function that handles both minimal and header-rich responses:
+QH uses a single `Response()` function that accepts headers as a string map:
 
 ```go
-// Minimal response with required headers only (Content-Type and Content-Length)
-server.Response(200, protocol.JSON, []byte(`{"message": "success"}`), nil)
-server.Response(404, protocol.TextPlain, []byte("Not Found"), nil)
-
-// Response with optional headers (Date auto-added)
-server.Response(200, protocol.JSON, body, map[int]string{
-    protocol.RespHeaderCacheControl: "max-age=3600",
-    protocol.RespHeaderCORS: "*",
-    protocol.RespHeaderETag: "\"abc123\"",
+// Minimal response with automatic Content-Length
+server.Response(200, []byte(`{"message": "success"}`), map[string]string{
+    "Content-Type": strconv.Itoa(int(protocol.JSON)),
 })
 
-// Convenience methods (all use Response() with nil headers internally)
-server.TextResponse(200, "Hello, World!")        // text/plain
-server.TextResponse(404, "Not Found")            // text/plain errors
-server.JSONResponse(200, `{"data": "value"}`)    // application/json
+// Response with multiple headers
+server.Response(200, []byte(body), map[string]string{
+    "Content-Type":  strconv.Itoa(int(protocol.JSON)),
+    "Cache-Control": "max-age=3600",
+    "Date":          strconv.FormatInt(time.Now().Unix(), 10),
+    "ETag":          "\"abc123\"",
+})
+
+// Convenience methods (automatically set Content-Type)
+server.TextResponse(200, "Hello, World!")        // Content-Type: 1 (text/plain)
+server.TextResponse(404, "Not Found")            // Content-Type: 1 (text/plain)
+server.JSONResponse(200, `{"data": "value"}`)    // Content-Type: 2 (application/json)
 ```
 
 **Notes**:
 
-- When `headers` contains any optional headers, `RespHeaderDate` is automatically added with current Unix timestamp
-- `RespHeaderDate` cannot be overridden by applications to ensure timestamp accuracy
-- Gaps between specified header indices are automatically filled with empty strings
-- Content-Type (index 0) and Content-Length (index 1) are always set automatically
+- `Content-Length` is automatically calculated and set
+- `Date` header is optional, set it manually if needed for caching
+- All header values are strings (use `strconv.Itoa()` for numeric values)
 
-#### Available Response Header Indices
+**Example:**
 
 ```go
-const (
-    RespHeaderContentType     = 0  // Content type (automatically set)
-    RespHeaderContentLength   = 1  // Size of response body (automatically set)
-    RespHeaderCacheControl    = 2  // Cache-Control directives
-    RespHeaderContentEncoding = 3  // Content encoding used (e.g., "gzip")
-    RespHeaderAuthorization   = 4  // Authorization info
-    RespHeaderCORS            = 5  // Access-Control-Allow-Origin
-    RespHeaderETag            = 6  // Entity tag for cache validation
-    RespHeaderDate            = 7  // Unix timestamp (automatically set)
-    RespHeaderCSP             = 8  // Content-Security-Policy
-    RespHeaderContentTypeOpts = 9  // X-Content-Type-Options
-    RespHeaderFrameOptions    = 10 // X-Frame-Options
-)
+headers := map[string]string{
+    "Content-Type": strconv.Itoa(int(protocol.JSON)),  // "2"
+}
 ```
 
 ## Client
+
+### GET Request
+
+```go
+headers := map[string]string{
+    "Accept": "3,2,1",  // HTML, JSON, text/plain (in order of preference)
+}
+response, err := client.GET("example.com", "/api/data", headers)
+```
+
+### POST Request
+
+```go
+body := []byte(`{"name": "test"}`)
+headers := map[string]string{
+    "Accept":       "2,1",  // JSON, text/plain
+    "Content-Type": strconv.Itoa(int(protocol.JSON)),  // "2"
+}
+response, err := client.POST("example.com", "/submit", body, headers)
+```
+
+**Notes**:
+
+- `Content-Length` is automatically set for POST requests
+- Body is `[]byte` (convert strings with `[]byte()`)
