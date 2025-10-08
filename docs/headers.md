@@ -82,7 +82,7 @@ Accept: 3,2,1\0        → text/html, application/json, text/plain (in order)
 
 ## Custom Headers
 
-When a header is not in the predefined table, use ID 0:
+When a header is not in the predefined table, ID 0 will be used:
 
 **Wire Format:**
 
