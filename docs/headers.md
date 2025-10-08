@@ -37,28 +37,48 @@ QH uses 1-byte header IDs instead of full header names, with separate lookup tab
 
 ## Response Headers (IDs 1-127)
 
-| ID     | Header Name                  | Description                 | Example                 |
-| ------ | ---------------------------- | --------------------------- | ----------------------- |
-| 1      | Content-Type                 | Numeric content type code   | `1` (text/plain)        |
-| 2      | Content-Length               | Response body size in bytes | `42`                    |
-| 3      | (reserved)                   | Reserved (conflicts with ETX \x03) |                  |
-| 4      | Cache-Control                | Caching directives          | `max-age=3600`          |
-| 5      | Content-Encoding             | Content encoding used       | `gzip`                  |
-| 6      | Date                         | Unix timestamp              | `1758784800`            |
-| 7      | ETag                         | Entity tag for validation   | `"abc123"`              |
-| 8      | Expires                      | Response expiration time    | `1758788400`            |
-| 9      | Last-Modified                | Resource modification time  | `1758780000`            |
-| 10     | Access-Control-Allow-Origin  | CORS allowed origins        | `*`                     |
-| 11     | Access-Control-Allow-Methods | CORS allowed methods        | `GET, POST, PUT`        |
-| 12     | Access-Control-Allow-Headers | CORS allowed headers        | `Content-Type`          |
-| 13     | Set-Cookie                   | Set HTTP cookie             | `session=abc; Secure`   |
-| 14     | Location                     | Redirect location           | `/new-path`             |
-| 15     | Content-Security-Policy      | CSP directives              | `default-src 'self'`    |
-| 16     | X-Content-Type-Options       | MIME sniffing protection    | `nosniff`               |
-| 17     | X-Frame-Options              | Clickjacking protection     | `SAMEORIGIN`            |
-| 18     | Vary                         | Response variance           | `Accept-Encoding`       |
-| 19     | X-Payment-Response           | x402 settlement response    | `<base64-encoded-json>` |
-| 20-127 | (reserved)                   | Reserved for future headers |                         |
+| ID     | Header Name                  | Description                        | Example                 |
+| ------ | ---------------------------- | ---------------------------------- | ----------------------- |
+| 1      | Content-Type                 | Numeric content type code          | `1` (text/plain)        |
+| 2      | Content-Length               | Response body size in bytes        | `42`                    |
+| 3      | (reserved)                   | Reserved (conflicts with ETX \x03) |                         |
+| 4      | Cache-Control                | Caching directives                 | `max-age=3600`          |
+| 5      | Content-Encoding             | Content encoding used              | `gzip`                  |
+| 6      | Date                         | Unix timestamp                     | `1758784800`            |
+| 7      | ETag                         | Entity tag for validation          | `"abc123"`              |
+| 8      | Expires                      | Response expiration time           | `1758788400`            |
+| 9      | Last-Modified                | Resource modification time         | `1758780000`            |
+| 10     | Access-Control-Allow-Origin  | CORS allowed origins               | `*`                     |
+| 11     | Access-Control-Allow-Methods | CORS allowed methods               | `GET, POST, PUT`        |
+| 12     | Access-Control-Allow-Headers | CORS allowed headers               | `Content-Type`          |
+| 13     | Set-Cookie                   | Set HTTP cookie                    | `session=abc; Secure`   |
+| 14     | Location                     | Redirect location                  | `/new-path`             |
+| 15     | Content-Security-Policy      | CSP directives                     | `default-src 'self'`    |
+| 16     | X-Content-Type-Options       | MIME sniffing protection           | `nosniff`               |
+| 17     | X-Frame-Options              | Clickjacking protection            | `SAMEORIGIN`            |
+| 18     | Vary                         | Response variance                  | `Accept-Encoding`       |
+| 19     | X-Payment-Response           | x402 settlement response           | `<base64-encoded-json>` |
+| 20-127 | (reserved)                   | Reserved for future headers        |                         |
+
+## Content Type Codes
+
+Content-Type and Accept headers use numeric codes instead of MIME type strings:
+
+| Code | MIME Type                | Description                       | Common Use Cases         |
+| ---- | ------------------------ | --------------------------------- | ------------------------ |
+| 0    | custom                   | Custom/unspecified type           | Rare, use specific types |
+| 1    | text/plain               | Plain text                        | Simple text responses    |
+| 2    | application/json         | JSON data                         | API responses, AJAX      |
+| 3    | text/html                | HTML markup                       | Web pages, SPA shells    |
+| 4    | application/octet-stream | Binary data                       | Files, images, downloads |
+| 5-15 | (reserved)               | Reserved for future content types |                          |
+
+**Wire format:**
+
+```
+Content-Type: 2\0      → application/json
+Accept: 3,2,1\0        → text/html, application/json, text/plain (in order)
+```
 
 ## Custom Headers
 
