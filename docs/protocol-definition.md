@@ -144,7 +144,7 @@ Resources made available via the "qh" scheme have no shared identity with resour
 All QH messages follow this structure:
 
 ```
-<1-byte-header><header-key1>\0<header-value1>\0<header-key2>\0<header-value2>\0...\x03<optional-body>
+<1-byte-header>[<header-id>\0<value>\0...]\x03<optional-body>
 ```
 
 **Key principles:**
@@ -188,7 +188,7 @@ packet-beta
 ### 4.2 Request Format
 
 ```
-<1-byte-method><Host>\0<Path>\0<header-key>\0<header-value>\0...\x03<Body>
+<1-byte-method><Host>\0<Path>\0[<header-id>\0<value>\0...]\x03<Body>
 ```
 
 **Fields:**
@@ -402,7 +402,7 @@ The following status codes are supported with their compact wire format encoding
 ### 5.2 Response Format
 
 ```
-<1-byte-status><header-key>\0<header-value>\0...\x03<Body>
+<1-byte-status>[<header-id>\0<value>\0...]\x03<Body>
 ```
 
 **Fields:**
@@ -542,7 +542,7 @@ flowchart LR
 
 ## 6. Headers
 
-For the available headers, see [header_table](./header_table.md#request-headers).
+For the available headers, see [headers](./headers.md).
 
 **Notes:**
 
