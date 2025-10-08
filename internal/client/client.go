@@ -127,10 +127,9 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 	return response, nil
 }
 
-func (c *Client) GET(host, path string, accept, acceptEncoding string) (*protocol.Response, error) {
-	var headers []string
-	if accept != "" || acceptEncoding != "" {
-		headers = []string{accept, acceptEncoding}
+func (c *Client) GET(host, path string, headers map[string]string) (*protocol.Response, error) {
+	if headers == nil {
+		headers = make(map[string]string)
 	}
 
 	req := &protocol.Request{
@@ -143,14 +142,15 @@ func (c *Client) GET(host, path string, accept, acceptEncoding string) (*protoco
 	return c.Request(req)
 }
 
-// TODO: implement accept & acceptEncoding
-func (c *Client) POST(host, path, body string, accept, acceptEncoding string, contentType protocol.ContentType) (*protocol.Response, error) {
-	bodyBytes := []byte(body)
-	headers := make([]string, 4)
-	headers[protocol.ReqHeaderAccept] = accept
-	headers[protocol.ReqHeaderAcceptEncoding] = acceptEncoding
-	headers[protocol.ReqHeaderContentType] = strconv.Itoa(int(contentType))
-	headers[protocol.ReqHeaderContentLength] = strconv.Itoa(len(bodyBytes))
+func (c *Client) POST(host, path string, body []byte, headers map[string]string) (*protocol.Response, error) {
+	if headers == nil {
+		headers = make(map[string]string)
+	}
+
+	// Auto-set Content-Length if not provided
+	if _, exists := headers["Content-Length"]; !exists {
+		headers["Content-Length"] = strconv.Itoa(len(body))
+	}
 
 	req := &protocol.Request{
 		Method:  protocol.POST,
@@ -158,7 +158,7 @@ func (c *Client) POST(host, path, body string, accept, acceptEncoding string, co
 		Path:    path,
 		Version: protocol.Version,
 		Headers: headers,
-		Body:    bodyBytes,
+		Body:    body,
 	}
 	return c.Request(req)
 }

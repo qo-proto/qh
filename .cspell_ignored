@@ -2,6 +2,7 @@ Clickjacking
 SAMEORIGIN
 Zstandard
 abempty
+chacha
 hostnames
 nosniff
 qotp

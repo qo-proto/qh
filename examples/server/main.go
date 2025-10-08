@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"qh/internal/protocol"
 	"qh/internal/server"
@@ -33,7 +35,13 @@ func main() {
 
 	srv.HandleFunc("/api/user", protocol.GET, func(_ *protocol.Request) *protocol.Response {
 		slog.Info("Handling request", "method", "GET", "path", "/api/user")
-		return server.JSONResponse(200, `{"name": "John Doe", "id": 123, "active": true}`)
+		headers := map[string]string{
+			"Content-Type":  strconv.Itoa(int(protocol.JSON)),
+			"Cache-Control": "max-age=3600",
+			"Date":          strconv.FormatInt(time.Now().Unix(), 10),
+		}
+		body := `{"name": "John Doe", "id": 123, "active": true}`
+		return server.Response(200, []byte(body), headers)
 	})
 
 	srv.HandleFunc("/data", protocol.POST, func(req *protocol.Request) *protocol.Response {
@@ -55,7 +63,10 @@ func main() {
 			slog.Error("Failed to read file", "error", err)
 			return server.TextResponse(500, "Internal Server Error")
 		}
-		return server.Response(200, protocol.TextPlain, content, nil)
+		headers := map[string]string{
+			"Content-Type": strconv.Itoa(int(protocol.TextPlain)),
+		}
+		return server.Response(200, content, headers)
 	})
 
 	srv.HandleFunc("/image", protocol.GET, func(_ *protocol.Request) *protocol.Response {
@@ -66,7 +77,10 @@ func main() {
 			return server.TextResponse(500, "Internal Server Error")
 		}
 		slog.Info("Serving image", "bytes", len(content))
-		return server.Response(200, protocol.OctetStream, content, nil)
+		headers := map[string]string{
+			"Content-Type": strconv.Itoa(int(protocol.OctetStream)),
+		}
+		return server.Response(200, content, headers)
 	})
 
 	// listening with auto-generated keys

@@ -56,13 +56,20 @@ func main() {
 		var err error
 		switch req.method {
 		case "GET":
-			response, err = c.GET(hostname, req.path, "3,2,1", "") // Accept: HTML, JSON, text/plain
-		case "POST":
-			body := ""
-			if req.body != nil {
-				body = *req.body
+			headers := map[string]string{
+				"Accept": "3,2,1", // HTML, JSON, text/plain
 			}
-			response, err = c.POST(hostname, req.path, body, "2,1", "", protocol.TextPlain) // Accept: JSON, text/plain
+			response, err = c.GET(hostname, req.path, headers)
+		case "POST":
+			body := []byte("")
+			if req.body != nil {
+				body = []byte(*req.body)
+			}
+			headers := map[string]string{
+				"Accept":       "2,1", // JSON, text/plain
+				"Content-Type": strconv.Itoa(int(protocol.TextPlain)),
+			}
+			response, err = c.POST(hostname, req.path, body, headers)
 		default:
 			slog.Error("Unsupported method", "method", req.method, "path", req.path)
 			continue
@@ -97,33 +104,26 @@ func main() {
 }
 
 func logResponse(method, path string, response *protocol.Response) {
-	// Format the successful response for better readability
-	var formattedDate string
-	if len(response.Headers) > protocol.RespHeaderDate && response.Headers[protocol.RespHeaderDate] != "" {
-		unixTime, err := strconv.ParseInt(response.Headers[protocol.RespHeaderDate], 10, 64)
-		if err == nil {
-			// Format to DD.MM.YYYY HH:MM
-			formattedDate = time.Unix(unixTime, 0).Format("02.01.2006 15:04")
-		}
-	}
-
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("\n--- Response for %s %s ---\n", method, path))
 	sb.WriteString(fmt.Sprintf("Version:    %d\n", response.Version))
 	sb.WriteString(fmt.Sprintf("StatusCode: %d\n", response.StatusCode))
 
-	// Show Content-Type (decode from header position 0)
-	if len(response.Headers) > 0 && response.Headers[0] != "" {
-		contentTypeCode, err := strconv.Atoi(response.Headers[0])
+	if contentTypeStr, ok := response.Headers["Content-Type"]; ok && contentTypeStr != "" {
+		contentTypeCode, err := strconv.Atoi(contentTypeStr)
 		if err == nil {
 			sb.WriteString(fmt.Sprintf("Content:    %s\n", protocol.ContentType(contentTypeCode).String()))
 		}
 	}
 
-	if formattedDate != "" {
-		sb.WriteString(fmt.Sprintf("Timestamp:  %s\n", formattedDate))
+	if dateStr, ok := response.Headers["Date"]; ok && dateStr != "" {
+		unixTime, err := strconv.ParseInt(dateStr, 10, 64)
+		if err == nil {
+			formattedDate := time.Unix(unixTime, 0).Format("02.01.2006 15:04")
+			sb.WriteString(fmt.Sprintf("Timestamp:  %s\n", formattedDate))
+		}
 	}
-	// Show body size and preview for binary data
+
 	bodyPreview := string(response.Body)
 	if len(response.Body) > 100 {
 		bodyPreview = string(response.Body[:100]) + "... (truncated)"

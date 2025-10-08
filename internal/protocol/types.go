@@ -1,10 +1,10 @@
 package protocol
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 const Version = 0
@@ -62,44 +62,117 @@ func (ct ContentType) String() string {
 	}
 }
 
-// Request header indices (ordered by position in wire format)
 const (
-	ReqHeaderAccept         = 0 // Media types the client can process
-	ReqHeaderAcceptEncoding = 1 // Content-coding the client can process
-	ReqHeaderContentType    = 2 // Media type of request body (POST/PUT)
-	ReqHeaderContentLength  = 3 // Size of request body in bytes
+	HeaderCustom byte = 0
+
+	HeaderReqAccept         byte = 1
+	HeaderReqAcceptEncoding byte = 2
+	// ID 3 is reserved (conflicts with ETX separator \x03)
+	HeaderReqAcceptLanguage  byte = 4
+	HeaderReqContentType     byte = 5
+	HeaderReqContentLength   byte = 6
+	HeaderReqAuthorization   byte = 7
+	HeaderReqCookie          byte = 8
+	HeaderReqUserAgent       byte = 9
+	HeaderReqReferer         byte = 10
+	HeaderReqOrigin          byte = 11
+	HeaderReqIfNoneMatch     byte = 12
+	HeaderReqIfModifiedSince byte = 13
+	HeaderReqRange           byte = 14
+	HeaderReqXPayment        byte = 15
+
+	HeaderRespContentType   byte = 1
+	HeaderRespContentLength byte = 2
+	// ID 3 is reserved (conflicts with ETX separator \x03)
+	HeaderRespCacheControl              byte = 4
+	HeaderRespContentEncoding           byte = 5
+	HeaderRespDate                      byte = 6
+	HeaderRespETag                      byte = 7
+	HeaderRespExpires                   byte = 8
+	HeaderRespLastModified              byte = 9
+	HeaderRespAccessControlAllowOrigin  byte = 10
+	HeaderRespAccessControlAllowMethods byte = 11
+	HeaderRespAccessControlAllowHeaders byte = 12
+	HeaderRespSetCookie                 byte = 13
+	HeaderRespLocation                  byte = 14
+	HeaderRespContentSecurityPolicy     byte = 15
+	HeaderRespXContentTypeOptions       byte = 16
+	HeaderRespXFrameOptions             byte = 17
+	HeaderRespVary                      byte = 18
+	HeaderRespXPaymentResponse          byte = 19
 )
 
-// Response header indices (ordered by position in wire format)
-const (
-	RespHeaderContentType     = 0  // Content type (as code)
-	RespHeaderContentLength   = 1  // Size of response body in bytes
-	RespHeaderCacheControl    = 2  // Cache-Control directives
-	RespHeaderContentEncoding = 3  // Content encoding used (e.g., "gzip")
-	RespHeaderAuthorization   = 4  // Authorization info
-	RespHeaderCORS            = 5  // Access-Control-Allow-Origin
-	RespHeaderETag            = 6  // Entity tag for cache validation
-	RespHeaderDate            = 7  // Unix timestamp
-	RespHeaderCSP             = 8  // Content-Security-Policy
-	RespHeaderContentTypeOpts = 9  // X-Content-Type-Options
-	RespHeaderFrameOptions    = 10 // X-Frame-Options
-)
+var requestHeaderTable = map[string]byte{
+	"Accept":            HeaderReqAccept,
+	"Accept-Encoding":   HeaderReqAcceptEncoding,
+	"Accept-Language":   HeaderReqAcceptLanguage,
+	"Content-Type":      HeaderReqContentType,
+	"Content-Length":    HeaderReqContentLength,
+	"Authorization":     HeaderReqAuthorization,
+	"Cookie":            HeaderReqCookie,
+	"User-Agent":        HeaderReqUserAgent,
+	"Referer":           HeaderReqReferer,
+	"Origin":            HeaderReqOrigin,
+	"If-None-Match":     HeaderReqIfNoneMatch,
+	"If-Modified-Since": HeaderReqIfModifiedSince,
+	"Range":             HeaderReqRange,
+	"X-Payment":         HeaderReqXPayment,
+}
+
+var requestHeaderNames map[byte]string // filled in init()
+
+var responseHeaderTable = map[string]byte{
+	"Content-Type":                 HeaderRespContentType,
+	"Content-Length":               HeaderRespContentLength,
+	"Cache-Control":                HeaderRespCacheControl,
+	"Content-Encoding":             HeaderRespContentEncoding,
+	"Date":                         HeaderRespDate,
+	"ETag":                         HeaderRespETag,
+	"Expires":                      HeaderRespExpires,
+	"Last-Modified":                HeaderRespLastModified,
+	"Access-Control-Allow-Origin":  HeaderRespAccessControlAllowOrigin,
+	"Access-Control-Allow-Methods": HeaderRespAccessControlAllowMethods,
+	"Access-Control-Allow-Headers": HeaderRespAccessControlAllowHeaders,
+	"Set-Cookie":                   HeaderRespSetCookie,
+	"Location":                     HeaderRespLocation,
+	"Content-Security-Policy":      HeaderRespContentSecurityPolicy,
+	"X-Content-Type-Options":       HeaderRespXContentTypeOptions,
+	"X-Frame-Options":              HeaderRespXFrameOptions,
+	"Vary":                         HeaderRespVary,
+	"X-Payment-Response":           HeaderRespXPaymentResponse,
+}
+
+var responseHeaderNames map[byte]string // filled in init()
+
+func init() {
+	requestHeaderNames = make(map[byte]string, len(requestHeaderTable))
+	for name, id := range requestHeaderTable {
+		requestHeaderNames[id] = name
+	}
+
+	responseHeaderNames = make(map[byte]string, len(responseHeaderTable))
+	for name, id := range responseHeaderTable {
+		responseHeaderNames[id] = name
+	}
+}
 
 type Request struct {
 	Method  Method
 	Host    string
 	Path    string
 	Version uint8
-	Headers []string // Ordered headers by position
+	Headers map[string]string
 	Body    []byte
 }
 
 type Response struct {
 	Version    uint8
 	StatusCode int
-	Headers    []string // Ordered headers by position
+	Headers    map[string]string
 	Body       []byte
 }
+
+// TODO: pre-allocate capacity in both format methods
 
 // format QH request into wire format
 func (r *Request) Format() []byte {
@@ -107,12 +180,29 @@ func (r *Request) Format() []byte {
 	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
 	firstByte := (r.Version << 6) | (byte(r.Method) << 3)
 
-	otherParts := []string{r.Host, r.Path}
-	otherParts = append(otherParts, r.Headers...)
-
 	// Build message: first byte + headers + ETX + body
 	result := []byte{firstByte}
-	result = append(result, []byte(strings.Join(otherParts, "\x00"))...)
+	result = append(result, []byte(r.Host)...)
+	result = append(result, '\x00')
+	result = append(result, []byte(r.Path)...)
+	result = append(result, '\x00')
+
+	for key, value := range r.Headers {
+		if headerID, exists := requestHeaderTable[key]; exists {
+			result = append(result, headerID)
+			result = append(result, '\x00')
+			result = append(result, []byte(value)...)
+			result = append(result, '\x00')
+		} else {
+			result = append(result, HeaderCustom)
+			result = append(result, '\x00')
+			result = append(result, []byte(key)...)
+			result = append(result, '\x00')
+			result = append(result, []byte(value)...)
+			result = append(result, '\x00')
+		}
+	}
+
 	result = append(result, '\x03')
 	result = append(result, r.Body...)
 	return result
@@ -126,113 +216,225 @@ func (r *Response) Format() []byte {
 
 	// Build message: first byte + headers + ETX + body
 	result := []byte{firstByte}
-	result = append(result, []byte(strings.Join(r.Headers, "\x00"))...)
+
+	for key, value := range r.Headers {
+		if headerID, exists := responseHeaderTable[key]; exists {
+			result = append(result, headerID)
+			result = append(result, '\x00')
+			result = append(result, []byte(value)...)
+			result = append(result, '\x00')
+		} else {
+			result = append(result, HeaderCustom)
+			result = append(result, '\x00')
+			result = append(result, []byte(key)...)
+			result = append(result, '\x00')
+			result = append(result, []byte(value)...)
+			result = append(result, '\x00')
+		}
+	}
+
 	result = append(result, '\x03')
 	result = append(result, r.Body...)
 	return result
 }
 
-// IsRequestComplete checks if we have received a complete request
 func IsRequestComplete(data []byte) (bool, error) {
-	dataStr := string(data)
-	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
+	if len(data) == 0 {
+		return false, nil
+	}
+
+	allHeaders, bodyBytes, found := bytes.Cut(data, []byte{'\x03'})
 	if !found {
 		return false, nil
 	}
 
-	if len(headerPart) == 0 {
-		return false, nil
-	}
+	headerBytes := allHeaders[1:]
 
-	// Skip first byte (version + method), then split remaining header fields
-	stringHeaderPart := headerPart[1:]
-	if stringHeaderPart == "" {
-		// Need at least host and path, which can't be present if header part after first byte is empty
-		return false, nil
-	}
-
-	parts := strings.Split(stringHeaderPart, "\x00")
-	// Expect at least host and path
-	if len(parts) < 2 {
-		return false, nil
-	}
-
-	// Headers follow host and path
-	var headers []string
-	if len(parts) > 2 {
-		headers = parts[2:]
-	}
-
-	// If a Content-Length header is present (index 3 in ordered headers), enforce it
-	if len(headers) > ReqHeaderContentLength && headers[ReqHeaderContentLength] != "" {
-		expectedLen, err := strconv.Atoi(headers[ReqHeaderContentLength])
-		if err != nil {
-			return false, fmt.Errorf("invalid Content-Length: %s", headers[ReqHeaderContentLength])
+	// ensure we have at least host\x00path\x00 (minimum 2 null bytes)
+	// NOTE: This is faster than parsing the full header structure as before
+	offset := 0
+	nullCount := 0
+	for offset < len(headerBytes) {
+		if headerBytes[offset] == '\x00' {
+			nullCount++
+			if nullCount >= 2 {
+				break
+			}
 		}
-		return len(bodyPart) >= expectedLen, nil
+		offset++
+	}
+	if nullCount < 2 {
+		return false, nil
 	}
 
-	// No Content-Length provided; treat as complete once headers and separator are present
+	headers := parseRequestHeaders(headerBytes)
+
+	if contentLengthStr, ok := headers["Content-Length"]; ok {
+		expectedLen, err := strconv.Atoi(contentLengthStr)
+		if err != nil {
+			return false, fmt.Errorf("invalid Content-Length: %s", contentLengthStr)
+		}
+		return len(bodyBytes) >= expectedLen, nil
+	}
+
 	return true, nil
 }
 
-// IsResponseComplete checks if we have received a complete response based on Content-Length
+func parseRequestHeaders(headerBytes []byte) map[string]string {
+	headers := make(map[string]string)
+	offset := 0
+
+	// Skip host field (already parsed by ParseRequest)
+	for offset < len(headerBytes) && headerBytes[offset] != 0 {
+		offset++
+	}
+	offset++ // Skip \x00 separator
+
+	// Skip path field (already parsed by ParseRequest)
+	for offset < len(headerBytes) && headerBytes[offset] != 0 {
+		offset++
+	}
+	offset++ // Skip \x00 separator
+
+	// Parse headers: each is <header-id>\x00<value>\x00
+	// Custom headers: \x00\x00<key-name>\x00<value>\x00
+	for offset < len(headerBytes) {
+		headerID := headerBytes[offset]
+		offset++
+
+		// Expect separator after header ID
+		if offset >= len(headerBytes) || headerBytes[offset] != 0 {
+			break
+		}
+		offset++ // Skip \x00 separator
+
+		var key string
+		if headerID == HeaderCustom {
+			// Custom header: read key name
+			keyStart := offset
+			for offset < len(headerBytes) && headerBytes[offset] != 0 {
+				offset++
+			}
+			key = string(headerBytes[keyStart:offset])
+			offset++ // Skip \x00 separator
+		} else if name, exists := requestHeaderNames[headerID]; exists {
+			// Known header: look up name from ID
+			key = name
+		} else {
+			// Unknown header ID: skip value and continue
+			for offset < len(headerBytes) && headerBytes[offset] != 0 {
+				offset++
+			}
+			offset++ // Skip \x00 separator
+			continue
+		}
+
+		// Read header value
+		valueStart := offset
+		for offset < len(headerBytes) && headerBytes[offset] != 0 {
+			offset++
+		}
+		value := string(headerBytes[valueStart:offset])
+		offset++ // Skip \x00 separator
+
+		headers[key] = value
+	}
+
+	return headers
+}
+
 func IsResponseComplete(data []byte) (bool, error) {
-	dataStr := string(data)
-	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
+	if len(data) == 0 {
+		return false, nil
+	}
+
+	allHeaders, bodyBytes, found := bytes.Cut(data, []byte{'\x03'})
 	if !found {
 		return false, nil
 	}
 
-	if len(headerPart) == 0 {
-		return false, nil
-	}
+	headerBytes := allHeaders[1:]
 
-	// Skip first byte (version + status), then split remaining headers
-	stringHeaderPart := headerPart[1:]
-	if stringHeaderPart == "" {
-		return false, nil
-	}
+	headers := parseResponseHeaders(headerBytes)
 
-	parts := strings.Split(stringHeaderPart, "\x00")
-	// Expect at least Content-Type and Content-Length headers
-	if len(parts) < 2 {
-		return false, nil
-	}
-
-	headers := parts
-
-	// If Content-Length header is present (index 1 in ordered headers), enforce it
-	if len(headers) > RespHeaderContentLength && headers[RespHeaderContentLength] != "" {
-		expectedLen, err := strconv.Atoi(headers[RespHeaderContentLength])
+	if contentLengthStr, ok := headers["Content-Length"]; ok {
+		expectedLen, err := strconv.Atoi(contentLengthStr)
 		if err != nil {
-			return false, fmt.Errorf("invalid Content-Length: %s", headers[RespHeaderContentLength])
+			return false, fmt.Errorf("invalid Content-Length: %s", contentLengthStr)
 		}
-		return len(bodyPart) >= expectedLen, nil
+		return len(bodyBytes) >= expectedLen, nil
 	}
 
-	// No Content-Length provided; treat response as complete (no body expected)
 	return true, nil
+}
+
+func parseResponseHeaders(headerBytes []byte) map[string]string {
+	headers := make(map[string]string)
+	offset := 0
+
+	// Parse headers: each is <header-id>\x00<value>\x00
+	// Custom headers: \x00\x00<key-name>\x00<value>\x00
+	for offset < len(headerBytes) {
+		headerID := headerBytes[offset]
+		offset++
+
+		// Expect separator after header ID
+		if offset >= len(headerBytes) || headerBytes[offset] != 0 {
+			break
+		}
+		offset++ // Skip \x00 separator
+
+		var key string
+		if headerID == HeaderCustom {
+			// Custom header: read key name
+			keyStart := offset
+			for offset < len(headerBytes) && headerBytes[offset] != 0 {
+				offset++
+			}
+			key = string(headerBytes[keyStart:offset])
+			offset++ // Skip \x00 separator
+		} else if name, exists := responseHeaderNames[headerID]; exists {
+			// Known header: look up name from ID
+			key = name
+		} else {
+			// Unknown header ID: skip value and continue
+			for offset < len(headerBytes) && headerBytes[offset] != 0 {
+				offset++
+			}
+			offset++ // Skip \x00 separator
+			continue
+		}
+
+		// Read header value
+		valueStart := offset
+		for offset < len(headerBytes) && headerBytes[offset] != 0 {
+			offset++
+		}
+		value := string(headerBytes[valueStart:offset])
+		offset++ // Skip \x00 separator
+
+		headers[key] = value
+	}
+
+	return headers
 }
 
 func ParseResponse(data []byte) (*Response, error) {
-	// Split headers from body using the End of Text character
-	dataStr := string(data)
-	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
+	if len(data) == 0 {
+		return nil, errors.New("invalid response: empty data")
+	}
+
+	// Split at ETX (\x03) separator between headers and body
+	allHeaders, body, found := bytes.Cut(data, []byte{'\x03'})
 	if !found {
 		return nil, errors.New("invalid response: missing body separator")
 	}
 
-	body := []byte(bodyPart)
-
-	if len(headerPart) == 0 {
-		return nil, errors.New("invalid response: empty header part")
-	}
-
-	// First byte contains status and version
-	firstByte := headerPart[0]
-	version := firstByte >> 6               // Upper 2 bits
-	compactStatus := firstByte & 0b00111111 // Lower 6 bits
+	// Parse first byte: Version (2 bits, bits 7-6) | Status Code (6 bits, bits 5-0)
+	// Wire format: <first-byte>[<header-id>\x00<value>\x00...]\x03<body>
+	firstByte := allHeaders[0]
+	version := firstByte >> 6               // Extract upper 2 bits
+	compactStatus := firstByte & 0b00111111 // Extract lower 6 bits
 
 	if version > 3 { // 2 bits can hold values 0-3
 		return nil, fmt.Errorf("invalid version: %d", version)
@@ -240,28 +442,18 @@ func ParseResponse(data []byte) (*Response, error) {
 
 	httpStatusCode := DecodeStatusCode(compactStatus)
 
-	// The rest of the header part is null-separated strings.
-	stringHeaderPart := headerPart[1:]
-	var parts []string
-	// Only split if there's content, otherwise parts will be `[""]` which is not what we want.
-	// We want an empty slice if there are no headers.
-	if stringHeaderPart != "" {
-		parts = strings.Split(stringHeaderPart, "\x00")
-	}
+	headerBytes := allHeaders[1:]
+	headers := parseResponseHeaders(headerBytes)
 
 	resp := &Response{
 		Version:    version,
 		StatusCode: httpStatusCode,
+		Headers:    headers,
 		Body:       body,
 	}
 
-	if len(parts) > 0 {
-		resp.Headers = parts
-	}
-
-	// Validate Content-Length if present (header index 1)
-	if len(resp.Headers) > 1 && resp.Headers[1] != "" {
-		expectedLen, err := strconv.Atoi(resp.Headers[1])
+	if contentLengthStr, ok := headers["Content-Length"]; ok {
+		expectedLen, err := strconv.Atoi(contentLengthStr)
 		if err == nil && len(body) != expectedLen {
 			return nil, errors.New("invalid response: body length does not match Content-Length")
 		}
@@ -271,21 +463,18 @@ func ParseResponse(data []byte) (*Response, error) {
 }
 
 func ParseRequest(data []byte) (*Request, error) {
-	// Split headers from body using the End of Text character
-	dataStr := string(data)
-	headerPart, bodyPart, found := strings.Cut(dataStr, "\x03")
+	if len(data) == 0 {
+		return nil, errors.New("invalid request: empty data")
+	}
+
+	// Split at ETX (\x03) separator between headers and body
+	allHeaders, body, found := bytes.Cut(data, []byte{'\x03'})
 	if !found {
 		return nil, errors.New("invalid request: missing body separator")
 	}
 
-	body := []byte(bodyPart)
-
-	if len(headerPart) == 0 {
-		return nil, errors.New("invalid request: empty header part")
-	}
-
-	// The first byte contains the method (lower 3 bits) and version (upper 5 bits).
-	firstByte := headerPart[0]
+	// Parse first byte: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
+	firstByte := allHeaders[0]
 	version := firstByte >> 6                       // Extract upper 2 bits
 	method := Method((firstByte >> 3) & 0b00000111) // Extract middle 3 bits
 
@@ -293,40 +482,56 @@ func ParseRequest(data []byte) (*Request, error) {
 		return nil, fmt.Errorf("invalid method value: %d", method)
 	}
 
-	// The rest of the header part is null-separated strings.
-	stringHeaderPart := headerPart[1:]
-	parts := strings.Split(stringHeaderPart, "\x00")
-	if len(parts) < 2 { // host, path
-		return nil, errors.New("invalid request: not enough parts in header")
-	}
+	// Parse host and path from header section
+	// Wire format: <first-byte><host>\x00<path>\x00[<header-id>\x00<value>\x00...]\x03<body>
+	headerBytes := allHeaders[1:]
+	offset := 0
 
-	// Validate required fields are not empty
-	if parts[0] == "" {
+	// Extract host (required)
+	hostStart := offset
+	for offset < len(headerBytes) && headerBytes[offset] != 0 {
+		offset++
+	}
+	host := string(headerBytes[hostStart:offset])
+
+	// Check if we found a null terminator or reached the end
+	if offset >= len(headerBytes) {
+		return nil, errors.New("invalid request: missing null terminator after host")
+	}
+	offset++ // Skip \x00 separator
+
+	if host == "" {
 		return nil, errors.New("invalid request: empty host")
 	}
 
-	// Default empty path to root
-	path := parts[1]
+	// Extract path (defaults to "/" if empty)
+	// Path may be empty or missing, both default to "/"
+	var path string
+	if offset < len(headerBytes) {
+		pathStart := offset
+		for offset < len(headerBytes) && headerBytes[offset] != 0 {
+			offset++
+		}
+		path = string(headerBytes[pathStart:offset])
+	}
+
 	if path == "" {
 		path = "/"
 	}
 
+	headers := parseRequestHeaders(headerBytes)
+
 	req := &Request{
 		Method:  method,
-		Host:    parts[0],
+		Host:    host,
 		Path:    path,
 		Version: version,
+		Headers: headers,
 		Body:    body,
 	}
 
-	// The rest of the parts are headers
-	if len(parts) > 2 {
-		req.Headers = parts[2:]
-	}
-
-	// Validate Content-Length if present (header index 3)
-	if len(req.Headers) > ReqHeaderContentLength && req.Headers[ReqHeaderContentLength] != "" {
-		expectedLen, err := strconv.Atoi(req.Headers[ReqHeaderContentLength])
+	if contentLengthStr, ok := headers["Content-Length"]; ok {
+		expectedLen, err := strconv.Atoi(contentLengthStr)
 		if err == nil && len(body) != expectedLen {
 			return nil, errors.New("invalid request: body length does not match Content-Length")
 		}
