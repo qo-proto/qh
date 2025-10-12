@@ -249,10 +249,10 @@ func (c *Client) POST(host, path, body string, accept, acceptEncoding string, co
 
 func (c *Client) Close() error {
 	if c.conn != nil {
-		c.conn.CloseNow()
+		c.conn.Close()
 	}
 	if c.listener != nil {
-		return c.listener.CloseNow()
+		return c.listener.Close()
 	}
 	return nil
 }
