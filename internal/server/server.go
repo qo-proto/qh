@@ -27,13 +27,6 @@ func NewServer() *Server {
 	}
 }
 
-func (s *Server) getPublicKeyDNS() string {
-	if s.listener == nil || s.listener.PubKey() == nil {
-		return ""
-	}
-	return fmt.Sprintf("v=%d;k=%s", qotp.ProtoVersion, base64.StdEncoding.EncodeToString(s.listener.PubKey().Bytes()))
-}
-
 // HandleFunc registers a handler for a given path and method.
 func (s *Server) HandleFunc(path string, method protocol.Method, handler Handler) {
 	if s.handlers[path] == nil {
@@ -118,6 +111,13 @@ func (s *Server) Close() error {
 		return s.listener.Close()
 	}
 	return nil
+}
+
+func (s *Server) getPublicKeyDNS() string {
+	if s.listener == nil || s.listener.PubKey() == nil {
+		return ""
+	}
+	return fmt.Sprintf("v=%d;k=%s", qotp.ProtoVersion, base64.StdEncoding.EncodeToString(s.listener.PubKey().Bytes()))
 }
 
 // handleRequest parses a request from a stream, routes it, and sends a response.

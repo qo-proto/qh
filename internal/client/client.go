@@ -46,66 +46,16 @@ func (c *Client) Connect(addr string) error {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	// Goroutine for IP address lookup
 	go func() {
 		defer wg.Done()
-		// First, try parsing as an IP to avoid a DNS lookup if not needed.
-		parsedIP := net.ParseIP(host)
-		if parsedIP != nil {
-			ip = parsedIP
-			return
-		}
-		// If not an IP, resolve the hostname.
-		ips, err := net.DefaultResolver.LookupIPAddr(context.Background(), host)
-		if err != nil {
-			ipLookupErr = fmt.Errorf("failed to resolve hostname %s: %w", host, err)
-			return
-		}
-		if len(ips) == 0 {
-			ipLookupErr = fmt.Errorf("no IP addresses found for hostname: %s", host)
-			return
-		}
-		ip = ips[0].IP // Use the first resolved IP
+		ip, ipLookupErr = resolveAddr(host)
 	}()
 
-	// Goroutine to get server public key from DNS for 0-RTT connection
 	go func() {
 		defer wg.Done()
-		txtRecords, err := net.DefaultResolver.LookupTXT(context.Background(), "_qotp."+host)
-		if err != nil || len(txtRecords) == 0 {
-			// No record found or an error occurred, just continue without 0-RTT.
-			return
-		}
-
-		// Parse the first TXT record, expecting "v=0;k=..."
-		record := txtRecords[0]
-		parts := strings.Split(record, ";")
-		var version = -1
-		var key string
-
-		for _, part := range parts {
-			kv := strings.SplitN(part, "=", 2)
-			if len(kv) != 2 {
-				continue
-			}
-			switch strings.TrimSpace(kv[0]) {
-			case "v":
-				v, err := strconv.Atoi(kv[1])
-				if err == nil {
-					version = v
-				}
-			case "k":
-				key = kv[1]
-			}
-		}
-
-		// Validate the found values
-		if version == qotp.ProtoVersion && key != "" {
-			serverPubKey = key
-			slog.Info("Found valid QOTP public key in DNS TXT record", "host", host, "key", serverPubKey)
-		} else {
-			slog.Warn("DNS TXT record found but is invalid or has mismatched version", "record", record, "expected_version", qotp.ProtoVersion)
-		}
+		// This function handles errors internally and just logs them,
+		// as failing to find a key is not a critical connection error.
+		serverPubKey = lookupPubKey(host)
 	}()
 
 	wg.Wait()
@@ -147,6 +97,67 @@ func (c *Client) Connect(addr string) error {
 	c.conn = conn
 	slog.Info("Connected to QH server", "addr", addr, "resolved", ipAddr)
 	return nil
+}
+
+// resolveAddr resolves a host to an IP address. It first tries to parse the host
+// as a literal IP address to avoid a DNS lookup if possible.
+func resolveAddr(host string) (net.IP, error) {
+	// First, try parsing as an IP to avoid a DNS lookup if not needed.
+	if parsedIP := net.ParseIP(host); parsedIP != nil {
+		return parsedIP, nil
+	}
+	// If not an IP, resolve the hostname.
+	ips, err := net.DefaultResolver.LookupIPAddr(context.Background(), host)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve hostname %s: %w", host, err)
+	}
+	if len(ips) == 0 {
+		return nil, fmt.Errorf("no IP addresses found for hostname: %s", host)
+	}
+	return ips[0].IP, nil // Use the first resolved IP
+}
+
+// lookupPubKey looks for a server's public key in a DNS TXT record.
+// It returns the key as a string if a valid record is found, or an empty string otherwise.
+func lookupPubKey(host string) string {
+	txtRecords, err := net.DefaultResolver.LookupTXT(context.Background(), "_qotp."+host)
+	if err != nil || len(txtRecords) == 0 {
+		// No record found or an error occurred, just continue without 0-RTT.
+		return ""
+	}
+
+	// Parse the first TXT record, expecting "v=0;k=..."
+	record := txtRecords[0]
+	parts := strings.Split(record, ";")
+	var version = -1
+	var key string
+
+	for _, part := range parts {
+		kv := strings.SplitN(strings.TrimSpace(part), "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		switch kv[0] {
+		case "v":
+			v, err := strconv.Atoi(kv[1])
+			if err == nil {
+				version = v
+			}
+		case "k":
+			key = kv[1]
+		}
+	}
+
+	// Validate the found values
+	if version == qotp.ProtoVersion && key != "" {
+		slog.Info("Found valid QOTP public key in DNS TXT record", "host", host, "key", key)
+		return key
+	}
+
+	if key != "" || version != -1 {
+		slog.Warn("DNS TXT record found but is invalid or has mismatched version", "record", record, "expected_version", qotp.ProtoVersion)
+	}
+	return ""
 }
 
 func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
