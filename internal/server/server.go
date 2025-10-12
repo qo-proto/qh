@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -36,13 +37,19 @@ func (s *Server) HandleFunc(path string, method protocol.Method, handler Handler
 
 // Listen starts listening on the given address.
 // It uses qotp with auto-generated keys.
-func (s *Server) Listen(addr string) error {
-	listener, err := qotp.Listen(qotp.WithListenAddr(addr))
+func (s *Server) Listen(addr string, seed ...string) error {
+	opts := []qotp.ListenFunc{qotp.WithListenAddr(addr)}
+	if len(seed) > 0 && seed[0] != "" {
+		opts = append(opts, qotp.WithSeedStr(seed[0]))
+		slog.Info("QH server listening with provided seed")
+	}
+	listener, err := qotp.Listen(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to listen on %s: %w", addr, err)
 	}
 	s.listener = listener
-	slog.Info("QH server listening with auto-generated keys", "address", addr)
+	slog.Info("QH server listening", "address", addr)
+	slog.Info("Server public key for DNS", "pubKey", s.getPublicKeyDNS())
 	return nil
 }
 
@@ -103,6 +110,13 @@ func (s *Server) Close() error {
 		return s.listener.Close()
 	}
 	return nil
+}
+
+func (s *Server) getPublicKeyDNS() string {
+	if s.listener == nil || s.listener.PubKey() == nil {
+		return ""
+	}
+	return fmt.Sprintf("v=%d;k=%s", qotp.ProtoVersion, base64.StdEncoding.EncodeToString(s.listener.PubKey().Bytes()))
 }
 
 // handleRequest parses a request from a stream, routes it, and sends a response.

@@ -15,7 +15,8 @@ import (
 func main() {
 	slog.Info("QH Protocol Client starting")
 
-	hostname := "qh.gianhunold.ch"
+	hostname := "qh.gianhunold.ch" // 127.0.0.1 with public key from seed: my-secret-server-seed
+	// hostname := "qh2.gianhunold.ch" // 127.0.0.1 but no public key
 	port := 8090
 
 	addr := fmt.Sprintf("%s:%d", hostname, port)

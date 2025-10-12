@@ -85,7 +85,8 @@ func main() {
 
 	// listening with auto-generated keys
 	addr := "127.0.0.1:8090"
-	if err := srv.Listen(addr); err != nil {
+	seed := "Start123"
+	if err := srv.Listen(addr, seed); err != nil {
 		slog.Error("Failed to start server", "error", err)
 		os.Exit(1)
 	}

@@ -3,11 +3,15 @@ package client
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net"
 	"strconv"
+	"strings"
+	"sync"
 
 	"qh/internal/protocol"
 
@@ -35,17 +39,30 @@ func (c *Client) Connect(addr string) error {
 		return fmt.Errorf("invalid port: %w", err)
 	}
 
-	// Resolve hostname to IP if it's not already an IP
-	ip := net.ParseIP(host)
-	if ip == nil {
-		ips, err := net.DefaultResolver.LookupIPAddr(context.Background(), host)
-		if err != nil {
-			return fmt.Errorf("failed to resolve hostname %s: %w", host, err)
-		}
-		if len(ips) == 0 {
-			return fmt.Errorf("no IP addresses found for hostname: %s", host)
-		}
-		ip = ips[0].IP // Use the first resolved IP
+	// Concurrently resolve hostname to IP and look for a server public key in DNS.
+	var ip net.IP
+	var serverPubKey string
+	var ipLookupErr error
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		ip, ipLookupErr = resolveAddr(host)
+	}()
+
+	go func() {
+		defer wg.Done()
+		// This function handles errors internally and just logs them,
+		// as failing to find a key is not a critical connection error.
+		serverPubKey = lookupPubKey(host)
+	}()
+
+	wg.Wait()
+
+	// Check for errors from the IP lookup.
+	if ipLookupErr != nil {
+		return ipLookupErr
 	}
 
 	// create local listener (auto generates keys)
@@ -54,15 +71,93 @@ func (c *Client) Connect(addr string) error {
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
 	c.listener = listener
+
 	ipAddr := fmt.Sprintf("%s:%d", ip.String(), port)
-	// in-band key exchange
-	conn, err := listener.DialString(ipAddr)
+
+	var conn *qotp.Conn
+	if serverPubKey != "" {
+		// Out-of-band key exchange (0-RTT)
+		slog.Info("Attempting connection with out-of-band key (0-RTT)")
+		pubKeyBytes, decodeErr := base64.StdEncoding.DecodeString(serverPubKey)
+		if decodeErr != nil {
+			slog.Warn("Failed to decode base64 public key from DNS, falling back to in-band handshake", "error", decodeErr)
+		} else {
+			pubKeyHex := hex.EncodeToString(pubKeyBytes)
+			conn, err = listener.DialWithCryptoString(ipAddr, pubKeyHex)
+		}
+	} else {
+		// In-band key exchange
+		slog.Info("No DNS key found, attempting connection with in-band key exchange")
+		conn, err = listener.DialString(ipAddr)
+	}
+
 	if err != nil {
 		return fmt.Errorf("failed to connect to %s: %w", ipAddr, err)
 	}
 	c.conn = conn
 	slog.Info("Connected to QH server", "addr", addr, "resolved", ipAddr)
 	return nil
+}
+
+// resolveAddr resolves a host to an IP address. It first tries to parse the host
+// as a literal IP address to avoid a DNS lookup if possible.
+func resolveAddr(host string) (net.IP, error) {
+	// First, try parsing as an IP to avoid a DNS lookup if not needed.
+	if parsedIP := net.ParseIP(host); parsedIP != nil {
+		return parsedIP, nil
+	}
+	// If not an IP, resolve the hostname.
+	ips, err := net.DefaultResolver.LookupIPAddr(context.Background(), host)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve hostname %s: %w", host, err)
+	}
+	if len(ips) == 0 {
+		return nil, fmt.Errorf("no IP addresses found for hostname: %s", host)
+	}
+	return ips[0].IP, nil // Use the first resolved IP
+}
+
+// lookupPubKey looks for a server's public key in a DNS TXT record.
+// It returns the key as a string if a valid record is found, or an empty string otherwise.
+func lookupPubKey(host string) string {
+	txtRecords, err := net.DefaultResolver.LookupTXT(context.Background(), "_qotp."+host)
+	if err != nil || len(txtRecords) == 0 {
+		// No record found or an error occurred, just continue without 0-RTT.
+		return ""
+	}
+
+	// Parse the first TXT record, expecting "v=0;k=..."
+	record := txtRecords[0]
+	parts := strings.Split(record, ";")
+	var version = -1
+	var key string
+
+	for _, part := range parts {
+		kv := strings.SplitN(strings.TrimSpace(part), "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		switch kv[0] {
+		case "v":
+			v, err := strconv.Atoi(kv[1])
+			if err == nil {
+				version = v
+			}
+		case "k":
+			key = kv[1]
+		}
+	}
+
+	// Validate the found values
+	if version == qotp.ProtoVersion && key != "" {
+		slog.Info("Found valid QOTP public key in DNS TXT record", "host", host, "key", key)
+		return key
+	}
+
+	if key != "" || version != -1 {
+		slog.Warn("DNS TXT record found but is invalid or has mismatched version", "record", record, "expected_version", qotp.ProtoVersion)
+	}
+	return ""
 }
 
 func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
