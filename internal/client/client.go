@@ -234,9 +234,9 @@ func (c *Client) Request(req *protocol.Request, redirectCount int) (*protocol.Re
 
 	// Handle redirects
 	switch response.StatusCode {
-	case 300, 301, 302, 307, 308:
+	case protocol.StatusMultipleChoices, protocol.StatusMovedPermanently, protocol.StatusFound, protocol.StatusTemporaryRedirect, protocol.StatusPermanentRedirect:
 		if redirectCount >= MaxRedirects {
-			return nil, fmt.Errorf("too many redirects")
+			return nil, errors.New("too many redirects")
 		}
 
 		var newHostname, newPath string
@@ -258,7 +258,7 @@ func (c *Client) Request(req *protocol.Request, redirectCount int) (*protocol.Re
 			newHostname = newURL.Hostname()
 			newPath = newURL.Path
 		} else {
-			return nil, fmt.Errorf("redirect response missing Location or host/path headers")
+			return nil, errors.New("redirect response missing Location or host/path headers")
 		}
 
 		if newPath == "" {
@@ -277,7 +277,9 @@ func (c *Client) Request(req *protocol.Request, redirectCount int) (*protocol.Re
 
 		// Reconnect if the host has changed.
 		if newHostname != "" && newHostname != req.Host {
-			c.reconnect(newHostname, c.remoteAddr.Port)
+			if err := c.reconnect(newHostname, c.remoteAddr.Port); err != nil {
+				return nil, err
+			}
 		}
 		return c.Request(newReq, redirectCount+1)
 	}
@@ -320,6 +322,16 @@ func (c *Client) POST(host, path string, body []byte, headers map[string]string)
 	return c.Request(req, 0)
 }
 
+func (c *Client) Close() error {
+	if c.conn != nil {
+		c.conn.Close()
+	}
+	if c.listener != nil {
+		return c.listener.Close()
+	}
+	return nil
+}
+
 func (c *Client) reconnect(host string, port int) error {
 	slog.Info("Reconnecting to new host", "host", host, "port", port)
 	c.Close()
@@ -331,14 +343,4 @@ func (c *Client) reconnect(host string, port int) error {
 	}
 	c.listener = listener
 	return c.Connect(fmt.Sprintf("%s:%d", host, port))
-}
-
-func (c *Client) Close() error {
-	if c.conn != nil {
-		c.conn.Close()
-	}
-	if c.listener != nil {
-		return c.listener.Close()
-	}
-	return nil
 }
