@@ -618,7 +618,37 @@ Future specifications MAY define authentication headers or security extensions.
 
 ## 9. Domain Name System
 
-- See [DNS](./dns.md)
+Traditional HTTPS relies on Certificate Authorities (CAs) to establish trust. QH uses DNS TXT records to distribute server public keys, enabling clients to establish secure 0-RTT connections.
+
+### DNS Record Format
+
+#### TXT Record Structure
+
+For a domain serving QH protocol (e.g., `example.com`), publish a TXT record containing the server's public key:
+
+```
+_qotp.example.com.  IN  TXT  "v=0;k=<base64-encoded-public-key>"
+```
+
+**Field Descriptions:**
+
+| Field   | Description                               | Format                     | Example                  |
+| ------- | ----------------------------------------- | -------------------------- | ------------------------ |
+| `_qotp` | Subdomain prefix identifying QOTP records | Fixed string               | `_qotp`                  |
+| `v`     | QOTP protocol version                     | Integer                    | `0`                      |
+| `k`     | Server's X25519 public key                | Base64-encoded 32-byte key | `ABCDEFGHIJKLMNOPQRS...` |
+
+**Format:** Fields are separated by semicolons (`;`), with no spaces: `v=0;k=<key>`
+
+#### Example Record
+
+```
+_qotp.example.com.  IN  TXT  "v=0;k=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnop="
+```
+
+#### Fallback Behavior
+
+In case a DNS lookup fails or the TXT record is missing/invalid, the client can fall back to a standard QOTP in-band key exchange (adds 1-RTT).
 
 ## 10. Versioning
 
