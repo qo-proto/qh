@@ -235,53 +235,7 @@ func (c *Client) Request(req *protocol.Request, redirectCount int) (*protocol.Re
 	// Handle redirects
 	switch response.StatusCode {
 	case protocol.StatusMultipleChoices, protocol.StatusMovedPermanently, protocol.StatusFound, protocol.StatusTemporaryRedirect, protocol.StatusPermanentRedirect:
-		if redirectCount >= MaxRedirects {
-			return nil, errors.New("too many redirects")
-		}
-
-		var newHostname, newPath string
-
-		// Prioritize custom host/path headers as requested.
-		if host, ok := response.Headers["host"]; ok {
-			if path, ok := response.Headers["path"]; ok {
-				slog.Info("Redirecting (custom headers)", "status", response.StatusCode, "host", host, "path", path)
-				newHostname = host
-				newPath = path
-			}
-		} else if location, ok := response.Headers["Location"]; ok {
-			// Fallback to standard Location header.
-			slog.Info("Redirecting (Location header)", "status", response.StatusCode, "location", location)
-			newURL, err := url.Parse(location)
-			if err != nil {
-				return nil, fmt.Errorf("invalid Location header: %w", err)
-			}
-			newHostname = newURL.Hostname()
-			newPath = newURL.Path
-		} else {
-			return nil, errors.New("redirect response missing Location or host/path headers")
-		}
-
-		if newPath == "" {
-			newPath = "/"
-		}
-
-		// For 307 and 308, the method should be preserved. For simplicity, we'll
-		// always use GET for redirects, which is common practice for 301/302.
-		newReq := &protocol.Request{
-			Method:  protocol.GET,
-			Host:    newHostname,
-			Path:    newPath,
-			Version: protocol.Version,
-			Headers: req.Headers, // Re-use headers from original request
-		}
-
-		// Reconnect if the host has changed.
-		if newHostname != "" && newHostname != req.Host {
-			if err := c.reconnect(newHostname, c.remoteAddr.Port); err != nil {
-				return nil, err
-			}
-		}
-		return c.Request(newReq, redirectCount+1)
+		return c.handleRedirect(req, response, redirectCount)
 	}
 	return response, nil
 }
@@ -343,4 +297,54 @@ func (c *Client) reconnect(host string, port int) error {
 	}
 	c.listener = listener
 	return c.Connect(fmt.Sprintf("%s:%d", host, port))
+}
+
+func (c *Client) handleRedirect(req *protocol.Request, resp *protocol.Response, redirectCount int) (*protocol.Response, error) {
+	if redirectCount >= MaxRedirects {
+		return nil, errors.New("too many redirects")
+	}
+
+	var newHostname, newPath string
+
+	// Prioritize custom host/path headers as requested.
+	if host, ok := resp.Headers["host"]; ok {
+		if path, ok := resp.Headers["path"]; ok {
+			slog.Info("Redirecting (custom headers)", "status", resp.StatusCode, "host", host, "path", path)
+			newHostname = host
+			newPath = path
+		}
+	} else if location, ok := resp.Headers["Location"]; ok {
+		// Fallback to standard Location header.
+		slog.Info("Redirecting (Location header)", "status", resp.StatusCode, "location", location)
+		newURL, err := url.Parse(location)
+		if err != nil {
+			return nil, fmt.Errorf("invalid Location header: %w", err)
+		}
+		newHostname = newURL.Hostname()
+		newPath = newURL.Path
+	} else {
+		return nil, errors.New("redirect response missing Location or host/path headers")
+	}
+
+	if newPath == "" {
+		newPath = "/"
+	}
+
+	// For 307 and 308, the method should be preserved. For simplicity, we'll
+	// always use GET for redirects, which is common practice for 301/302.
+	newReq := &protocol.Request{
+		Method:  protocol.GET,
+		Host:    newHostname,
+		Path:    newPath,
+		Version: protocol.Version,
+		Headers: req.Headers, // Re-use headers from original request
+	}
+
+	// Reconnect if the host has changed.
+	if newHostname != "" && newHostname != req.Host {
+		if err := c.reconnect(newHostname, c.remoteAddr.Port); err != nil {
+			return nil, err
+		}
+	}
+	return c.Request(newReq, redirectCount+1)
 }
