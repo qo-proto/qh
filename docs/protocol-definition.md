@@ -28,6 +28,7 @@ Status: Draft
   - [5. Response](#5-response)
     - [5.1 Status Codes](#51-status-codes)
       - [Status Code Encoding](#status-code-encoding)
+      - [5.1.2 Redirection](#512-redirection)
       - [5.1.1 Supported Status Codes](#511-supported-status-codes)
     - [5.2 Response Format](#52-response-format)
     - [5.3 Response Examples](#53-response-examples)
@@ -419,6 +420,28 @@ The following status codes are supported with their compact wire format encoding
 - Status codes are ordered by frequency to optimize common cases
 - Unmapped status codes default to 500 (Internal Server Error) with compact code 2.
 - The compact code and version are packed into the first byte of the response.
+
+#### 5.1.2 Redirection
+
+When a client receives a `3xx` status code (e.g., 300, 301, 302), it indicates that the requested resource has moved. The client should look for headers in the response to determine the new location. QH supports two mechanisms for specifying the new location, which clients should process in the following order of priority:
+
+1.  **Custom `host` and `path` Headers:**
+    The server can provide the new location using two separate headers: `host` for the new hostname and `path` for the new resource path. This is the preferred mechanism for QH-specific redirects.
+
+    - `host`: The hostname of the new origin.
+    - `path`: The path to the resource on the new host.
+
+    Example:
+    `host: qh2.example.com`
+    `path: /new-resource`
+
+2.  **Standard `Location` Header:**
+    As a fallback, QH supports the standard `Location` header, which should contain a full `qh://` URI pointing to the new resource.
+
+    Example:
+    `Location: qh://qh2.example.com/new-resource`
+
+Upon receiving a redirect, a client MUST make a new `GET` request to the new location. To prevent infinite redirect loops, clients SHOULD limit the number of consecutive redirects (e.g., to a maximum of 10). If the hostname changes, the client is responsible for closing the current connection and establishing a new one to the new host.
 
 ### 5.2 Response Format
 
