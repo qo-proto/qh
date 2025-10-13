@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -19,10 +20,15 @@ import (
 	"github.com/tbocek/qotp"
 )
 
+const (
+	MaxRedirects = 10
+)
+
 type Client struct {
-	listener *qotp.Listener
-	conn     *qotp.Conn
-	streamID uint32
+	listener   *qotp.Listener
+	conn       *qotp.Conn
+	streamID   uint32
+	remoteAddr *net.UDPAddr
 }
 
 func NewClient() *Client {
@@ -75,6 +81,12 @@ func (c *Client) Connect(addr string) error {
 
 	ipAddr := fmt.Sprintf("%s:%d", ip.String(), port)
 
+	// Construct the UDP address to store it for potential reconnects.
+	udpAddr := &net.UDPAddr{
+		IP:   ip,
+		Port: port,
+	}
+
 	var conn *qotp.Conn
 	if serverPubKey != "" {
 		// Out-of-band key exchange (0-RTT)
@@ -96,6 +108,7 @@ func (c *Client) Connect(addr string) error {
 		return fmt.Errorf("failed to connect to %s: %w", ipAddr, err)
 	}
 	c.conn = conn
+	c.remoteAddr = udpAddr
 	slog.Info("Connected to QH server", "addr", addr, "resolved", ipAddr)
 	return nil
 }
@@ -161,7 +174,7 @@ func lookupPubKey(host string) string {
 	return ""
 }
 
-func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
+func (c *Client) Request(req *protocol.Request, redirectCount int) (*protocol.Response, error) {
 	if c.conn == nil {
 		return nil, errors.New("client not connected")
 	}
@@ -220,10 +233,15 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 		return nil, errors.New("no response received")
 	}
 
+	// Handle redirects
+	switch response.StatusCode {
+	case protocol.StatusMultipleChoices, protocol.StatusMovedPermanently, protocol.StatusFound, protocol.StatusTemporaryRedirect, protocol.StatusPermanentRedirect:
+		return c.handleRedirect(req, response, redirectCount)
+	}
+
 	if err := c.decompressResponse(response); err != nil {
 		return nil, fmt.Errorf("decompression failed: %w", err)
 	}
-
 	return response, nil
 }
 
@@ -244,7 +262,7 @@ func (c *Client) GET(host, path string, headers map[string]string) (*protocol.Re
 		Version: protocol.Version,
 		Headers: headers,
 	}
-	return c.Request(req)
+	return c.Request(req, 0)
 }
 
 func (c *Client) POST(host, path string, body []byte, headers map[string]string) (*protocol.Response, error) {
@@ -270,7 +288,7 @@ func (c *Client) POST(host, path string, body []byte, headers map[string]string)
 		Headers: headers,
 		Body:    body,
 	}
-	return c.Request(req)
+	return c.Request(req, 0)
 }
 
 func (c *Client) Close() error {
@@ -305,4 +323,67 @@ func (c *Client) decompressResponse(response *protocol.Response) error {
 		"compressed_bytes", originalSize, "decompressed_bytes", len(decompressed))
 
 	return nil
+}
+
+func (c *Client) reconnect(host string, port int) error {
+	slog.Info("Reconnecting to new host", "host", host, "port", port)
+	c.Close()
+
+	// Create a new listener for the new connection
+	listener, err := qotp.Listen()
+	if err != nil {
+		return fmt.Errorf("failed to create new listener for reconnect: %w", err)
+	}
+	c.listener = listener
+	return c.Connect(fmt.Sprintf("%s:%d", host, port))
+}
+
+func (c *Client) handleRedirect(req *protocol.Request, resp *protocol.Response, redirectCount int) (*protocol.Response, error) {
+	if redirectCount >= MaxRedirects {
+		return nil, errors.New("too many redirects")
+	}
+
+	var newHostname, newPath string
+
+	// Prioritize custom host/path headers as requested.
+	if host, ok := resp.Headers["host"]; ok {
+		if path, ok := resp.Headers["path"]; ok {
+			slog.Info("Redirecting (custom headers)", "status", resp.StatusCode, "host", host, "path", path)
+			newHostname = host
+			newPath = path
+		}
+	} else if location, ok := resp.Headers["Location"]; ok {
+		// Fallback to standard Location header.
+		slog.Info("Redirecting (Location header)", "status", resp.StatusCode, "location", location)
+		newURL, err := url.Parse(location)
+		if err != nil {
+			return nil, fmt.Errorf("invalid Location header: %w", err)
+		}
+		newHostname = newURL.Hostname()
+		newPath = newURL.Path
+	} else {
+		return nil, errors.New("redirect response missing Location or host/path headers")
+	}
+
+	if newPath == "" {
+		newPath = "/"
+	}
+
+	// For 307 and 308, the method should be preserved. For simplicity, we'll
+	// always use GET for redirects, which is common practice for 301/302.
+	newReq := &protocol.Request{
+		Method:  protocol.GET,
+		Host:    newHostname,
+		Path:    newPath,
+		Version: protocol.Version,
+		Headers: req.Headers, // Re-use headers from original request
+	}
+
+	// Reconnect if the host has changed.
+	if newHostname != "" && newHostname != req.Host {
+		if err := c.reconnect(newHostname, c.remoteAddr.Port); err != nil {
+			return nil, err
+		}
+	}
+	return c.Request(newReq, redirectCount+1)
 }

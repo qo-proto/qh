@@ -1,5 +1,13 @@
 package protocol
 
+const (
+	StatusMultipleChoices   = 300
+	StatusMovedPermanently  = 301
+	StatusFound             = 302
+	StatusTemporaryRedirect = 307
+	StatusPermanentRedirect = 308
+)
+
 // TODO: default print error messages in the body like in http (no need to set body message manually for statusCodes)
 
 // map common HTTP status codes to a compact wire format, ordered by frequency
