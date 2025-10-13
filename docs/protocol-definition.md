@@ -574,6 +574,18 @@ For the available headers, see [headers](./headers.md).
   - POST requests: `Content-Type` recommended but optional (defaults to code 4 - octet-stream). `Content-Length` is calculated from the body.
   - Accept uses numeric codes: `text/html,application/json,text/plain` → `3,2,1`
 
+### 6.1 Header Compression
+
+Unlike HTTP/2 (HPACK) and HTTP/3 (QPACK), QH does not implement header compression schemes. This design decision is intentional.
+
+The main reason why QH doesn't use header compression is that the protocol is compact by design:
+
+- Headers use numeric IDs (`\x01`) instead of strings ("Accept")
+- Content types are single digits (`2` instead of "application/json")
+- Status codes use 6-bit encoding
+
+This binary-first approach trades maximum compression efficiency for simplicity, eliminating the overhead and complexity of dynamic compression tables (like HPACK/QPACK).
+
 ## 7. Transport
 
 QH is designed to be transported over **qotp**, a secure, reliable, stream-multiplexed protocol running on top of UDP.
