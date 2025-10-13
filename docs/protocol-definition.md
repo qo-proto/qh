@@ -81,7 +81,7 @@ While HTTP is a feature-rich protocol for hypermedia systems, QH focuses on prov
 │            Application Layer: qh:// Protocol                │
 │  • HTTP-inspired request/response semantics                 │
 │  • Compact binary encoding                                  │
-│  • DNS-based certificate distribution via TXT records       │
+│  • DNS TXT record key distribution                          │
 ├─────────────────────────────────────────────────────────────┤
 │            Transport Layer: QOTP                            │
 │  • 0-RTT connection establishment                           │
