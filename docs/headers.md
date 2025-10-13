@@ -151,3 +151,22 @@ flowchart LR
 ```
 \x00example.com\0/pay\0\x00\0-Custom-Header\0custom-value-123\0\x03
 ```
+
+## Payment Protocol Support (x402)
+
+QH supports the [x402 payment protocol](https://github.com/coinbase/x402), an open standard for web payments that enables blockchain micropayments with fast settlement and no fees.
+
+**Required Protocol Features:**
+
+- `X-Payment` header (Request Header ID 15)
+- `X-Payment-Response` header (Response Header ID 19)
+- `402 Payment Required` status code (compact code 38)
+- JSON content type (code 2) for payment payloads
+
+**Basic Flow:**
+
+1. Client requests resource → Server responds with `402` and payment requirements (JSON)
+2. Client submits payment via `X-Payment` header → Server verifies and settles
+3. Server returns resource with `X-Payment-Response` header containing settlement proof
+
+For more information, see the [x402 repository](https://github.com/coinbase/x402) and [ecosystem](https://x402.org/ecosystem)
