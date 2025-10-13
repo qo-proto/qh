@@ -36,8 +36,9 @@ func main() {
 		{method: "POST", path: "/data", body: ptr("Updated data!")},
 		// {method: "POST", path: "/large-post", body: ptr(strings.Repeat("LARGE_DATA_", 20000))}, // ~220KB
 		{method: "GET", path: "/file"},
-		{method: "GET", path: "/image"},
+		//{method: "GET", path: "/image"},
 		{method: "GET", path: "/not-found"}, // This will trigger a 404
+		{method: "GET", path: "/redirect"},  // This should return a 301 and hostname from the new site
 	}
 
 	c := client.NewClient()
@@ -120,6 +121,13 @@ func logResponse(method, path string, response *protocol.Response) {
 		if err == nil {
 			formattedDate := time.Unix(unixTime, 0).Format("02.01.2006 15:04")
 			sb.WriteString(fmt.Sprintf("Timestamp:  %s\n", formattedDate))
+		}
+	}
+
+	// Special handling for redirect response logging
+	if response.StatusCode >= 300 && response.StatusCode < 400 {
+		if location, ok := response.Headers["Location"]; ok {
+			sb.WriteString(fmt.Sprintf("Location:   %s\n", location))
 		}
 	}
 

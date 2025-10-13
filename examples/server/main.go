@@ -83,6 +83,21 @@ func main() {
 		return server.Response(200, content, headers)
 	})
 
+	srv.HandleFunc("/redirect", protocol.GET, func(_ *protocol.Request) *protocol.Response {
+		slog.Info("Handling request", "method", "GET", "path", "/redirect")
+		headers := map[string]string{
+			"host": "qh2.gianhunold.ch",
+			"path": "/permanent-hello",
+		}
+		// A redirect response typically has an empty body.
+		return server.Response(301, nil, headers)
+	})
+
+	srv.HandleFunc("/permanent-hello", protocol.GET, func(_ *protocol.Request) *protocol.Response {
+		slog.Info("Handling request", "method", "GET", "path", "/permanent-hello")
+		return server.TextResponse(200, "Hello from the new, permanent location!")
+	})
+
 	// listening with auto-generated keys
 	addr := "127.0.0.1:8090"
 	seed := "Start123"
