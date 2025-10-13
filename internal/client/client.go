@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 
+	"qh/internal/compression"
 	"qh/internal/protocol"
 
 	"github.com/tbocek/qotp"
@@ -129,7 +130,7 @@ func lookupPubKey(host string) string {
 	// Parse the first TXT record, expecting "v=0;k=..."
 	record := txtRecords[0]
 	parts := strings.Split(record, ";")
-	var version = -1
+	version := -1
 	var key string
 
 	for _, part := range parts {
@@ -219,12 +220,21 @@ func (c *Client) Request(req *protocol.Request) (*protocol.Response, error) {
 		return nil, errors.New("no response received")
 	}
 
+	if err := c.decompressResponse(response); err != nil {
+		return nil, fmt.Errorf("decompression failed: %w", err)
+	}
+
 	return response, nil
 }
 
 func (c *Client) GET(host, path string, headers map[string]string) (*protocol.Response, error) {
 	if headers == nil {
 		headers = make(map[string]string)
+	}
+
+	// Add Accept-Encoding if not already present (like in HTTP)
+	if _, ok := headers["Accept-Encoding"]; !ok {
+		headers["Accept-Encoding"] = "zstd, br, gzip, deflate"
 	}
 
 	req := &protocol.Request{
@@ -240,6 +250,11 @@ func (c *Client) GET(host, path string, headers map[string]string) (*protocol.Re
 func (c *Client) POST(host, path string, body []byte, headers map[string]string) (*protocol.Response, error) {
 	if headers == nil {
 		headers = make(map[string]string)
+	}
+
+	// Add Accept-Encoding if not already present (like in HTTP)
+	if _, ok := headers["Accept-Encoding"]; !ok {
+		headers["Accept-Encoding"] = "zstd, br, gzip, deflate"
 	}
 
 	// Auto-set Content-Length if not provided
@@ -265,5 +280,29 @@ func (c *Client) Close() error {
 	if c.listener != nil {
 		return c.listener.Close()
 	}
+	return nil
+}
+
+func (c *Client) decompressResponse(response *protocol.Response) error {
+	contentEncoding, ok := response.Headers["Content-Encoding"]
+	if !ok || contentEncoding == "" {
+		return nil // No compression
+	}
+
+	originalSize := len(response.Body)
+	slog.Debug("Decompressing response", "encoding", contentEncoding, "compressed_bytes", originalSize)
+
+	decompressed, err := compression.Decompress(response.Body, compression.Encoding(contentEncoding))
+	if err != nil {
+		return fmt.Errorf("failed to decompress with %s: %w", contentEncoding, err)
+	}
+
+	response.Body = decompressed
+	delete(response.Headers, "Content-Encoding") // Remove encoding header after decompression
+	response.Headers["Content-Length"] = strconv.Itoa(len(decompressed))
+
+	slog.Info("Response decompressed", "encoding", contentEncoding,
+		"compressed_bytes", originalSize, "decompressed_bytes", len(decompressed))
+
 	return nil
 }

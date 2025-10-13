@@ -67,6 +67,19 @@ response, err := client.POST("example.com", "/submit", body, headers)
 - `Content-Length` is automatically set for POST requests
 - Body is `[]byte` (convert strings with `[]byte()`)
 
+### Compression
+
+The client automatically requests compressed responses by adding `Accept-Encoding: zstd, br, gzip, deflate` to all requests. The server will compress responses (if beneficial) and the client decompresses them. Currently the implementation uses the first supported encoding.
+
+**To disable compression:**
+
+```go
+headers := map[string]string{
+    "Accept-Encoding": "",  // No compression
+}
+response, err := client.GET("example.com", "/data", headers)
+```
+
 ## DNS
 
 ### Server Configuration

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"strconv"
 
+	"qh/internal/compression"
 	"qh/internal/protocol"
 
 	"github.com/tbocek/qotp"
@@ -137,6 +138,8 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 
 	response := s.routeRequest(request) // execute according handler
 
+	s.applyCompression(request, response)
+
 	// send response
 	responseData := response.Format()
 	slog.Debug("Sending response", "bytes", len(responseData))
@@ -190,6 +193,60 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	if _, err := stream.Write(responseData); err != nil {
 		slog.Error("Failed to write error response", "error", err)
 	}
+}
+
+func (s *Server) applyCompression(request *protocol.Request, response *protocol.Response) {
+	if len(response.Body) == 0 {
+		return
+	}
+
+	// Don't compress very small responses (overhead not worth it)
+	const minCompressionSize = 1024 // 1KB - typical HTTP server threshold
+	if len(response.Body) < minCompressionSize {
+		slog.Debug("Skipping compression for small response", "bytes", len(response.Body), "threshold", minCompressionSize)
+		return
+	}
+
+	contentTypeStr, ok := response.Headers["Content-Type"]
+	contentType, err := strconv.Atoi(contentTypeStr)
+	if ok && err == nil && contentType == int(protocol.OctetStream) {
+		slog.Debug("Skipping compression for binary media", "content_type", "octet-stream")
+		return
+	}
+
+	acceptEncodingStr, ok := request.Headers["Accept-Encoding"]
+	if !ok || acceptEncodingStr == "" {
+		return
+	}
+
+	acceptedEncodings := compression.ParseAcceptEncoding(acceptEncodingStr)
+	selectedEncoding := compression.SelectEncoding(acceptedEncodings)
+
+	if selectedEncoding == "" {
+		return // skip compression if header with empty string
+	}
+
+	originalSize := len(response.Body)
+	compressed, err := compression.Compress(response.Body, selectedEncoding)
+	if err != nil {
+		slog.Error("Compression failed", "encoding", selectedEncoding, "error", err)
+		return
+	}
+
+	if len(compressed) >= originalSize {
+		slog.Debug("Compression not beneficial", "encoding", selectedEncoding,
+			"original", originalSize, "compressed", len(compressed))
+		return
+	}
+
+	response.Body = compressed
+	response.Headers["Content-Encoding"] = string(selectedEncoding)
+	response.Headers["Content-Length"] = strconv.Itoa(len(compressed))
+
+	savings := float64(originalSize-len(compressed)) / float64(originalSize) * 100
+	slog.Info("Compressed", "encoding", selectedEncoding,
+		"original_bytes", originalSize, "compressed_bytes", len(compressed),
+		"saved", fmt.Sprintf("%.1f%%", savings))
 }
 
 func Response(statusCode int, body []byte, headers map[string]string) *protocol.Response {
