@@ -3,9 +3,14 @@ module qh
 go 1.25.1
 
 require (
+	github.com/google/gopacket v1.1.19
 	github.com/stretchr/testify v1.11.1
 	github.com/tbocek/qotp v0.1.1
 )
+
+// The replace directive tells the Go compiler to use the local qotp module
+// instead of the one from github.com. This is the standard way to do local development.
+replace github.com/tbocek/qotp => ../qotp
 
 require (
 	github.com/MatusOllah/slogcolor v1.7.0 // indirect
@@ -16,6 +21,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

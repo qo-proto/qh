@@ -15,16 +15,16 @@ import (
 func main() {
 	slog.Info("QH Protocol Client starting")
 
-	hostname := "qh.gianhunold.ch" // 127.0.0.1 with public key from seed: my-secret-server-seed
+	hostname := "qh2.gianhunold.ch" // 127.0.0.1 with public key from seed: my-secret-server-seed
 	//hostname := "qh2.gianhunold.ch" // 127.0.0.1 but no public key
 	port := 8090
 
 	addr := fmt.Sprintf("%s:%d", hostname, port)
 
 	// ptr is a helper to create a pointer to a string literal.
-	ptr := func(s string) *string { return &s }
+	//ptr := func(s string) *string { return &s }
 
-	largePayload := strings.Repeat("LARGE_DATA_", 20000) // ~220KB
+	//largePayload := strings.Repeat("LARGE_DATA_", 20000) // ~220KB
 
 	requests := []struct {
 		method string
@@ -32,13 +32,13 @@ func main() {
 		body   *string
 	}{
 		{method: "GET", path: "/hello"},
-		{method: "GET", path: "/status"},
-		{method: "GET", path: "/api/user"}, // JSON response
-		{method: "POST", path: "/echo", body: ptr("Hello QH World!")},
-		{method: "POST", path: "/data", body: ptr("Updated data!")},
-		{method: "POST", path: "/large-post", body: &largePayload},
-		{method: "GET", path: "/file"},
-		{method: "GET", path: "/image"},
+		//{method: "GET", path: "/status"},
+		//{method: "GET", path: "/api/user"}, // JSON response
+		//{method: "POST", path: "/echo", body: ptr("Hello QH World!")},
+		//{method: "POST", path: "/data", body: ptr("Updated data!")},
+		//{method: "POST", path: "/large-post", body: &largePayload},
+		//{method: "GET", path: "/file"},
+		//{method: "GET", path: "/image"},
 		{method: "GET", path: "/not-found"}, // This will trigger a 404
 	}
 

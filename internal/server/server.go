@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"strconv"
 	"time"
@@ -37,8 +38,11 @@ func (s *Server) HandleFunc(path string, method protocol.Method, handler Handler
 
 // Listen starts listening on the given address.
 // It uses qotp with auto-generated keys.
-func (s *Server) Listen(addr string, seed ...string) error {
+func (s *Server) Listen(addr string, keyLogWriter io.Writer, seed ...string) error {
 	opts := []qotp.ListenFunc{qotp.WithListenAddr(addr)}
+	if keyLogWriter != nil {
+		opts = append(opts, qotp.WithKeyLogWriter(keyLogWriter))
+	}
 	if len(seed) > 0 && seed[0] != "" {
 		opts = append(opts, qotp.WithSeedStr(seed[0]))
 		slog.Info("QH server listening with provided seed")
