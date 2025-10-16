@@ -427,7 +427,6 @@ When a client receives a `3xx` status code (e.g., 300, 301, 302), it indicates t
 
 1.  **Custom `host` and `path` Headers:**
     The server can provide the new location using two separate headers: `host` for the new hostname and `path` for the new resource path. This is the preferred mechanism for QH-specific redirects.
-
     - `host`: The hostname of the new origin.
     - `path`: The path to the resource on the new host.
 
@@ -674,6 +673,14 @@ _qotp.example.com.  IN  TXT  "v=0;k=<base64-encoded-public-key>"
 | `k`     | Server's X25519 public key                | Base64-encoded 32-byte key | `ABCDEFGHIJKLMNOPQRS...` |
 
 **Format:** Fields are separated by semicolons (`;`), with no spaces: `v=0;k=<key>`
+
+#### Underscore Prefix
+
+The `_qotp` prefix follows the standard DNS naming convention for service-specific records as defined in RFC 2782 and RFC 6763. According to RFC 2782:
+
+> "An underscore (\_) is prepended to the service identifier to avoid collisions with DNS labels that occur in nature."
+
+- This pattern is also used by DNS-SD and DKIM
 
 #### Example Record
 
