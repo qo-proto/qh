@@ -34,9 +34,9 @@ func main() {
 		{method: "GET", path: "/api/user"}, // JSON response
 		{method: "POST", path: "/echo", body: ptr("Hello QH World!")},
 		{method: "POST", path: "/data", body: ptr("Updated data!")},
-		// {method: "POST", path: "/large-post", body: ptr(strings.Repeat("LARGE_DATA_", 20000))}, // ~220KB
+		{method: "POST", path: "/large-post", body: ptr(strings.Repeat("LARGE_DATA_", 20000))}, // ~220KB
 		{method: "GET", path: "/file"},
-		// {method: "GET", path: "/image"},
+		{method: "GET", path: "/image"},
 		{method: "GET", path: "/not-found"}, // This will trigger a 404
 		{method: "GET", path: "/redirect"},  // This should return a 301 and hostname from the new site
 	}
