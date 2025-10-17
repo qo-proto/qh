@@ -17,13 +17,19 @@ import (
 type Handler func(*protocol.Request) *protocol.Response
 
 type Server struct {
-	listener *qotp.Listener
-	handlers map[string]map[protocol.Method]Handler // path -> method -> handler (method parsed from request first byte)
+	listener           *qotp.Listener
+	handlers           map[string]map[protocol.Method]Handler // path -> method -> handler (method parsed from request first byte)
+	supportedEncodings []compression.Encoding                 // compression algorithms this server supports, in order of preference
 }
 
 func NewServer() *Server {
 	return &Server{
 		handlers: make(map[string]map[protocol.Method]Handler),
+		supportedEncodings: []compression.Encoding{
+			compression.Zstd,
+			compression.Brotli,
+			compression.Gzip,
+		},
 	}
 }
 
@@ -220,10 +226,11 @@ func (s *Server) applyCompression(request *protocol.Request, response *protocol.
 	}
 
 	acceptedEncodings := compression.ParseAcceptEncoding(acceptEncodingStr)
-	selectedEncoding := compression.SelectEncoding(acceptedEncodings)
+	selectedEncoding := compression.SelectEncoding(acceptedEncodings, s.supportedEncodings)
 
 	if selectedEncoding == "" {
-		return // skip compression if header with empty string
+		slog.Debug("No common encoding between client and server")
+		return // No matching encoding
 	}
 
 	originalSize := len(response.Body)

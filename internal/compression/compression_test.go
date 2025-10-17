@@ -61,31 +61,67 @@ func TestParseAcceptEncoding(t *testing.T) {
 
 func TestSelectEncoding(t *testing.T) {
 	tests := []struct {
-		name     string
-		input    []Encoding
-		expected Encoding
+		name           string
+		clientAccepts  []Encoding
+		serverSupports []Encoding
+		expected       Encoding
+		description    string
 	}{
 		{
-			name:     "first preference",
-			input:    []Encoding{Gzip, Brotli, Zstd},
-			expected: Gzip,
+			name:           "client and server both prefer zstd",
+			clientAccepts:  []Encoding{Zstd, Gzip, Brotli},
+			serverSupports: []Encoding{Zstd, Brotli, Gzip},
+			expected:       Zstd,
+			description:    "should select zstd when both agree",
 		},
 		{
-			name:     "zstd preferred",
-			input:    []Encoding{Zstd, Gzip},
-			expected: Zstd,
+			name:           "client preference wins over server preference",
+			clientAccepts:  []Encoding{Gzip, Brotli, Zstd},
+			serverSupports: []Encoding{Zstd, Brotli, Gzip},
+			expected:       Gzip,
+			description:    "should use client preference",
 		},
 		{
-			name:     "empty list returns empty string",
-			input:    []Encoding{},
-			expected: "",
+			name:           "no common encoding",
+			clientAccepts:  []Encoding{Gzip, Deflate},
+			serverSupports: []Encoding{Zstd, Brotli},
+			expected:       "",
+			description:    "should return empty string when no match",
+		},
+		{
+			name:           "server supports subset of client",
+			clientAccepts:  []Encoding{Zstd, Brotli, Gzip, Deflate},
+			serverSupports: []Encoding{Brotli},
+			expected:       Brotli,
+			description:    "should find the only common encoding",
+		},
+		{
+			name:           "client accepts only one encoding",
+			clientAccepts:  []Encoding{Gzip},
+			serverSupports: []Encoding{Zstd, Brotli, Gzip, Deflate},
+			expected:       Gzip,
+			description:    "should select the only client-accepted encoding",
+		},
+		{
+			name:           "empty lists return no encoding",
+			clientAccepts:  []Encoding{},
+			serverSupports: []Encoding{Zstd, Gzip},
+			expected:       "",
+			description:    "should return empty when lists are empty",
+		},
+		{
+			name:           "first client preference wins when multiple matches",
+			clientAccepts:  []Encoding{Deflate, Gzip, Brotli},
+			serverSupports: []Encoding{Brotli, Gzip, Deflate},
+			expected:       Deflate,
+			description:    "should select first client preference that server supports",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := SelectEncoding(tt.input)
-			assert.Equal(t, tt.expected, result)
+			result := SelectEncoding(tt.clientAccepts, tt.serverSupports)
+			assert.Equal(t, tt.expected, result, tt.description)
 		})
 	}
 }

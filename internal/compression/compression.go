@@ -7,6 +7,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/andybalholm/brotli"
@@ -25,7 +26,6 @@ const (
 // TODO: add quality values (e.g., `gzip;q=0.8, br;q=1.0`)
 // TODO: Wildcard encodings (`*`)
 // TODO: add `identity` encoding back?
-// TODO: behavior for multiple encodings? (currently just uses first one), encoding selection based on server preferences
 
 // parse Accept-Encoding header, example: "gzip, br, zstd" -> [gzip, br, zstd]
 func ParseAcceptEncoding(acceptEncoding string) []Encoding {
@@ -48,11 +48,13 @@ func ParseAcceptEncoding(acceptEncoding string) []Encoding {
 	return encodings
 }
 
-func SelectEncoding(acceptedEncodings []Encoding) Encoding {
-	if len(acceptedEncodings) > 0 {
-		return acceptedEncodings[0]
+func SelectEncoding(acceptedEncodings []Encoding, serverSupported []Encoding) Encoding {
+	for _, clientEnc := range acceptedEncodings {
+		if slices.Contains(serverSupported, clientEnc) {
+			return clientEnc // First match
+		}
 	}
-	return "" // No compression
+	return "" // No common encoding, don't compress
 }
 
 func Compress(data []byte, encoding Encoding) ([]byte, error) {
