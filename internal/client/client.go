@@ -179,6 +179,10 @@ func (c *Client) Request(req *protocol.Request, redirectCount int) (*protocol.Re
 		return nil, errors.New("client not connected")
 	}
 
+	if _, ok := req.Headers["Accept-Encoding"]; !ok {
+		req.Headers["Accept-Encoding"] = "zstd, br, gzip"
+	}
+
 	// use next available stream ID
 	currentStreamID := c.streamID
 	c.streamID++
@@ -250,11 +254,6 @@ func (c *Client) GET(host, path string, headers map[string]string) (*protocol.Re
 		headers = make(map[string]string)
 	}
 
-	// Add Accept-Encoding if not already present (like in HTTP)
-	if _, ok := headers["Accept-Encoding"]; !ok {
-		headers["Accept-Encoding"] = "zstd, br, gzip, deflate"
-	}
-
 	req := &protocol.Request{
 		Method:  protocol.GET,
 		Host:    host,
@@ -268,11 +267,6 @@ func (c *Client) GET(host, path string, headers map[string]string) (*protocol.Re
 func (c *Client) POST(host, path string, body []byte, headers map[string]string) (*protocol.Response, error) {
 	if headers == nil {
 		headers = make(map[string]string)
-	}
-
-	// Add Accept-Encoding if not already present (like in HTTP)
-	if _, ok := headers["Accept-Encoding"]; !ok {
-		headers["Accept-Encoding"] = "zstd, br, gzip, deflate"
 	}
 
 	// Auto-set Content-Length if not provided

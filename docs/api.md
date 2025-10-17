@@ -69,16 +69,33 @@ response, err := client.POST("example.com", "/submit", body, headers)
 
 ### Compression
 
-The client automatically requests compressed responses by adding `Accept-Encoding: zstd, br, gzip, deflate` to all requests. The server will compress responses (if beneficial) and the client decompresses them. Currently the implementation uses the first supported encoding.
+**Note:** QH currently only supports compression for responses, not requests. This matches how most HTTP traffic operates, as request bodies are typically small.
+
+The client **automatically** adds the `Accept-Encoding: zstd, br, gzip` header to all requests. The server supports the same encodings by default and uses the first client-preferred encoding.
+
+**Example - Override client preferences:**
+
+```go
+headers := map[string]string{
+    "Accept-Encoding": "gzip, br",  // Only accept gzip or brotli
+}
+// Server will use gzip (client's first choice), not zstd (server default)
+response, err := client.GET("example.com", "/data", headers)
+```
 
 **To disable compression:**
 
 ```go
 headers := map[string]string{
-    "Accept-Encoding": "",  // No compression
+    "Accept-Encoding": "",  // Explicitly disable compression
 }
 response, err := client.GET("example.com", "/data", headers)
 ```
+
+**Notes:**
+
+- Server only compresses responses when beneficial (≥1KB, non-binary content, actual size savings)
+- The `deflate` encoding is available in the compression library but not enabled by default
 
 ## DNS
 
