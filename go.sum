@@ -23,8 +23,8 @@ github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
-github.com/tbocek/qotp v0.2.1 h1:/qz/EaTwlMPHTQDuMwxshHi8uRPHLap6ORhttpjOHt0=
-github.com/tbocek/qotp v0.2.1/go.mod h1:tzZUy+b6MHoDjKiof5mUP5E3ha40hzPwF8uvuRKJ8+A=
+github.com/tbocek/qotp v0.2.2 h1:8HxqKosU87VY4uDZOx3iAK6evbo8vGX6qXbI1Hgf8HA=
+github.com/tbocek/qotp v0.2.2/go.mod h1:tzZUy+b6MHoDjKiof5mUP5E3ha40hzPwF8uvuRKJ8+A=
 github.com/xyproto/randomstring v1.0.5 h1:YtlWPoRdgMu3NZtP45drfy1GKoojuR7hmRcnhZqKjWU=
 github.com/xyproto/randomstring v1.0.5/go.mod h1:rgmS5DeNXLivK7YprL0pY+lTuhNQW3iGxZ18UQApw/E=
 golang.org/x/crypto v0.42.0 h1:chiH31gIWm57EkTXpwnqf8qeuMUi0yekh6mT2AvFlqI=
