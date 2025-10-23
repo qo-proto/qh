@@ -1,4 +1,3 @@
-// Package compression provides compression/decompression utilities
 package qh
 
 import (
