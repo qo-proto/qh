@@ -186,8 +186,7 @@ type Response struct {
 	Body       []byte
 }
 
-// TODO: pre-allocate capacity in both format methods
-
+// Note: Pre-allocation was benchmarked and is not worth it
 // format QH request into wire format
 func (r *Request) Format() []byte {
 	// The first byte contains: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
