@@ -9,12 +9,12 @@ QH uses a single `Response()` function that accepts headers as a string map:
 ```go
 // Minimal response with automatic Content-Length
 server.Response(200, []byte(`{"message": "success"}`), map[string]string{
-    "Content-Type": strconv.Itoa(int(protocol.JSON)),
+    "Content-Type": qh.JSON.HeaderValue(),
 })
 
 // Response with multiple headers
 server.Response(200, []byte(body), map[string]string{
-    "Content-Type":  strconv.Itoa(int(protocol.JSON)),
+    "Content-Type":  qh.JSON.HeaderValue(),
     "Cache-Control": "max-age=3600",
     "Date":          strconv.FormatInt(time.Now().Unix(), 10),
     "ETag":          "\"abc123\"",
@@ -30,14 +30,14 @@ server.JSONResponse(200, `{"data": "value"}`)    // Content-Type: 2 (application
 
 - `Content-Length` is automatically calculated and set
 - `Date` header is optional, set it manually if needed for caching
-- All header values are strings (use `strconv.Itoa()` for numeric values)
+- Use the `ContentType.HeaderValue()` method for single content type values
 
-**Example:**
+**Content Type Helpers:**
 
 ```go
-headers := map[string]string{
-    "Content-Type": strconv.Itoa(int(protocol.JSON)),  // "2"
-}
+// For single content type (Content-Type header)
+headers["Content-Type"] = qh.JSON.HeaderValue()  // Returns "2"
+headers["Content-Type"] = qh.TextPlain.HeaderValue()  // Returns "1"
 ```
 
 ## Client
@@ -46,7 +46,7 @@ headers := map[string]string{
 
 ```go
 headers := map[string]string{
-    "Accept": "3,2,1",  // HTML, JSON, text/plain (in order of preference)
+    "Accept": qh.AcceptHeader(qh.HTML, qh.JSON, qh.TextPlain),
 }
 response, err := client.GET("example.com", "/api/data", headers)
 ```
@@ -56,8 +56,8 @@ response, err := client.GET("example.com", "/api/data", headers)
 ```go
 body := []byte(`{"name": "test"}`)
 headers := map[string]string{
-    "Accept":       "2,1",  // JSON, text/plain
-    "Content-Type": strconv.Itoa(int(protocol.JSON)),  // "2"
+    "Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
+    "Content-Type": qh.JSON.HeaderValue(),
 }
 response, err := client.POST("example.com", "/submit", body, headers)
 ```

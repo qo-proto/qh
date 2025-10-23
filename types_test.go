@@ -294,6 +294,60 @@ func TestIsValidContentType(t *testing.T) {
 	}
 }
 
+func TestContentTypeHeaderValue(t *testing.T) {
+	tests := []struct {
+		name        string
+		contentType ContentType
+		expected    string
+	}{
+		{"Custom", Custom, "0"},
+		{"TextPlain", TextPlain, "1"},
+		{"JSON", JSON, "2"},
+		{"HTML", HTML, "3"},
+		{"OctetStream", OctetStream, "4"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := tt.contentType.HeaderValue()
+			require.Equal(t, tt.expected, actual)
+		})
+	}
+}
+
+func TestHeaderHelpersInRequest(t *testing.T) {
+	req := &Request{
+		Method:  GET,
+		Host:    "example.com",
+		Path:    "/api/data",
+		Version: 0,
+		Headers: map[string]string{
+			"Accept": AcceptHeader(JSON, TextPlain, HTML),
+		},
+	}
+
+	formatted := req.Format()
+	parsed, err := ParseRequest(formatted)
+	require.NoError(t, err)
+	require.Equal(t, "2,1,3", parsed.Headers["Accept"])
+}
+
+func TestHeaderHelpersInResponse(t *testing.T) {
+	resp := &Response{
+		Version:    0,
+		StatusCode: 200,
+		Headers: map[string]string{
+			"Content-Type": JSON.HeaderValue(),
+		},
+		Body: []byte(`{"status":"ok"}`),
+	}
+
+	formatted := resp.Format()
+	parsed, err := ParseResponse(formatted)
+	require.NoError(t, err)
+	require.Equal(t, "2", parsed.Headers["Content-Type"])
+}
+
 // TODO: add tests for IsRequestComplete and IsResponseComplete
 
 // Round-trip tests verify that Format() and Parse() are consistent

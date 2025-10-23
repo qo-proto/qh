@@ -56,7 +56,7 @@ func main() {
 		switch req.method {
 		case "GET":
 			headers := map[string]string{
-				"Accept": "3,2,1", // HTML, JSON, text/plain
+				"Accept": qh.AcceptHeader(qh.HTML, qh.JSON, qh.TextPlain),
 			}
 			response, err = c.GET(hostname, req.path, headers)
 		case "POST":
@@ -65,8 +65,8 @@ func main() {
 				body = []byte(*req.body)
 			}
 			headers := map[string]string{
-				"Accept":       "2,1", // JSON, text/plain
-				"Content-Type": strconv.Itoa(int(qh.TextPlain)),
+				"Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
+				"Content-Type": qh.TextPlain.HeaderValue(),
 			}
 			response, err = c.POST(hostname, req.path, body, headers)
 		default:

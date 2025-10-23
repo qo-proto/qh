@@ -35,7 +35,7 @@ func main() {
 	srv.HandleFunc("/api/user", qh.GET, func(_ *qh.Request) *qh.Response {
 		slog.Info("Handling request", "method", "GET", "path", "/api/user")
 		headers := map[string]string{
-			"Content-Type":  strconv.Itoa(int(qh.JSON)),
+			"Content-Type":  qh.JSON.HeaderValue(),
 			"Cache-Control": "max-age=3600",
 			"Date":          strconv.FormatInt(time.Now().Unix(), 10),
 		}
@@ -63,7 +63,7 @@ func main() {
 			return qh.TextResponse(500, "Internal Server Error")
 		}
 		headers := map[string]string{
-			"Content-Type": strconv.Itoa(int(qh.TextPlain)),
+			"Content-Type": qh.TextPlain.HeaderValue(),
 		}
 		return qh.NewResponse(200, content, headers)
 	})
@@ -77,7 +77,7 @@ func main() {
 		}
 		slog.Info("Serving image", "bytes", len(content))
 		headers := map[string]string{
-			"Content-Type": strconv.Itoa(int(qh.OctetStream)),
+			"Content-Type": qh.OctetStream.HeaderValue(),
 		}
 		return qh.NewResponse(200, content, headers)
 	})

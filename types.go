@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 const Version = 0
@@ -27,8 +28,6 @@ func (m Method) String() string {
 	}
 }
 
-// TODO: maybe add a helper method protocol.AcceptHeader() to use types directly in the client
-// e.g. protocol.AcceptHeader(protocol.JSON, protocol.TextPlain) and not "1,2"
 type ContentType int
 
 const (
@@ -60,6 +59,21 @@ func (ct ContentType) String() string {
 	default:
 		return "unknown"
 	}
+}
+
+func (ct ContentType) HeaderValue() string {
+	return strconv.Itoa(int(ct))
+}
+
+func AcceptHeader(types ...ContentType) string {
+	if len(types) == 0 {
+		return ""
+	}
+	parts := make([]string, len(types))
+	for i, ct := range types {
+		parts[i] = strconv.Itoa(int(ct))
+	}
+	return strings.Join(parts, ",")
 }
 
 const (
