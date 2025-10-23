@@ -134,14 +134,34 @@ The numeric code is transmitted as an ASCII digit string in the Content-Type hea
 
 QH supports content encoding negotiation via the `Accept-Encoding` request header. This allows clients to indicate which compression algorithms they support for response bodies.
 
-Common encoding values include:
+**Supported encoding values:**
 
 - `gzip` - GNU zip compression
 - `br` - Brotli compression
 - `zstd` - Zstandard compression
 - `deflate` - DEFLATE compression
 
-Multiple encodings can be specified as a comma-separated list (e.g., `gzip,br,zstd`).
+Multiple encodings can be specified as a comma-separated list (e.g., `gzip,br,zstd`). The client's preference order is respected: the server uses the first encoding from the client's list that the server also supports.
+
+**Compression Behavior:**
+
+- **Header present with values** (e.g., `Accept-Encoding: zstd, br, gzip`): Server compresses response if beneficial
+- **Header missing or empty** (e.g., `Accept-Encoding: ""`): Server sends uncompressed response
+- **No match**: If client and server have no common encodings, response is uncompressed
+
+The server only applies compression when:
+
+- Response body is ≥1KB (smaller responses have negligible benefit)
+- Content is compressible (skips binary content like `application/octet-stream`)
+- Compression actually reduces size (if compressed size ≥ original, uncompressed is sent)
+
+**Simplified Design:**
+
+Unlike HTTP/1.1 (RFC 7231), QH does not support:
+
+- Quality values (e.g., `gzip;q=0.8`) - client preference order is used instead
+- Wildcard encodings (`*`) - clients must explicitly list supported encodings
+- `identity` encoding - use empty string or omit header to disable compression
 
 ### 2.4 qh URI Scheme
 

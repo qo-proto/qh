@@ -22,10 +22,6 @@ const (
 	Zstd    Encoding = "zstd"
 )
 
-// TODO: add quality values (e.g., `gzip;q=0.8, br;q=1.0`)
-// TODO: Wildcard encodings (`*`)
-// TODO: add `identity` encoding back?
-
 // parse Accept-Encoding header, example: "gzip, br, zstd" -> [gzip, br, zstd]
 func ParseAcceptEncoding(acceptEncoding string) []Encoding {
 	if acceptEncoding == "" {

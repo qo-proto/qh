@@ -71,31 +71,55 @@ response, err := client.POST("example.com", "/submit", body, headers)
 
 **Note:** QH currently only supports compression for responses, not requests. This matches how most HTTP traffic operates, as request bodies are typically small.
 
+#### Default Behavior
+
 The client **automatically** adds the `Accept-Encoding: zstd, br, gzip` header to all requests. The server supports the same encodings by default and uses the first client-preferred encoding.
 
-**Example - Override client preferences:**
+```go
+// Compression happens automatically
+response, err := client.GET("example.com", "/api/data", nil)
+// Client sends: Accept-Encoding: zstd, br, gzip
+// Server compresses with zstd (if beneficial)
+```
+
+#### Override Client Preferences
+
+Specify different encodings or change the preference order:
 
 ```go
 headers := map[string]string{
     "Accept-Encoding": "gzip, br",  // Only accept gzip or brotli
 }
-// Server will use gzip (client's first choice), not zstd (server default)
 response, err := client.GET("example.com", "/data", headers)
+// Server will use gzip (client's first choice), not zstd
 ```
 
-**To disable compression:**
+#### Disable Compression
+
+Set the `Accept-Encoding` header to an empty string:
 
 ```go
 headers := map[string]string{
-    "Accept-Encoding": "",  // Explicitly disable compression
+    "Accept-Encoding": "",  // No compression
 }
 response, err := client.GET("example.com", "/data", headers)
+// Server will send uncompressed response
 ```
+
+#### Server Compression Rules
+
+The server only compresses responses when all conditions are met:
+
+1. **Client supports it**: `Accept-Encoding` header is present and non-empty
+2. **Size threshold**: Response body is ≥1KB (smaller responses aren't worth compressing)
+3. **Content is compressible**: Skips binary content like `application/octet-stream`
+4. **Actual savings**: Compressed size must be smaller than original (otherwise uncompressed is sent)
 
 **Notes:**
 
-- Server only compresses responses when beneficial (≥1KB, non-binary content, actual size savings)
-- The `deflate` encoding is available in the compression library but not enabled by default
+- QH does not support HTTP quality values (e.g., `gzip;q=0.8`) - use ordering instead
+- QH does not support wildcard encodings (`*`)
+- QH does not support `identity` encoding - use empty string `""` to disable compression
 
 ## DNS
 
