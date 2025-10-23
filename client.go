@@ -1,5 +1,5 @@
-// Package client implements a QH protocol client over QOTP transport.
-package client
+// Package qh implements the QH protocol client and server over QOTP transport.
+package qh
 
 import (
 	"context"
@@ -13,9 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"qh/internal/compression"
-	"qh/internal/protocol"
 
 	"github.com/tbocek/qotp"
 )
@@ -174,7 +171,7 @@ func lookupPubKey(host string) string {
 	return ""
 }
 
-func (c *Client) Request(req *protocol.Request, redirectCount int) (*protocol.Response, error) {
+func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 	if c.conn == nil {
 		return nil, errors.New("client not connected")
 	}
@@ -216,7 +213,7 @@ func (c *Client) Request(req *protocol.Request, redirectCount int) (*protocol.Re
 		slog.Debug("Received chunk from server", "bytes", len(chunk))
 		responseBuffer = append(responseBuffer, chunk...)
 
-		complete, checkErr := protocol.IsResponseComplete(responseBuffer)
+		complete, checkErr := IsResponseComplete(responseBuffer)
 		if checkErr != nil {
 			slog.Error("Error checking response completeness", "error", checkErr)
 			return false
@@ -229,7 +226,7 @@ func (c *Client) Request(req *protocol.Request, redirectCount int) (*protocol.Re
 		return true
 	})
 
-	response, parseErr := protocol.ParseResponse(responseBuffer)
+	response, parseErr := ParseResponse(responseBuffer)
 	if parseErr != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", parseErr)
 	}
@@ -239,7 +236,7 @@ func (c *Client) Request(req *protocol.Request, redirectCount int) (*protocol.Re
 
 	// Handle redirects
 	switch response.StatusCode {
-	case protocol.StatusMultipleChoices, protocol.StatusMovedPermanently, protocol.StatusFound, protocol.StatusTemporaryRedirect, protocol.StatusPermanentRedirect:
+	case StatusMultipleChoices, StatusMovedPermanently, StatusFound, StatusTemporaryRedirect, StatusPermanentRedirect:
 		return c.handleRedirect(req, response, redirectCount)
 	}
 
@@ -249,22 +246,22 @@ func (c *Client) Request(req *protocol.Request, redirectCount int) (*protocol.Re
 	return response, nil
 }
 
-func (c *Client) GET(host, path string, headers map[string]string) (*protocol.Response, error) {
+func (c *Client) GET(host, path string, headers map[string]string) (*Response, error) {
 	if headers == nil {
 		headers = make(map[string]string)
 	}
 
-	req := &protocol.Request{
-		Method:  protocol.GET,
+	req := &Request{
+		Method:  GET,
 		Host:    host,
 		Path:    path,
-		Version: protocol.Version,
+		Version: Version,
 		Headers: headers,
 	}
 	return c.Request(req, 0)
 }
 
-func (c *Client) POST(host, path string, body []byte, headers map[string]string) (*protocol.Response, error) {
+func (c *Client) POST(host, path string, body []byte, headers map[string]string) (*Response, error) {
 	if headers == nil {
 		headers = make(map[string]string)
 	}
@@ -274,11 +271,11 @@ func (c *Client) POST(host, path string, body []byte, headers map[string]string)
 		headers["Content-Length"] = strconv.Itoa(len(body))
 	}
 
-	req := &protocol.Request{
-		Method:  protocol.POST,
+	req := &Request{
+		Method:  POST,
 		Host:    host,
 		Path:    path,
-		Version: protocol.Version,
+		Version: Version,
 		Headers: headers,
 		Body:    body,
 	}
@@ -295,7 +292,7 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) decompressResponse(response *protocol.Response) error {
+func (c *Client) decompressResponse(response *Response) error {
 	contentEncoding, ok := response.Headers["Content-Encoding"]
 	if !ok || contentEncoding == "" {
 		return nil // No compression
@@ -304,7 +301,7 @@ func (c *Client) decompressResponse(response *protocol.Response) error {
 	originalSize := len(response.Body)
 	slog.Debug("Decompressing response", "encoding", contentEncoding, "compressed_bytes", originalSize)
 
-	decompressed, err := compression.Decompress(response.Body, compression.Encoding(contentEncoding))
+	decompressed, err := Decompress(response.Body, Encoding(contentEncoding))
 	if err != nil {
 		return fmt.Errorf("failed to decompress with %s: %w", contentEncoding, err)
 	}
@@ -332,7 +329,7 @@ func (c *Client) reconnect(host string, port int) error {
 	return c.Connect(fmt.Sprintf("%s:%d", host, port))
 }
 
-func (c *Client) handleRedirect(req *protocol.Request, resp *protocol.Response, redirectCount int) (*protocol.Response, error) {
+func (c *Client) handleRedirect(req *Request, resp *Response, redirectCount int) (*Response, error) {
 	if redirectCount >= MaxRedirects {
 		return nil, errors.New("too many redirects")
 	}
@@ -365,11 +362,11 @@ func (c *Client) handleRedirect(req *protocol.Request, resp *protocol.Response, 
 
 	// For 307 and 308, the method should be preserved. For simplicity, we'll
 	// always use GET for redirects, which is common practice for 301/302.
-	newReq := &protocol.Request{
-		Method:  protocol.GET,
+	newReq := &Request{
+		Method:  GET,
 		Host:    newHostname,
 		Path:    newPath,
-		Version: protocol.Version,
+		Version: Version,
 		Headers: req.Headers, // Re-use headers from original request
 	}
 

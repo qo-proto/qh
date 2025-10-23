@@ -1,4 +1,4 @@
-package server
+package qh
 
 import (
 	"encoding/base64"
@@ -7,36 +7,29 @@ import (
 	"log/slog"
 	"strconv"
 
-	"qh/internal/compression"
-	"qh/internal/protocol"
-
 	"github.com/tbocek/qotp"
 )
 
 // handles QH requests
-type Handler func(*protocol.Request) *protocol.Response
+type Handler func(*Request) *Response
 
 type Server struct {
 	listener           *qotp.Listener
-	handlers           map[string]map[protocol.Method]Handler // path -> method -> handler (method parsed from request first byte)
-	supportedEncodings []compression.Encoding                 // compression algorithms this server supports, in order of preference
+	handlers           map[string]map[Method]Handler // path -> method -> handler (method parsed from request first byte)
+	supportedEncodings []Encoding                    // compression algorithms this server supports, in order of preference
 }
 
 func NewServer() *Server {
 	return &Server{
-		handlers: make(map[string]map[protocol.Method]Handler),
-		supportedEncodings: []compression.Encoding{
-			compression.Zstd,
-			compression.Brotli,
-			compression.Gzip,
-		},
+		handlers:           make(map[string]map[Method]Handler),
+		supportedEncodings: []Encoding{Zstd, Brotli, Gzip},
 	}
 }
 
 // HandleFunc registers a handler for a given path and method.
-func (s *Server) HandleFunc(path string, method protocol.Method, handler Handler) {
+func (s *Server) HandleFunc(path string, method Method, handler Handler) {
 	if s.handlers[path] == nil {
-		s.handlers[path] = make(map[protocol.Method]Handler)
+		s.handlers[path] = make(map[Method]Handler)
 	}
 	s.handlers[path][method] = handler
 	slog.Info("Registered handler", "method", method.String(), "path", path)
@@ -90,7 +83,7 @@ func (s *Server) Serve() error {
 
 			slog.Debug("Received data fragment", "fragment_bytes", len(data), "total_bytes", len(buffer))
 
-			complete, checkErr := protocol.IsRequestComplete(buffer)
+			complete, checkErr := IsRequestComplete(buffer)
 			if checkErr != nil {
 				slog.Error("Request validation error", "error", checkErr)
 				s.sendErrorResponse(stream, 400, "Bad Request")
@@ -130,7 +123,7 @@ func (s *Server) getPublicKeyDNS() string {
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
 
-	request, err := protocol.ParseRequest(requestData)
+	request, err := ParseRequest(requestData)
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
 		s.sendErrorResponse(stream, 400, "Bad Request")
@@ -138,7 +131,7 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	}
 
 	// Validate and normalize Content-Type for POST requests
-	if request.Method == protocol.POST && s.validateContentType(request, stream) != nil {
+	if request.Method == POST && s.validateContentType(request, stream) != nil {
 		return // error response already sent
 	}
 
@@ -160,17 +153,17 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Response sent, stream kept open for reuse")
 }
 
-func (s *Server) validateContentType(request *protocol.Request, stream *qotp.Stream) error {
+func (s *Server) validateContentType(request *Request, stream *qotp.Stream) error {
 	contentTypeStr, hasContentType := request.Headers["Content-Type"]
 
 	if !hasContentType || contentTypeStr == "" {
 		slog.Debug("Content-Type missing for POST, defaulting to octet-stream")
-		request.Headers["Content-Type"] = strconv.Itoa(int(protocol.OctetStream))
+		request.Headers["Content-Type"] = strconv.Itoa(int(OctetStream))
 		return nil
 	}
 
 	contentType, parseErr := strconv.Atoi(contentTypeStr)
-	if parseErr != nil || !protocol.IsValidContentType(contentType) {
+	if parseErr != nil || !IsValidContentType(contentType) {
 		slog.Error("Invalid Content-Type", "value", contentTypeStr)
 		s.sendErrorResponse(stream, 415, "Unsupported Media Type")
 		return fmt.Errorf("invalid content-type: %s", contentTypeStr)
@@ -179,7 +172,7 @@ func (s *Server) validateContentType(request *protocol.Request, stream *qotp.Str
 	return nil
 }
 
-func (s *Server) routeRequest(request *protocol.Request) *protocol.Response {
+func (s *Server) routeRequest(request *Request) *Response {
 	slog.Debug("Routing request", "path", request.Path, "method", request.Method.String())
 
 	// check if we have a handler for this path and method
@@ -201,7 +194,7 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	}
 }
 
-func (s *Server) applyCompression(request *protocol.Request, response *protocol.Response) {
+func (s *Server) applyCompression(request *Request, response *Response) {
 	if len(response.Body) == 0 {
 		return
 	}
@@ -215,7 +208,7 @@ func (s *Server) applyCompression(request *protocol.Request, response *protocol.
 
 	contentTypeStr, ok := response.Headers["Content-Type"]
 	contentType, err := strconv.Atoi(contentTypeStr)
-	if ok && err == nil && contentType == int(protocol.OctetStream) {
+	if ok && err == nil && contentType == int(OctetStream) {
 		slog.Debug("Skipping compression for binary media", "content_type", "octet-stream")
 		return
 	}
@@ -225,8 +218,8 @@ func (s *Server) applyCompression(request *protocol.Request, response *protocol.
 		return
 	}
 
-	acceptedEncodings := compression.ParseAcceptEncoding(acceptEncodingStr)
-	selectedEncoding := compression.SelectEncoding(acceptedEncodings, s.supportedEncodings)
+	acceptedEncodings := ParseAcceptEncoding(acceptEncodingStr)
+	selectedEncoding := SelectEncoding(acceptedEncodings, s.supportedEncodings)
 
 	if selectedEncoding == "" {
 		slog.Debug("No common encoding between client and server")
@@ -234,7 +227,7 @@ func (s *Server) applyCompression(request *protocol.Request, response *protocol.
 	}
 
 	originalSize := len(response.Body)
-	compressed, err := compression.Compress(response.Body, selectedEncoding)
+	compressed, err := Compress(response.Body, selectedEncoding)
 	if err != nil {
 		slog.Error("Compression failed", "encoding", selectedEncoding, "error", err)
 		return
@@ -256,7 +249,7 @@ func (s *Server) applyCompression(request *protocol.Request, response *protocol.
 		"saved", fmt.Sprintf("%.1f%%", savings))
 }
 
-func Response(statusCode int, body []byte, headers map[string]string) *protocol.Response {
+func NewResponse(statusCode int, body []byte, headers map[string]string) *Response {
 	headerMap := make(map[string]string)
 	headerMap["Content-Length"] = strconv.Itoa(len(body))
 
@@ -264,8 +257,8 @@ func Response(statusCode int, body []byte, headers map[string]string) *protocol.
 		headerMap[key] = value
 	}
 
-	return &protocol.Response{
-		Version:    protocol.Version,
+	return &Response{
+		Version:    Version,
 		StatusCode: statusCode,
 		Headers:    headerMap,
 		Body:       body,
@@ -273,16 +266,16 @@ func Response(statusCode int, body []byte, headers map[string]string) *protocol.
 }
 
 // Convenience methods for common response types
-func TextResponse(statusCode int, body string) *protocol.Response {
+func TextResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
-		"Content-Type": strconv.Itoa(int(protocol.TextPlain)),
+		"Content-Type": strconv.Itoa(int(TextPlain)),
 	}
-	return Response(statusCode, []byte(body), headers)
+	return NewResponse(statusCode, []byte(body), headers)
 }
 
-func JSONResponse(statusCode int, body string) *protocol.Response {
+func JSONResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
-		"Content-Type": strconv.Itoa(int(protocol.JSON)),
+		"Content-Type": strconv.Itoa(int(JSON)),
 	}
-	return Response(statusCode, []byte(body), headers)
+	return NewResponse(statusCode, []byte(body), headers)
 }

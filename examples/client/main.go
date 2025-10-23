@@ -8,8 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"qh/internal/client"
-	"qh/internal/protocol"
+	"github.com/qh-project/qh"
 )
 
 func main() {
@@ -41,7 +40,7 @@ func main() {
 		{method: "GET", path: "/redirect"},  // This should return a 301 and hostname from the new site
 	}
 
-	c := client.NewClient()
+	c := qh.NewClient()
 	defer c.Close()
 
 	if err := c.Connect(addr); err != nil {
@@ -52,7 +51,7 @@ func main() {
 	for _, req := range requests {
 		slog.Info("Testing request", "method", req.method, "path", req.path)
 
-		var response *protocol.Response
+		var response *qh.Response
 		var err error
 		switch req.method {
 		case "GET":
@@ -67,7 +66,7 @@ func main() {
 			}
 			headers := map[string]string{
 				"Accept":       "2,1", // JSON, text/plain
-				"Content-Type": strconv.Itoa(int(protocol.TextPlain)),
+				"Content-Type": strconv.Itoa(int(qh.TextPlain)),
 			}
 			response, err = c.POST(hostname, req.path, body, headers)
 		default:
@@ -103,7 +102,7 @@ func main() {
 	slog.Info("All tests completed")
 }
 
-func logResponse(method, path string, response *protocol.Response) {
+func logResponse(method, path string, response *qh.Response) {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("\n--- Response for %s %s ---\n", method, path))
 	sb.WriteString(fmt.Sprintf("Version:    %d\n", response.Version))
@@ -112,7 +111,7 @@ func logResponse(method, path string, response *protocol.Response) {
 	if contentTypeStr, ok := response.Headers["Content-Type"]; ok && contentTypeStr != "" {
 		contentTypeCode, err := strconv.Atoi(contentTypeStr)
 		if err == nil {
-			sb.WriteString(fmt.Sprintf("Content:    %s\n", protocol.ContentType(contentTypeCode).String()))
+			sb.WriteString(fmt.Sprintf("Content:    %s\n", qh.ContentType(contentTypeCode).String()))
 		}
 	}
 

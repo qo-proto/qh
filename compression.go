@@ -1,5 +1,5 @@
 // Package compression provides compression/decompression utilities
-package compression
+package qh
 
 import (
 	"bytes"
