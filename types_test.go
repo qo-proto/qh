@@ -348,10 +348,7 @@ func TestHeaderHelpersInResponse(t *testing.T) {
 	require.Equal(t, "2", parsed.Headers["Content-Type"])
 }
 
-// TODO: add tests for IsRequestComplete and IsResponseComplete
-
 // Round-trip tests verify that Format() and Parse() are consistent
-
 func TestRequestRoundTrip(t *testing.T) {
 	tests := []struct {
 		name    string
