@@ -258,9 +258,10 @@ func TestMethodString(t *testing.T) {
 	}{
 		{GET, "GET"},
 		{POST, "POST"},
-		/*{PUT, "PUT"},
+		{PUT, "PUT"},
+		{PATCH, "PATCH"},
 		{DELETE, "DELETE"},
-		{HEAD, "HEAD"},*/
+		{HEAD, "HEAD"},
 		{Method(123), "UNKNOWN"},
 	}
 
@@ -350,6 +351,58 @@ func TestRequestRoundTrip(t *testing.T) {
 					"Authorization":  "Bearer token123",
 				},
 				Body: []byte(`{"name":"test"}`),
+			},
+		},
+		{
+			name: "PUT with body",
+			request: &Request{
+				Method:  PUT,
+				Host:    "api.example.com",
+				Path:    "/user/123",
+				Version: 0,
+				Headers: map[string]string{
+					"Content-Type":   JSON.HeaderValue(),
+					"Content-Length": "18",
+				},
+				Body: []byte(`{"name":"updated"}`),
+			},
+		},
+		{
+			name: "PATCH with body",
+			request: &Request{
+				Method:  PATCH,
+				Host:    "api.example.com",
+				Path:    "/user/123",
+				Version: 0,
+				Headers: map[string]string{
+					"Content-Type":   JSON.HeaderValue(),
+					"Content-Length": "12",
+				},
+				Body: []byte(`{"age":"30"}`),
+			},
+		},
+		{
+			name: "DELETE without body",
+			request: &Request{
+				Method:  DELETE,
+				Host:    "api.example.com",
+				Path:    "/user/123",
+				Version: 0,
+				Headers: map[string]string{},
+				Body:    []byte{},
+			},
+		},
+		{
+			name: "HEAD without body",
+			request: &Request{
+				Method:  HEAD,
+				Host:    "example.com",
+				Path:    "/api/data",
+				Version: 0,
+				Headers: map[string]string{
+					"Accept": AcceptHeader(JSON, TextPlain),
+				},
+				Body: []byte{},
 			},
 		},
 		{

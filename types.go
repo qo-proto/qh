@@ -13,8 +13,12 @@ const Version = 0
 type Method int
 
 const (
-	GET  Method = 0
-	POST Method = 1
+	GET    Method = 0
+	POST   Method = 1
+	PUT    Method = 2
+	PATCH  Method = 3
+	DELETE Method = 4
+	HEAD   Method = 5
 )
 
 func (m Method) String() string {
@@ -23,6 +27,14 @@ func (m Method) String() string {
 		return "GET"
 	case POST:
 		return "POST"
+	case PUT:
+		return "PUT"
+	case PATCH:
+		return "PATCH"
+	case DELETE:
+		return "DELETE"
+	case HEAD:
+		return "HEAD"
 	default:
 		return "UNKNOWN"
 	}
@@ -561,7 +573,7 @@ func ParseRequest(data []byte) (*Request, error) {
 	version := firstByte >> 6                       // Extract upper 2 bits
 	method := Method((firstByte >> 3) & 0b00000111) // Extract middle 3 bits
 
-	if method != GET && method != POST {
+	if method < GET || method > HEAD { // valid methods are 0-5
 		return nil, fmt.Errorf("invalid method value: %d", method)
 	}
 

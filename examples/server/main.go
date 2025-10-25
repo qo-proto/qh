@@ -97,6 +97,11 @@ func main() {
 		return qh.TextResponse(200, "Hello from the new, permanent location!")
 	})
 
+	srv.HandleFunc("/api/user", qh.PUT, func(req *qh.Request) *qh.Response {
+		slog.Info("Handling request", "method", "PUT", "path", "/api/user", "body", string(req.Body))
+		return qh.JSONResponse(200, `{"message": "User updated", "id": 123}`)
+	})
+
 	// listening with auto-generated keys
 	addr := "127.0.0.1:8090"
 	seed := "Start123"

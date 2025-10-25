@@ -130,8 +130,8 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 		return
 	}
 
-	// Validate and normalize Content-Type for POST requests
-	if req.Method == POST && s.validateContentType(req, stream) != nil {
+	// Validate and normalize Content-Type for requests with body
+	if (req.Method == POST || req.Method == PUT || req.Method == PATCH) && s.validateContentType(req, stream) != nil {
 		return // error response already sent
 	}
 

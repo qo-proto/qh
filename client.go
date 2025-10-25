@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net"
 	"net/url"
 	"strconv"
@@ -251,39 +252,27 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 }
 
 func (c *Client) GET(host, path string, headers map[string]string) (*Response, error) {
-	if headers == nil {
-		headers = make(map[string]string)
-	}
-
-	req := &Request{
-		Method:  GET,
-		Host:    host,
-		Path:    path,
-		Version: Version,
-		Headers: headers,
-	}
-	return c.Request(req, 0)
+	return c.do(GET, host, path, headers, nil)
 }
 
 func (c *Client) POST(host, path string, body []byte, headers map[string]string) (*Response, error) {
-	if headers == nil {
-		headers = make(map[string]string)
-	}
+	return c.do(POST, host, path, headers, body)
+}
 
-	// Auto-set Content-Length if not provided
-	if _, exists := headers["Content-Length"]; !exists {
-		headers["Content-Length"] = strconv.Itoa(len(body))
-	}
+func (c *Client) PUT(host, path string, body []byte, headers map[string]string) (*Response, error) {
+	return c.do(PUT, host, path, headers, body)
+}
 
-	req := &Request{
-		Method:  POST,
-		Host:    host,
-		Path:    path,
-		Version: Version,
-		Headers: headers,
-		Body:    body,
-	}
-	return c.Request(req, 0)
+func (c *Client) PATCH(host, path string, body []byte, headers map[string]string) (*Response, error) {
+	return c.do(PATCH, host, path, headers, body)
+}
+
+func (c *Client) DELETE(host, path string, headers map[string]string) (*Response, error) {
+	return c.do(DELETE, host, path, headers, nil)
+}
+
+func (c *Client) HEAD(host, path string, headers map[string]string) (*Response, error) {
+	return c.do(HEAD, host, path, headers, nil)
 }
 
 func (c *Client) Close() error {
@@ -294,6 +283,32 @@ func (c *Client) Close() error {
 		return c.listener.Close()
 	}
 	return nil
+}
+
+func (c *Client) do(method Method, host, path string, headers map[string]string, body []byte) (*Response, error) {
+	if headers == nil {
+		headers = map[string]string{}
+	}
+
+	// Normalize body and Content-Length based on method
+	if method == POST || method == PUT || method == PATCH {
+		if _, ok := headers["Content-Length"]; !ok {
+			headers["Content-Length"] = strconv.Itoa(len(body))
+		}
+	} else {
+		body = nil // ensure no body for non-body methods
+		delete(headers, "Content-Length")
+	}
+
+	req := &Request{
+		Method:  method,
+		Host:    host,
+		Path:    path,
+		Version: Version,
+		Headers: headers,
+		Body:    body,
+	}
+	return c.Request(req, 0)
 }
 
 func (c *Client) decompressResponse(resp *Response) error {
@@ -364,14 +379,29 @@ func (c *Client) handleRedirect(req *Request, resp *Response, redirectCount int)
 		newPath = "/"
 	}
 
-	// For 307 and 308, the method should be preserved. For simplicity, we'll
-	// always use GET for redirects, which is common practice for 301/302.
+	// Preserve method and body for 307/308; switch to GET for 300/301/302.
+	preserve := resp.StatusCode == StatusTemporaryRedirect || resp.StatusCode == StatusPermanentRedirect
+	newMethod := GET
+	var newBody []byte
+	headers := req.Headers
+	if preserve {
+		newMethod = req.Method
+		newBody = req.Body
+	} else if headers != nil {
+		// When switching to GET, ensure Content-Length is not carried over
+		// copy headers to avoid mutating the original map
+		copied := make(map[string]string, len(headers))
+		maps.Copy(copied, headers)
+		delete(copied, "Content-Length")
+		headers = copied
+	}
 	newReq := &Request{
-		Method:  GET,
+		Method:  newMethod,
 		Host:    newHostname,
 		Path:    newPath,
 		Version: Version,
-		Headers: req.Headers, // Re-use headers from original request
+		Headers: headers,
+		Body:    newBody,
 	}
 
 	// Reconnect if the host has changed.

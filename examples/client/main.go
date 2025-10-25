@@ -20,20 +20,18 @@ func main() {
 
 	addr := fmt.Sprintf("%s:%d", hostname, port)
 
-	// ptr is a helper to create a pointer to a string literal.
-	ptr := func(s string) *string { return &s }
-
 	requests := []struct {
 		method string
 		path   string
-		body   *string
+		body   string
 	}{
 		{method: "GET", path: "/hello"},
 		{method: "GET", path: "/status"},
 		{method: "GET", path: "/api/user"}, // JSON response
-		{method: "POST", path: "/echo", body: ptr("Hello QH World!")},
-		{method: "POST", path: "/data", body: ptr("Updated data!")},
-		{method: "POST", path: "/large-post", body: ptr(strings.Repeat("LARGE_DATA_", 20000))}, // ~220KB
+		{method: "POST", path: "/echo", body: "Hello QH World!"},
+		{method: "POST", path: "/data", body: "Updated data!"},
+		{method: "PUT", path: "/api/user", body: `{"name": "Jane Doe", "id": 123}`},
+		{method: "POST", path: "/large-post", body: strings.Repeat("LARGE_DATA_", 20000)}, // ~220KB
 		{method: "GET", path: "/file"},
 		{method: "GET", path: "/image"},
 		{method: "GET", path: "/not-found"}, // This will trigger a 404
@@ -60,15 +58,17 @@ func main() {
 			}
 			resp, err = c.GET(hostname, req.path, headers)
 		case "POST":
-			body := []byte("")
-			if req.body != nil {
-				body = []byte(*req.body)
-			}
 			headers := map[string]string{
 				"Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
 				"Content-Type": qh.TextPlain.HeaderValue(),
 			}
-			resp, err = c.POST(hostname, req.path, body, headers)
+			resp, err = c.POST(hostname, req.path, []byte(req.body), headers)
+		case "PUT":
+			headers := map[string]string{
+				"Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
+				"Content-Type": qh.JSON.HeaderValue(),
+			}
+			resp, err = c.PUT(hostname, req.path, []byte(req.body), headers)
 		default:
 			slog.Error("Unsupported method", "method", req.method, "path", req.path)
 			continue

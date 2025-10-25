@@ -226,12 +226,31 @@ packet-beta
   title Request First Byte Layout
 ```
 
-| Method | Code | First Byte | Description                |
-| ------ | ---- | ---------- | -------------------------- |
-| GET    | 000  | `\x00`     | Retrieve a resource.       |
-| POST   | 001  | `\x08`     | Submit data to the server. |
+| Method | Code | First Byte | Description                     |
+| ------ | ---- | ---------- | ------------------------------- |
+| GET    | 000  | `\x00`     | Retrieve a resource             |
+| POST   | 001  | `\x08`     | Create a new resource           |
+| PUT    | 010  | `\x10`     | Replace a resource entirely     |
+| PATCH  | 011  | `\x18`     | Partially modify a resource     |
+| DELETE | 100  | `\x20`     | Remove a resource               |
+| HEAD   | 101  | `\x28`     | Retrieve headers only (no body) |
 
-**Encoding:** Version is `0` for QH/0. Method bits: GET=000, POST=001. Reserved bits must be 0.
+**Encoding:** Version is `0` for QH/0. Method bits are encoded in positions 3-5 (middle 3 bits). Reserved bits (0-2) must be 0.
+
+**Bit Layout Example:**
+
+```
+[VV][MMM][RRR]
+
+Byte value \x00 (GET):    00 000 000 = Version 0, Method 0 (GET), Reserved 0
+Byte value \x08 (POST):   00 001 000 = Version 0, Method 1 (POST), Reserved 0
+Byte value \x10 (PUT):    00 010 000 = Version 0, Method 2 (PUT), Reserved 0
+Byte value \x18 (PATCH):  00 011 000 = Version 0, Method 3 (PATCH), Reserved 0
+Byte value \x20 (DELETE): 00 100 000 = Version 0, Method 4 (DELETE), Reserved 0
+Byte value \x28 (HEAD):   00 101 000 = Version 0, Method 5 (HEAD), Reserved 0
+```
+
+**Available Capacity:** The 3-bit method field supports up to 8 methods (values 0-7). QH Version 0 defines 6 methods.
 
 ### 4.2 Request Format
 

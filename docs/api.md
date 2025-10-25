@@ -42,6 +42,8 @@ headers["Content-Type"] = qh.TextPlain.HeaderValue()  // Returns "1"
 
 ## Client
 
+QH supports the following HTTP methods for RESTful APIs:
+
 ### GET Request
 
 ```go
@@ -49,6 +51,16 @@ headers := map[string]string{
     "Accept": qh.AcceptHeader(qh.HTML, qh.JSON, qh.TextPlain),
 }
 response, err := client.GET("example.com", "/api/data", headers)
+```
+
+### HEAD Request
+
+```go
+headers := map[string]string{
+    "Accept": qh.AcceptHeader(qh.JSON, qh.TextPlain),
+}
+response, err := client.HEAD("example.com", "/api/user", headers)
+// Response contains headers but no body
 ```
 
 ### POST Request
@@ -62,10 +74,42 @@ headers := map[string]string{
 response, err := client.POST("example.com", "/submit", body, headers)
 ```
 
+### PUT Request
+
+```go
+body := []byte(`{"name": "test", "id": 123}`)
+headers := map[string]string{
+    "Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
+    "Content-Type": qh.JSON.HeaderValue(),
+}
+response, err := client.PUT("example.com", "/api/user", body, headers)
+```
+
+### PATCH Request
+
+```go
+body := []byte(`{"name": "updated"}`)
+headers := map[string]string{
+    "Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
+    "Content-Type": qh.JSON.HeaderValue(),
+}
+response, err := client.PATCH("example.com", "/api/user", body, headers)
+```
+
+### DELETE Request
+
+```go
+headers := map[string]string{
+    "Accept": qh.AcceptHeader(qh.JSON, qh.TextPlain),
+}
+response, err := client.DELETE("example.com", "/api/user", headers)
+```
+
 **Notes**:
 
-- `Content-Length` is automatically set for POST requests
+- `Content-Length` is automatically set for POST, PUT, and PATCH requests
 - Body is `[]byte` (convert strings with `[]byte()`)
+- GET, HEAD, and DELETE methods don't have a body parameter
 
 ### Compression
 
