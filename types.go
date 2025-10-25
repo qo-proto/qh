@@ -186,8 +186,59 @@ type Response struct {
 	Body       []byte
 }
 
+func validateHeaderValue(value string) error {
+	for i := range len(value) {
+		b := value[i]
+		if b == '\x00' {
+			return errors.New("header value contains null byte (\\x00) which is reserved as separator")
+		}
+		if b == '\x03' {
+			return errors.New("header value contains ETX byte (\\x03) which is reserved as headers/body separator")
+		}
+	}
+	return nil
+}
+
+func validateHeaderKey(key string) error {
+	for i := range len(key) {
+		b := key[i]
+		if b == '\x00' {
+			return errors.New("header key contains null byte (\\x00) which is reserved as separator")
+		}
+		if b == '\x03' {
+			return errors.New("header key contains ETX byte (\\x03) which is reserved as headers/body separator")
+		}
+	}
+	return nil
+}
+
+func (r *Request) Validate() error {
+	if err := validateHeaderValue(r.Host); err != nil {
+		return fmt.Errorf("invalid host: %w", err)
+	}
+	if err := validateHeaderValue(r.Path); err != nil {
+		return fmt.Errorf("invalid path: %w", err)
+	}
+
+	// Validate all headers
+	for key, value := range r.Headers {
+		// only check for custom headers (not in predefined table)
+		if _, exists := requestHeaderTable[key]; !exists {
+			if err := validateHeaderKey(key); err != nil {
+				return fmt.Errorf("invalid header key %q: %w", key, err)
+			}
+		}
+		if err := validateHeaderValue(value); err != nil {
+			return fmt.Errorf("invalid header value for %q: %w", key, err)
+		}
+	}
+
+	return nil
+}
+
 // Note: Pre-allocation was benchmarked and is not worth it
 // format QH request into wire format
+// ensure Validate() is called first to guarantee protocol compliance
 func (r *Request) Format() []byte {
 	// The first byte contains: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
 	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
@@ -221,7 +272,26 @@ func (r *Request) Format() []byte {
 	return result
 }
 
+// Validate checks that the response doesn't contain invalid protocol control characters
+func (r *Response) Validate() error {
+	// Validate all headers
+	for key, value := range r.Headers {
+		// only check for custom headers (not in predefined table)
+		if _, exists := responseHeaderTable[key]; !exists {
+			if err := validateHeaderKey(key); err != nil {
+				return fmt.Errorf("invalid header key %q: %w", key, err)
+			}
+		}
+		if err := validateHeaderValue(value); err != nil {
+			return fmt.Errorf("invalid header value for %q: %w", key, err)
+		}
+	}
+
+	return nil
+}
+
 // format QH response into wire format
+// ensure Validate() is called first to guarantee protocol compliance
 func (r *Response) Format() []byte {
 	compactStatus := EncodeStatusCode(r.StatusCode)
 	// First byte: Version (upper 2 bits) + Status Code (lower 6 bits)

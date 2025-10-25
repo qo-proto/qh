@@ -201,6 +201,13 @@ All QH messages follow this structure:
 - If `Content-Length` header is present, read until body reaches specified length
 - If absent or empty, message is complete after `\x03` separator
 
+**Header value restrictions:**
+
+- Header keys and values must not contain null bytes (`\x00`) or ETX (`\x03`)
+- These bytes are reserved as protocol separators
+- Header values should be UTF-8 text or base64-encoded binary data
+- The message body is binary-safe and can contain any bytes including `\x00` and `\x03`
+
 ## 4. Request
 
 ### 4.1 Methods
@@ -615,6 +622,21 @@ For the available headers, see [headers](./headers.md).
   - GET requests: typically omit `Content-Type` and `Content-Length`
   - POST requests: `Content-Type` recommended but optional (defaults to code 4 - octet-stream). `Content-Length` is calculated from the body.
   - Accept uses numeric codes: `text/html,application/json,text/plain` → `3,2,1`
+
+**Header Value Restrictions:**
+
+Header keys and values MUST NOT contain:
+
+- `\x00` (null byte) - separator between header fields
+- `\x03` (ETX) - separator between headers and body
+
+The message body is binary-safe and can contain any bytes.
+
+**Binary Data in Headers:**
+
+Binary data in header values must be base64-encoded before transmission.
+
+Implementations must validate headers and reject those containing `\x00` or `\x03`.
 
 ### 6.1 Header Compression
 

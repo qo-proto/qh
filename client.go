@@ -186,6 +186,10 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 
 	stream := c.conn.Stream(currentStreamID)
 
+	if err := req.Validate(); err != nil {
+		return nil, fmt.Errorf("request validation failed: %w", err)
+	}
+
 	requestData := req.Format()
 	slog.Debug("Sending request", "stream_id", currentStreamID, "bytes", len(requestData))
 

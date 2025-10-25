@@ -1,6 +1,7 @@
 package qh
 
 import (
+	"encoding/base64"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -31,7 +32,7 @@ func TestRequestFormat(t *testing.T) {
 				Path:    "/api",
 				Version: 0,
 				Headers: map[string]string{
-					"Accept": "2",
+					"Accept": JSON.HeaderValue(),
 				},
 			},
 			expected: []byte("\x00example.com\x00/api\x00\x01\x002\x00\x03"),
@@ -53,7 +54,7 @@ func TestRequestFormatWithBody(t *testing.T) {
 		Path:    "/submit",
 		Version: 0,
 		Headers: map[string]string{
-			"Content-Type": "2",
+			"Content-Type": JSON.HeaderValue(),
 		},
 		Body: []byte(`{"key":"val"}`),
 	}
@@ -86,7 +87,7 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"Content-Type": "1",
+					"Content-Type": TextPlain.HeaderValue(),
 				},
 				Body: []byte("Hello"),
 			},
@@ -98,7 +99,7 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 404,
 				Headers: map[string]string{
-					"Content-Type": "1",
+					"Content-Type": TextPlain.HeaderValue(),
 				},
 				Body: []byte("Not Found"),
 			},
@@ -120,7 +121,7 @@ func TestResponseFormatEmpty(t *testing.T) {
 		Version:    0,
 		StatusCode: 204,
 		Headers: map[string]string{
-			"Content-Type": "0",
+			"Content-Type": Custom.HeaderValue(),
 		},
 		Body: []byte{},
 	}
@@ -153,7 +154,7 @@ func TestParseRequestWithBody(t *testing.T) {
 	require.Equal(t, "example.com", req.Host)
 	require.Equal(t, "/submit", req.Path)
 	require.Equal(t, uint8(0), req.Version)
-	require.Equal(t, "2", req.Headers["Content-Type"])
+	require.Equal(t, JSON.HeaderValue(), req.Headers["Content-Type"])
 	require.Equal(t, "16", req.Headers["Content-Length"])
 	require.JSONEq(t, `{"name": "test"}`, string(req.Body))
 }
@@ -216,7 +217,7 @@ func TestParseResponseBasic(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint8(0), resp.Version)
 	require.Equal(t, 200, resp.StatusCode)
-	require.Equal(t, "1", resp.Headers["Content-Type"])
+	require.Equal(t, TextPlain.HeaderValue(), resp.Headers["Content-Type"])
 	require.Equal(t, "13", resp.Headers["Content-Length"])
 	require.Equal(t, "1758784800", resp.Headers["Date"])
 	require.Equal(t, []byte("Hello, world!"), resp.Body)
@@ -229,7 +230,7 @@ func TestParseResponseSingleHeader(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint8(0), resp.Version)
 	require.Equal(t, 200, resp.StatusCode)
-	require.Equal(t, "1", resp.Headers["Content-Type"])
+	require.Equal(t, TextPlain.HeaderValue(), resp.Headers["Content-Type"])
 	require.Equal(t, []byte("Response body"), resp.Body)
 }
 
@@ -315,39 +316,6 @@ func TestContentTypeHeaderValue(t *testing.T) {
 	}
 }
 
-func TestHeaderHelpersInRequest(t *testing.T) {
-	req := &Request{
-		Method:  GET,
-		Host:    "example.com",
-		Path:    "/api/data",
-		Version: 0,
-		Headers: map[string]string{
-			"Accept": AcceptHeader(JSON, TextPlain, HTML),
-		},
-	}
-
-	formatted := req.Format()
-	parsed, err := ParseRequest(formatted)
-	require.NoError(t, err)
-	require.Equal(t, "2,1,3", parsed.Headers["Accept"])
-}
-
-func TestHeaderHelpersInResponse(t *testing.T) {
-	resp := &Response{
-		Version:    0,
-		StatusCode: 200,
-		Headers: map[string]string{
-			"Content-Type": JSON.HeaderValue(),
-		},
-		Body: []byte(`{"status":"ok"}`),
-	}
-
-	formatted := resp.Format()
-	parsed, err := ParseResponse(formatted)
-	require.NoError(t, err)
-	require.Equal(t, "2", parsed.Headers["Content-Type"])
-}
-
 // Round-trip tests verify that Format() and Parse() are consistent
 func TestRequestRoundTrip(t *testing.T) {
 	tests := []struct {
@@ -362,7 +330,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/api/data",
 				Version: 0,
 				Headers: map[string]string{
-					"Accept":          "2,1",
+					"Accept":          AcceptHeader(JSON, TextPlain),
 					"Accept-Encoding": "gzip, br",
 					"User-Agent":      "QH-Client/1.0",
 				},
@@ -377,7 +345,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/submit",
 				Version: 0,
 				Headers: map[string]string{
-					"Content-Type":   "2",
+					"Content-Type":   JSON.HeaderValue(),
 					"Content-Length": "15",
 					"Authorization":  "Bearer token123",
 				},
@@ -403,7 +371,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/custom",
 				Version: 0,
 				Headers: map[string]string{
-					"Content-Type":     "1",
+					"Content-Type":     TextPlain.HeaderValue(),
 					"Content-Length":   "5",
 					"X-Custom-Header":  "custom-value",
 					"X-Another-Custom": "another-value",
@@ -439,7 +407,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"Content-Type":   "2",
+					"Content-Type":   JSON.HeaderValue(),
 					"Content-Length": "15",
 					"Cache-Control":  "max-age=3600",
 					"Date":           "1758784800",
@@ -453,7 +421,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 404,
 				Headers: map[string]string{
-					"Content-Type":   "1",
+					"Content-Type":   TextPlain.HeaderValue(),
 					"Content-Length": "9",
 				},
 				Body: []byte("Not Found"),
@@ -465,7 +433,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 204,
 				Headers: map[string]string{
-					"Content-Type": "1",
+					"Content-Type": TextPlain.HeaderValue(),
 				},
 				Body: []byte{},
 			},
@@ -476,7 +444,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"Content-Type":       "2",
+					"Content-Type":       JSON.HeaderValue(),
 					"Content-Length":     "2",
 					"X-Custom-Response":  "custom-value",
 					"X-Another-Response": "another-value",
@@ -490,7 +458,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"Content-Type":                 "2",
+					"Content-Type":                 JSON.HeaderValue(),
 					"Content-Length":               "2",
 					"Access-Control-Allow-Origin":  "*",
 					"Access-Control-Allow-Methods": "GET, POST, PUT",
@@ -512,4 +480,318 @@ func TestResponseRoundTrip(t *testing.T) {
 			require.Equal(t, tt.response.Body, parsed.Body)
 		})
 	}
+}
+
+// bytes.Cut splits at the first \x03, so any \x03 bytes in the body are preserved
+func TestETXWithBinaryData(t *testing.T) {
+	t.Run("Response with ETX byte in body", func(t *testing.T) {
+		binaryBody := []byte{0xAB, 0xCD, 0x03, 0xEF, 0x12, 0x34}
+		resp := &Response{
+			Version:    0,
+			StatusCode: 200,
+			Headers: map[string]string{
+				"Content-Type":     OctetStream.HeaderValue(),
+				"Content-Encoding": "zstd",
+				"Content-Length":   "6",
+			},
+			Body: binaryBody,
+		}
+		wireFormat := resp.Format()
+		parsed, err := ParseResponse(wireFormat)
+		require.NoError(t, err)
+		require.Equal(t, binaryBody, parsed.Body, "Body should be preserved completely, including \\x03 bytes")
+	})
+
+	t.Run("Request with ETX byte in compressed body", func(t *testing.T) {
+		compressedBody := []byte{0x28, 0xB5, 0x2F, 0xFD, 0x03, 0x00, 0x59, 0x00}
+		req := &Request{
+			Method:  POST,
+			Host:    "api.example.com",
+			Path:    "/submit",
+			Version: 0,
+			Headers: map[string]string{
+				"Content-Type":     JSON.HeaderValue(),
+				"Content-Encoding": "zstd",
+				"Content-Length":   "8",
+			},
+			Body: compressedBody,
+		}
+
+		wireFormat := req.Format()
+		parsed, err := ParseRequest(wireFormat)
+		require.NoError(t, err)
+		require.Equal(t, compressedBody, parsed.Body, "Compressed body should be preserved with \\x03 bytes intact")
+	})
+
+	t.Run("Real gzip data with ETX byte", func(t *testing.T) {
+		// \x03 at position 9
+		gzipData := []byte{
+			0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x03, 0xf3, 0x48, 0xcd, 0xc9, 0xc9, 0x57,
+			0x08, 0xcf, 0x2f, 0xca, 0x49, 0x01, 0x00, 0x85,
+			0x11, 0x4a, 0x0d, 0x0c, 0x00, 0x00, 0x00,
+		}
+		resp := &Response{
+			Version:    0,
+			StatusCode: 200,
+			Headers: map[string]string{
+				"Content-Type":     TextPlain.HeaderValue(),
+				"Content-Encoding": "gzip",
+			},
+			Body: gzipData,
+		}
+		wireFormat := resp.Format()
+		parsed, err := ParseResponse(wireFormat)
+		require.NoError(t, err)
+		require.Equal(t, gzipData, parsed.Body, "Real gzip data should be preserved completely, including \\x03 byte at position 9")
+	})
+}
+
+func TestRequestValidation(t *testing.T) {
+	t.Run("Valid request passes", func(t *testing.T) {
+		req := &Request{
+			Method:  GET,
+			Host:    "example.com",
+			Path:    "/path",
+			Version: 0,
+			Headers: map[string]string{
+				"Accept":       AcceptHeader(JSON, TextPlain),
+				"User-Agent":   "QH-Client/1.0",
+				"X-Custom-Key": "custom-value",
+			},
+		}
+		err := req.Validate()
+		require.NoError(t, err)
+	})
+
+	t.Run("Host with control characters rejected", func(t *testing.T) {
+		tests := []struct {
+			name      string
+			host      string
+			errSubstr string
+		}{
+			{"null byte", "example\x00.com", "null byte"},
+			{"ETX byte", "example\x03.com", "ETX"},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				req := &Request{
+					Method:  GET,
+					Host:    tt.host,
+					Path:    "/path",
+					Version: 0,
+				}
+				err := req.Validate()
+				require.Contains(t, err.Error(), "invalid host")
+				require.Contains(t, err.Error(), tt.errSubstr)
+			})
+		}
+	})
+
+	t.Run("Path with control characters rejected", func(t *testing.T) {
+		tests := []struct {
+			name      string
+			path      string
+			errSubstr string
+		}{
+			{"null byte", "/path\x00/sub", "null byte"},
+			{"ETX byte", "/path\x03/sub", "ETX"},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				req := &Request{
+					Method:  GET,
+					Host:    "example.com",
+					Path:    tt.path,
+					Version: 0,
+				}
+				err := req.Validate()
+				require.Contains(t, err.Error(), "invalid path")
+				require.Contains(t, err.Error(), tt.errSubstr)
+			})
+		}
+	})
+
+	t.Run("Predefined header value with control character rejected", func(t *testing.T) {
+		req := &Request{
+			Method:  GET,
+			Host:    "example.com",
+			Path:    "/path",
+			Version: 0,
+			Headers: map[string]string{
+				"User-Agent": "QH\x03Client",
+			},
+		}
+		err := req.Validate()
+		require.Contains(t, err.Error(), "User-Agent")
+		require.Contains(t, err.Error(), "ETX")
+	})
+
+	t.Run("Custom header key with control character rejected", func(t *testing.T) {
+		tests := []struct {
+			name      string
+			key       string
+			errSubstr string
+		}{
+			{"null byte", "X-Custom\x00Key", "null byte"},
+			{"ETX byte", "X-Custom\x03Key", "ETX"},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				req := &Request{
+					Method:  GET,
+					Host:    "example.com",
+					Path:    "/path",
+					Version: 0,
+					Headers: map[string]string{
+						tt.key: "value",
+					},
+				}
+				err := req.Validate()
+				require.Contains(t, err.Error(), "invalid header key")
+				require.Contains(t, err.Error(), tt.errSubstr)
+			})
+		}
+	})
+
+	t.Run("Custom header value with control character rejected", func(t *testing.T) {
+		tests := []struct {
+			name      string
+			value     string
+			errSubstr string
+		}{
+			{"null byte", "value\x00data", "null byte"},
+			{"ETX byte", "value\x03data", "ETX"},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				req := &Request{
+					Method:  GET,
+					Host:    "example.com",
+					Path:    "/path",
+					Version: 0,
+					Headers: map[string]string{
+						"X-Custom": tt.value,
+					},
+				}
+				err := req.Validate()
+				require.Contains(t, err.Error(), "X-Custom")
+				require.Contains(t, err.Error(), tt.errSubstr)
+			})
+		}
+	})
+}
+
+func TestResponseValidation(t *testing.T) {
+	t.Run("Valid response passes", func(t *testing.T) {
+		resp := &Response{
+			Version:    0,
+			StatusCode: 200,
+			Headers: map[string]string{
+				"Content-Type":      JSON.HeaderValue(),
+				"Cache-Control":     "max-age=3600",
+				"X-Custom-Response": "custom-value",
+			},
+			Body: []byte("test body"),
+		}
+
+		err := resp.Validate()
+		require.NoError(t, err)
+	})
+
+	t.Run("Header value with control character rejected", func(t *testing.T) {
+		tests := []struct {
+			name      string
+			header    map[string]string
+			errHeader string
+			errSubstr string
+		}{
+			{"null byte", map[string]string{"Cache-Control": "max-age\x00=3600"}, "Cache-Control", "null byte"},
+			{"ETX byte", map[string]string{"Content-Type": JSON.HeaderValue() + "\x03"}, "Content-Type", "ETX"},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				resp := &Response{
+					Version:    0,
+					StatusCode: 200,
+					Headers:    tt.header,
+				}
+				err := resp.Validate()
+				require.Contains(t, err.Error(), tt.errHeader)
+				require.Contains(t, err.Error(), tt.errSubstr)
+			})
+		}
+	})
+
+	t.Run("Custom header key with control character rejected", func(t *testing.T) {
+		tests := []struct {
+			name      string
+			key       string
+			errSubstr string
+		}{
+			{"null byte", "X-Bad\x00Key", "null byte"},
+			{"ETX byte", "X-Bad\x03Key", "ETX"},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				resp := &Response{
+					Version:    0,
+					StatusCode: 200,
+					Headers: map[string]string{
+						tt.key: "value",
+					},
+				}
+				err := resp.Validate()
+				require.Contains(t, err.Error(), "invalid header key")
+				require.Contains(t, err.Error(), tt.errSubstr)
+			})
+		}
+	})
+
+	t.Run("Body can contain control characters", func(t *testing.T) {
+		resp := &Response{
+			Version:    0,
+			StatusCode: 200,
+			Headers: map[string]string{
+				"Content-Type": OctetStream.HeaderValue(),
+			},
+			Body: []byte{0x00, 0x01, 0x03, 0xFF},
+		}
+
+		err := resp.Validate()
+		require.NoError(t, err, "Body should be allowed to contain any bytes")
+	})
+}
+
+func TestWireFormatCorruption(t *testing.T) {
+	// Without validation: ETX in headers corrupts wire format
+	req := &Request{
+		Method:  GET,
+		Host:    "example.com",
+		Path:    "/test",
+		Headers: map[string]string{"X-Data": "before\x03after"},
+	}
+
+	wireFormat := req.Format()
+	parsed, _ := ParseRequest(wireFormat)
+	require.NotEqual(t, "before\x03after", parsed.Headers["X-Data"])
+	require.Equal(t, "before", parsed.Headers["X-Data"], "Truncated at ETX byte")
+
+	// With validation: Error before corruption
+	err := req.Validate()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "ETX")
+
+	// Fix with base64 encoding
+	req.Headers = make(map[string]string)
+	req.Headers["Content-Type"] = TextPlain.HeaderValue()
+	encoded := base64.StdEncoding.EncodeToString([]byte("before\x03after"))
+	req.Headers["X-Data"] = encoded
+	require.NoError(t, req.Validate())
+
+	// Round-trip preserves data
+	wireFormat = req.Format()
+	parsed, _ = ParseRequest(wireFormat)
+	data, _ := base64.StdEncoding.DecodeString(parsed.Headers["X-Data"])
+	require.Equal(t, []byte("before\x03after"), data)
 }

@@ -123,7 +123,7 @@ func (s *Server) getPublicKeyDNS() string {
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
 
-	request, err := ParseRequest(requestData)
+	req, err := ParseRequest(requestData)
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
 		s.sendErrorResponse(stream, 400, "Bad Request")
@@ -131,19 +131,25 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	}
 
 	// Validate and normalize Content-Type for POST requests
-	if request.Method == POST && s.validateContentType(request, stream) != nil {
+	if req.Method == POST && s.validateContentType(req, stream) != nil {
 		return // error response already sent
 	}
 
-	response := s.routeRequest(request) // execute according handler
+	res := s.routeRequest(req) // execute according handler
 
-	s.applyCompression(request, response)
+	s.applyCompression(req, res)
+
+	if err := res.Validate(); err != nil {
+		slog.Error("Response validation failed", "error", err)
+		s.sendErrorResponse(stream, 500, "Internal Server Error")
+		return
+	}
 
 	// send response
-	responseData := response.Format()
-	slog.Debug("Sending response", "bytes", len(responseData))
+	resData := res.Format()
+	slog.Debug("Sending response", "bytes", len(resData))
 
-	_, err = stream.Write(responseData)
+	_, err = stream.Write(resData)
 	if err != nil {
 		slog.Error("Failed to write response", "error", err)
 		stream.Close()
@@ -153,12 +159,12 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Response sent, stream kept open for reuse")
 }
 
-func (s *Server) validateContentType(request *Request, stream *qotp.Stream) error {
-	contentTypeStr, hasContentType := request.Headers["Content-Type"]
+func (s *Server) validateContentType(req *Request, stream *qotp.Stream) error {
+	contentTypeStr, hasContentType := req.Headers["Content-Type"]
 
 	if !hasContentType || contentTypeStr == "" {
 		slog.Debug("Content-Type missing for POST, defaulting to octet-stream")
-		request.Headers["Content-Type"] = strconv.Itoa(int(OctetStream))
+		req.Headers["Content-Type"] = strconv.Itoa(int(OctetStream))
 		return nil
 	}
 
@@ -172,13 +178,13 @@ func (s *Server) validateContentType(request *Request, stream *qotp.Stream) erro
 	return nil
 }
 
-func (s *Server) routeRequest(request *Request) *Response {
-	slog.Debug("Routing request", "path", request.Path, "method", request.Method.String())
+func (s *Server) routeRequest(req *Request) *Response {
+	slog.Debug("Routing request", "path", req.Path, "method", req.Method.String())
 
 	// check if we have a handler for this path and method
-	if pathHandlers, exists := s.handlers[request.Path]; exists {
-		if handler, methodExists := pathHandlers[request.Method]; methodExists {
-			return handler(request) // Execute the handler for the method
+	if pathHandlers, exists := s.handlers[req.Path]; exists {
+		if handler, methodExists := pathHandlers[req.Method]; methodExists {
+			return handler(req) // Execute the handler for the method
 		}
 	}
 
@@ -194,26 +200,26 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	}
 }
 
-func (s *Server) applyCompression(request *Request, response *Response) {
-	if len(response.Body) == 0 {
+func (s *Server) applyCompression(req *Request, res *Response) {
+	if len(res.Body) == 0 {
 		return
 	}
 
 	// Don't compress very small responses (overhead not worth it)
 	const minCompressionSize = 1024 // 1KB - typical HTTP server threshold
-	if len(response.Body) < minCompressionSize {
-		slog.Debug("Skipping compression for small response", "bytes", len(response.Body), "threshold", minCompressionSize)
+	if len(res.Body) < minCompressionSize {
+		slog.Debug("Skipping compression for small response", "bytes", len(res.Body), "threshold", minCompressionSize)
 		return
 	}
 
-	contentTypeStr, ok := response.Headers["Content-Type"]
+	contentTypeStr, ok := res.Headers["Content-Type"]
 	contentType, err := strconv.Atoi(contentTypeStr)
 	if ok && err == nil && contentType == int(OctetStream) {
 		slog.Debug("Skipping compression for binary media", "content_type", "octet-stream")
 		return
 	}
 
-	acceptEncodingStr, ok := request.Headers["Accept-Encoding"]
+	acceptEncodingStr, ok := req.Headers["Accept-Encoding"]
 	if !ok || acceptEncodingStr == "" {
 		return
 	}
@@ -226,8 +232,8 @@ func (s *Server) applyCompression(request *Request, response *Response) {
 		return // No matching encoding
 	}
 
-	originalSize := len(response.Body)
-	compressed, err := Compress(response.Body, selectedEncoding)
+	originalSize := len(res.Body)
+	compressed, err := Compress(res.Body, selectedEncoding)
 	if err != nil {
 		slog.Error("Compression failed", "encoding", selectedEncoding, "error", err)
 		return
@@ -239,9 +245,9 @@ func (s *Server) applyCompression(request *Request, response *Response) {
 		return
 	}
 
-	response.Body = compressed
-	response.Headers["Content-Encoding"] = string(selectedEncoding)
-	response.Headers["Content-Length"] = strconv.Itoa(len(compressed))
+	res.Body = compressed
+	res.Headers["Content-Encoding"] = string(selectedEncoding)
+	res.Headers["Content-Length"] = strconv.Itoa(len(compressed))
 
 	savings := float64(originalSize-len(compressed)) / float64(originalSize) * 100
 	slog.Info("Compressed", "encoding", selectedEncoding,
