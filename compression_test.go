@@ -41,8 +41,8 @@ func TestParseAcceptEncoding(t *testing.T) {
 		},
 		{
 			name:     "all supported encodings",
-			input:    "gzip, deflate, br, zstd",
-			expected: []Encoding{Gzip, Deflate, Brotli, Zstd},
+			input:    "gzip, br, zstd",
+			expected: []Encoding{Gzip, Brotli, Zstd},
 		},
 		{
 			name:     "identity encoding ignored",
@@ -83,14 +83,14 @@ func TestSelectEncoding(t *testing.T) {
 		},
 		{
 			name:           "no common encoding",
-			clientAccepts:  []Encoding{Gzip, Deflate},
+			clientAccepts:  []Encoding{Gzip},
 			serverSupports: []Encoding{Zstd, Brotli},
 			expected:       "",
 			description:    "should return empty string when no match",
 		},
 		{
 			name:           "server supports subset of client",
-			clientAccepts:  []Encoding{Zstd, Brotli, Gzip, Deflate},
+			clientAccepts:  []Encoding{Zstd, Brotli, Gzip},
 			serverSupports: []Encoding{Brotli},
 			expected:       Brotli,
 			description:    "should find the only common encoding",
@@ -98,7 +98,7 @@ func TestSelectEncoding(t *testing.T) {
 		{
 			name:           "client accepts only one encoding",
 			clientAccepts:  []Encoding{Gzip},
-			serverSupports: []Encoding{Zstd, Brotli, Gzip, Deflate},
+			serverSupports: []Encoding{Zstd, Brotli, Gzip},
 			expected:       Gzip,
 			description:    "should select the only client-accepted encoding",
 		},
@@ -111,9 +111,9 @@ func TestSelectEncoding(t *testing.T) {
 		},
 		{
 			name:           "first client preference wins when multiple matches",
-			clientAccepts:  []Encoding{Deflate, Gzip, Brotli},
-			serverSupports: []Encoding{Brotli, Gzip, Deflate},
-			expected:       Deflate,
+			clientAccepts:  []Encoding{Brotli, Gzip, Zstd},
+			serverSupports: []Encoding{Zstd, Gzip, Brotli},
+			expected:       Brotli,
 			description:    "should select first client preference that server supports",
 		},
 	}
@@ -128,7 +128,7 @@ func TestSelectEncoding(t *testing.T) {
 
 func TestCompressDecompress(t *testing.T) {
 	testData := []byte(strings.Repeat("Hello, QH Protocol! This is some test data that should compress. ", 100))
-	encodings := []Encoding{Gzip, Deflate, Brotli, Zstd}
+	encodings := []Encoding{Gzip, Brotli, Zstd}
 
 	for _, encoding := range encodings {
 		t.Run(string(encoding), func(t *testing.T) {
@@ -166,7 +166,7 @@ func TestCompressDecompressEmptyEncoding(t *testing.T) {
 
 func TestCompressDecompressEmpty(t *testing.T) {
 	testData := []byte{}
-	encodings := []Encoding{Gzip, Deflate, Brotli, Zstd}
+	encodings := []Encoding{Gzip, Brotli, Zstd}
 
 	for _, encoding := range encodings {
 		t.Run(string(encoding), func(t *testing.T) {
@@ -202,7 +202,7 @@ func TestBinaryDataCompression(t *testing.T) {
 		binaryData[i] = byte(seed >> 16)
 	}
 
-	encodings := []Encoding{Gzip, Deflate, Brotli, Zstd}
+	encodings := []Encoding{Gzip, Brotli, Zstd}
 
 	for _, encoding := range encodings {
 		t.Run(string(encoding), func(t *testing.T) {
@@ -224,7 +224,7 @@ func TestBinaryDataCompression(t *testing.T) {
 
 func BenchmarkCompressions(b *testing.B) {
 	testData := []byte(strings.Repeat("Hello, QH Protocol! This is benchmark data. ", 1000))
-	encodings := []Encoding{Gzip, Deflate, Brotli, Zstd}
+	encodings := []Encoding{Gzip, Brotli, Zstd}
 
 	for _, encoding := range encodings {
 		b.Run(string(encoding), func(b *testing.B) {

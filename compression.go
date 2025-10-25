@@ -2,7 +2,6 @@ package qh
 
 import (
 	"bytes"
-	"compress/flate"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -16,10 +15,9 @@ import (
 type Encoding string
 
 const (
-	Gzip    Encoding = "gzip"
-	Deflate Encoding = "deflate"
-	Brotli  Encoding = "br"
-	Zstd    Encoding = "zstd"
+	Gzip   Encoding = "gzip"
+	Brotli Encoding = "br"
+	Zstd   Encoding = "zstd"
 )
 
 // parse Accept-Encoding header, example: "gzip, br, zstd" -> [gzip, br, zstd]
@@ -34,7 +32,7 @@ func ParseAcceptEncoding(acceptEncoding string) []Encoding {
 	for _, part := range parts {
 		enc := Encoding(strings.TrimSpace(part))
 		switch enc {
-		case Gzip, Deflate, Brotli, Zstd:
+		case Gzip, Brotli, Zstd:
 			encodings = append(encodings, enc)
 		}
 		// Unknown encodings (including "identity") are ignored
@@ -66,20 +64,6 @@ func Compress(data []byte, encoding Encoding) ([]byte, error) {
 		}
 		if err := w.Close(); err != nil {
 			return nil, fmt.Errorf("gzip close error: %w", err)
-		}
-		return buf.Bytes(), nil
-
-	case Deflate:
-		var buf bytes.Buffer
-		w, err := flate.NewWriter(&buf, flate.DefaultCompression)
-		if err != nil {
-			return nil, fmt.Errorf("deflate writer error: %w", err)
-		}
-		if _, err := w.Write(data); err != nil {
-			return nil, fmt.Errorf("deflate write error: %w", err)
-		}
-		if err := w.Close(); err != nil {
-			return nil, fmt.Errorf("deflate close error: %w", err)
 		}
 		return buf.Bytes(), nil
 
@@ -124,15 +108,6 @@ func Decompress(data []byte, encoding Encoding) ([]byte, error) {
 		decompressed, err := io.ReadAll(r)
 		if err != nil {
 			return nil, fmt.Errorf("gzip read error: %w", err)
-		}
-		return decompressed, nil
-
-	case Deflate:
-		r := flate.NewReader(bytes.NewReader(data))
-		defer r.Close()
-		decompressed, err := io.ReadAll(r)
-		if err != nil {
-			return nil, fmt.Errorf("deflate read error: %w", err)
 		}
 		return decompressed, nil
 

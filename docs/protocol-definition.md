@@ -139,7 +139,6 @@ QH supports content encoding negotiation via the `Accept-Encoding` request heade
 - `gzip` - GNU zip compression
 - `br` - Brotli compression
 - `zstd` - Zstandard compression
-- `deflate` - DEFLATE compression
 
 Multiple encodings can be specified as a comma-separated list (e.g., `gzip,br,zstd`). The client's preference order is respected: the server uses the first encoding from the client's list that the server also supports.
 
