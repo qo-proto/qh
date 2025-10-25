@@ -135,21 +135,21 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 		return // error response already sent
 	}
 
-	res := s.routeRequest(req) // execute according handler
+	resp := s.routeRequest(req) // execute according handler
 
-	s.applyCompression(req, res)
+	s.applyCompression(req, resp)
 
-	if err := res.Validate(); err != nil {
+	if err := resp.Validate(); err != nil {
 		slog.Error("Response validation failed", "error", err)
 		s.sendErrorResponse(stream, 500, "Internal Server Error")
 		return
 	}
 
 	// send response
-	resData := res.Format()
-	slog.Debug("Sending response", "bytes", len(resData))
+	respData := resp.Format()
+	slog.Debug("Sending response", "bytes", len(respData))
 
-	_, err = stream.Write(resData)
+	_, err = stream.Write(respData)
 	if err != nil {
 		slog.Error("Failed to write response", "error", err)
 		stream.Close()
@@ -200,19 +200,19 @@ func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message 
 	}
 }
 
-func (s *Server) applyCompression(req *Request, res *Response) {
-	if len(res.Body) == 0 {
+func (s *Server) applyCompression(req *Request, resp *Response) {
+	if len(resp.Body) == 0 {
 		return
 	}
 
 	// Don't compress very small responses (overhead not worth it)
 	const minCompressionSize = 1024 // 1KB - typical HTTP server threshold
-	if len(res.Body) < minCompressionSize {
-		slog.Debug("Skipping compression for small response", "bytes", len(res.Body), "threshold", minCompressionSize)
+	if len(resp.Body) < minCompressionSize {
+		slog.Debug("Skipping compression for small response", "bytes", len(resp.Body), "threshold", minCompressionSize)
 		return
 	}
 
-	contentTypeStr, ok := res.Headers["Content-Type"]
+	contentTypeStr, ok := resp.Headers["Content-Type"]
 	contentType, err := strconv.Atoi(contentTypeStr)
 	if ok && err == nil && contentType == int(OctetStream) {
 		slog.Debug("Skipping compression for binary media", "content_type", "octet-stream")
@@ -232,8 +232,8 @@ func (s *Server) applyCompression(req *Request, res *Response) {
 		return // No matching encoding
 	}
 
-	originalSize := len(res.Body)
-	compressed, err := Compress(res.Body, selectedEncoding)
+	originalSize := len(resp.Body)
+	compressed, err := Compress(resp.Body, selectedEncoding)
 	if err != nil {
 		slog.Error("Compression failed", "encoding", selectedEncoding, "error", err)
 		return
@@ -245,9 +245,9 @@ func (s *Server) applyCompression(req *Request, res *Response) {
 		return
 	}
 
-	res.Body = compressed
-	res.Headers["Content-Encoding"] = string(selectedEncoding)
-	res.Headers["Content-Length"] = strconv.Itoa(len(compressed))
+	resp.Body = compressed
+	resp.Headers["Content-Encoding"] = string(selectedEncoding)
+	resp.Headers["Content-Length"] = strconv.Itoa(len(compressed))
 
 	savings := float64(originalSize-len(compressed)) / float64(originalSize) * 100
 	slog.Info("Compressed", "encoding", selectedEncoding,

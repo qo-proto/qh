@@ -51,14 +51,14 @@ func main() {
 	for _, req := range requests {
 		slog.Info("Testing request", "method", req.method, "path", req.path)
 
-		var response *qh.Response
+		var resp *qh.Response
 		var err error
 		switch req.method {
 		case "GET":
 			headers := map[string]string{
 				"Accept": qh.AcceptHeader(qh.HTML, qh.JSON, qh.TextPlain),
 			}
-			response, err = c.GET(hostname, req.path, headers)
+			resp, err = c.GET(hostname, req.path, headers)
 		case "POST":
 			body := []byte("")
 			if req.body != nil {
@@ -68,7 +68,7 @@ func main() {
 				"Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
 				"Content-Type": qh.TextPlain.HeaderValue(),
 			}
-			response, err = c.POST(hostname, req.path, body, headers)
+			resp, err = c.POST(hostname, req.path, body, headers)
 		default:
 			slog.Error("Unsupported method", "method", req.method, "path", req.path)
 			continue
@@ -79,7 +79,7 @@ func main() {
 			continue
 		}
 
-		logResponse(req.method, req.path, response)
+		logResponse(req.method, req.path, resp)
 
 		// save files
 		var filename string
@@ -91,10 +91,10 @@ func main() {
 		}
 
 		if filename != "" {
-			if err := os.WriteFile(filename, response.Body, 0o600); err != nil {
+			if err := os.WriteFile(filename, resp.Body, 0o600); err != nil {
 				slog.Error("Failed to save file", "path", filename, "error", err)
 			} else {
-				slog.Info("Saved response to file", "path", filename, "bytes", len(response.Body))
+				slog.Info("Saved response to file", "path", filename, "bytes", len(resp.Body))
 			}
 		}
 	}

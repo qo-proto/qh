@@ -230,24 +230,24 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 		return true
 	})
 
-	response, parseErr := ParseResponse(responseBuffer)
+	resp, parseErr := ParseResponse(responseBuffer)
 	if parseErr != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", parseErr)
 	}
-	if response == nil {
+	if resp == nil {
 		return nil, errors.New("no response received")
 	}
 
 	// Handle redirects
-	switch response.StatusCode {
+	switch resp.StatusCode {
 	case StatusMultipleChoices, StatusMovedPermanently, StatusFound, StatusTemporaryRedirect, StatusPermanentRedirect:
-		return c.handleRedirect(req, response, redirectCount)
+		return c.handleRedirect(req, resp, redirectCount)
 	}
 
-	if err := c.decompressResponse(response); err != nil {
+	if err := c.decompressResponse(resp); err != nil {
 		return nil, fmt.Errorf("decompression failed: %w", err)
 	}
-	return response, nil
+	return resp, nil
 }
 
 func (c *Client) GET(host, path string, headers map[string]string) (*Response, error) {
@@ -296,23 +296,23 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) decompressResponse(response *Response) error {
-	contentEncoding, ok := response.Headers["Content-Encoding"]
+func (c *Client) decompressResponse(resp *Response) error {
+	contentEncoding, ok := resp.Headers["Content-Encoding"]
 	if !ok || contentEncoding == "" {
 		return nil // No compression
 	}
 
-	originalSize := len(response.Body)
+	originalSize := len(resp.Body)
 	slog.Debug("Decompressing response", "encoding", contentEncoding, "compressed_bytes", originalSize)
 
-	decompressed, err := Decompress(response.Body, Encoding(contentEncoding))
+	decompressed, err := Decompress(resp.Body, Encoding(contentEncoding))
 	if err != nil {
 		return fmt.Errorf("failed to decompress with %s: %w", contentEncoding, err)
 	}
 
-	response.Body = decompressed
-	delete(response.Headers, "Content-Encoding") // Remove encoding header after decompression
-	response.Headers["Content-Length"] = strconv.Itoa(len(decompressed))
+	resp.Body = decompressed
+	delete(resp.Headers, "Content-Encoding") // Remove encoding header after decompression
+	resp.Headers["Content-Length"] = strconv.Itoa(len(decompressed))
 
 	slog.Info("Response decompressed", "encoding", contentEncoding,
 		"compressed_bytes", originalSize, "decompressed_bytes", len(decompressed))
