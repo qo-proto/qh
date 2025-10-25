@@ -91,7 +91,10 @@ func main() {
 		}
 
 		if filename != "" {
-			if err := os.WriteFile(filename, resp.Body, 0o600); err != nil {
+			// Create directory if it doesn't exist
+			if err := os.MkdirAll("examples/client/downloaded_files", 0o755); err != nil {
+				slog.Error("Failed to create directory", "error", err)
+			} else if err := os.WriteFile(filename, resp.Body, 0o600); err != nil {
 				slog.Error("Failed to save file", "path", filename, "error", err)
 			} else {
 				slog.Info("Saved response to file", "path", filename, "bytes", len(resp.Body))
