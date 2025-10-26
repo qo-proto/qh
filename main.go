@@ -104,7 +104,8 @@ func main() {
 		// The server is the one listening on the well-known port.
 		isFromServer := udp.SrcPort == 8090
 		isSenderOnInit := !isFromServer
-		// Pass only the encrypted part of the payload, excluding the QOTP header.
+
+		// Pass only the encrypted part of the payload, which starts after the QOTP header and Connection ID.
 		encryptedPortion := udp.Payload[qotp.HeaderSize+qotp.ConnIdSize:]
 		decryptedPayload, err := qotp.DecryptDataForPcap(encryptedPortion, isSenderOnInit, 0, secret, connID)
 		if err != nil {
@@ -121,14 +122,6 @@ func main() {
 		previewBytes := decryptedPayload[:previewLen]
 		slog.Info("Successfully decrypted payload", "size", len(decryptedPayload),
 			"preview_str", string(previewBytes), "preview_hex", hex.EncodeToString(previewBytes))
-
-		// Decryption successful! Reconstruct the QOTP Data packet with the decrypted payload.
-		// The new payload will be [QOTP Header] + [Dummy SN] + [Decrypted QH Payload].
-		// This allows the Wireshark dissector to parse the QOTP header correctly.
-		newPayload := make([]byte, qotp.HeaderSize+qotp.ConnIdSize+qotp.SnSize+len(decryptedPayload))
-		copy(newPayload, udp.Payload[:qotp.HeaderSize+qotp.ConnIdSize+qotp.SnSize]) // Copy header and original SN space
-		copy(newPayload[qotp.HeaderSize+qotp.ConnIdSize+qotp.SnSize:], decryptedPayload)
-		udp.Payload = newPayload
 
 		// To ensure the decrypted payload is written, we create a new UDP layer
 		// and serialize it with the lower-level layers from the original packet.
@@ -159,7 +152,7 @@ func main() {
 		}
 		// Append our new UDP layer and its decrypted payload
 		// The payload must be added as a gopacket.Payload layer after the UDP layer.
-		layersToSerialize = append(layersToSerialize, newUDPLayer, gopacket.Payload(newPayload))
+		layersToSerialize = append(layersToSerialize, newUDPLayer, gopacket.Payload(decryptedPayload))
 
 		err = gopacket.SerializeLayers(buf, opts, layersToSerialize...)
 		if err != nil {
