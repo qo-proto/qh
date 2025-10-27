@@ -1,4 +1,3 @@
-// Package qh implements the QH protocol client and server over QOTP transport.
 package qh
 
 import (

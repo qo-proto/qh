@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/qh-project/qh"
 )
+
+var errServerStart = errors.New("server startup failed")
 
 func main() {
 	slog.Info("QH Protocol Server starting")
@@ -139,15 +142,24 @@ func main() {
 
 	// listening with auto-generated keys
 	addr := "127.0.0.1:8090"
-	seed := "Start123"
-	if err := srv.Listen(addr, seed); err != nil {
-		slog.Error("Failed to start server", "error", err)
+	keyLogFile, err := os.OpenFile("qotp_keylog.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		slog.Error("Failed to open key log file", "error", err)
 		os.Exit(1)
+	}
+	defer keyLogFile.Close()
+
+	// You can provide a seed for deterministic keys
+	// if err := srv.Listen(addr, keyLogFile); err != nil {
+	seed := "Start123"
+	if err := srv.Listen(addr, keyLogFile, seed); err != nil {
+		slog.Error("Failed to start server", "error", err)
+		return
 	}
 
 	slog.Info("QH Server started", "address", addr)
 
-	if err := srv.Serve(); err != nil {
+	if err := srv.Serve(); err != nil && !errors.Is(err, errServerStart) {
 		slog.Error("Server error", "error", err)
 	}
 }
