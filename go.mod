@@ -10,10 +10,6 @@ require (
 	github.com/tbocek/qotp v0.2.2
 )
 
-// The replace directive tells the Go compiler to use the local qotp module
-// instead of the one from github.com. This is the standard way to do local development.
-replace github.com/tbocek/qotp => ../qotp //nolint:gomoddirectives
-
 require (
 	github.com/MatusOllah/slogcolor v1.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
