@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -11,6 +12,9 @@ import (
 	"github.com/qh-project/qh"
 )
 
+var errUnsupportedMethod = errors.New("unsupported method")
+
+//nolint:funlen
 func main() {
 	slog.Info("QH Protocol Client starting")
 
@@ -70,7 +74,7 @@ func main() {
 			}
 			resp, err = c.PUT(hostname, req.path, []byte(req.body), headers)
 		default:
-			slog.Error("Unsupported method", "method", req.method, "path", req.path)
+			slog.Error("Unsupported method", "error", errUnsupportedMethod, "method", req.method, "path", req.path)
 			continue
 		}
 
@@ -93,7 +97,7 @@ func main() {
 		if filename != "" {
 			// Create directory if it doesn't exist
 			if err := os.MkdirAll("examples/client/downloaded_files", 0o755); err != nil {
-				slog.Error("Failed to create directory", "error", err)
+				slog.Error("Failed to create directory", "path", "examples/client/downloaded_files", "error", err)
 			} else if err := os.WriteFile(filename, resp.Body, 0o600); err != nil {
 				slog.Error("Failed to save file", "path", filename, "error", err)
 			} else {
@@ -137,6 +141,6 @@ func logResponse(method, path string, response *qh.Response) {
 	if len(response.Body) > 100 {
 		bodyPreview = string(response.Body[:100]) + "... (truncated)"
 	}
-	sb.WriteString(fmt.Sprintf("Body (%d bytes): %s\n", len(response.Body), bodyPreview))
+	sb.WriteString(fmt.Sprintf("Body (%d bytes): %s\n", len(response.Body), bodyPreview)) //nolint:sloglint
 	slog.Info(sb.String())
 }
