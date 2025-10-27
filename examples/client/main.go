@@ -8,41 +8,37 @@ import (
 	"strings"
 	"time"
 
-	"qh/internal/client"
-	"qh/internal/protocol"
+	"github.com/qh-project/qh"
 )
 
 func main() {
 	slog.Info("QH Protocol Client starting")
 
-	hostname := "qh2.gianhunold.ch" // 127.0.0.1 with public key from seed: my-secret-server-seed
-	//hostname := "qh2.gianhunold.ch" // 127.0.0.1 but no public key
+	hostname := "qh.gianhunold.ch" // 127.0.0.1 with public key from seed: my-secret-server-seed
+	// hostname := "qh2.gianhunold.ch" // 127.0.0.1 but no public key
 	port := 8090
 
 	addr := fmt.Sprintf("%s:%d", hostname, port)
 
-	// ptr is a helper to create a pointer to a string literal.
-	//ptr := func(s string) *string { return &s }
-
-	//largePayload := strings.Repeat("LARGE_DATA_", 20000) // ~220KB
-
 	requests := []struct {
 		method string
 		path   string
-		body   *string
+		body   string
 	}{
 		{method: "GET", path: "/hello"},
-		//{method: "GET", path: "/status"},
-		//{method: "GET", path: "/api/user"}, // JSON response
-		//{method: "POST", path: "/echo", body: ptr("Hello QH World!")},
-		//{method: "POST", path: "/data", body: ptr("Updated data!")},
-		//{method: "POST", path: "/large-post", body: &largePayload},
-		//{method: "GET", path: "/file"},
-		//{method: "GET", path: "/image"},
+		{method: "GET", path: "/status"},
+		{method: "GET", path: "/api/user"}, // JSON response
+		{method: "POST", path: "/echo", body: "Hello QH World!"},
+		{method: "POST", path: "/data", body: "Updated data!"},
+		{method: "PUT", path: "/api/user", body: `{"name": "Jane Doe", "id": 123}`},
+		{method: "POST", path: "/large-post", body: strings.Repeat("LARGE_DATA_", 20000)}, // ~220KB
+		{method: "GET", path: "/file"},
+		{method: "GET", path: "/image"},
 		{method: "GET", path: "/not-found"}, // This will trigger a 404
+		{method: "GET", path: "/redirect"},  // This should return a 301 and hostname from the new site
 	}
 
-	c := client.NewClient()
+	c := qh.NewClient()
 	defer c.Close()
 
 	if err := c.Connect(addr); err != nil {
@@ -53,17 +49,26 @@ func main() {
 	for _, req := range requests {
 		slog.Info("Testing request", "method", req.method, "path", req.path)
 
-		var response *protocol.Response
+		var resp *qh.Response
 		var err error
 		switch req.method {
 		case "GET":
-			response, err = c.GET(hostname, req.path, "3,2,1", "") // Accept: HTML, JSON, text/plain
-		case "POST":
-			body := ""
-			if req.body != nil {
-				body = *req.body
+			headers := map[string]string{
+				"Accept": qh.AcceptHeader(qh.HTML, qh.JSON, qh.TextPlain),
 			}
-			response, err = c.POST(hostname, req.path, body, "2,1", "", protocol.TextPlain) // Accept: JSON, text/plain
+			resp, err = c.GET(hostname, req.path, headers)
+		case "POST":
+			headers := map[string]string{
+				"Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
+				"Content-Type": qh.TextPlain.HeaderValue(),
+			}
+			resp, err = c.POST(hostname, req.path, []byte(req.body), headers)
+		case "PUT":
+			headers := map[string]string{
+				"Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
+				"Content-Type": qh.JSON.HeaderValue(),
+			}
+			resp, err = c.PUT(hostname, req.path, []byte(req.body), headers)
 		default:
 			slog.Error("Unsupported method", "method", req.method, "path", req.path)
 			continue
@@ -74,7 +79,7 @@ func main() {
 			continue
 		}
 
-		logResponse(req.method, req.path, response)
+		logResponse(req.method, req.path, resp)
 
 		// save files
 		var filename string
@@ -86,10 +91,13 @@ func main() {
 		}
 
 		if filename != "" {
-			if err := os.WriteFile(filename, response.Body, 0o600); err != nil {
+			// Create directory if it doesn't exist
+			if err := os.MkdirAll("examples/client/downloaded_files", 0o755); err != nil {
+				slog.Error("Failed to create directory", "error", err)
+			} else if err := os.WriteFile(filename, resp.Body, 0o600); err != nil {
 				slog.Error("Failed to save file", "path", filename, "error", err)
 			} else {
-				slog.Info("Saved response to file", "path", filename, "bytes", len(response.Body))
+				slog.Info("Saved response to file", "path", filename, "bytes", len(resp.Body))
 			}
 		}
 	}
@@ -97,34 +105,34 @@ func main() {
 	slog.Info("All tests completed")
 }
 
-func logResponse(method, path string, response *protocol.Response) {
-	// Format the successful response for better readability
-	var formattedDate string
-	if len(response.Headers) > protocol.RespHeaderDate && response.Headers[protocol.RespHeaderDate] != "" {
-		unixTime, err := strconv.ParseInt(response.Headers[protocol.RespHeaderDate], 10, 64)
-		if err == nil {
-			// Format to DD.MM.YYYY HH:MM
-			formattedDate = time.Unix(unixTime, 0).Format("02.01.2006 15:04")
-		}
-	}
-
+func logResponse(method, path string, response *qh.Response) {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("\n--- Response for %s %s ---\n", method, path))
 	sb.WriteString(fmt.Sprintf("Version:    %d\n", response.Version))
 	sb.WriteString(fmt.Sprintf("StatusCode: %d\n", response.StatusCode))
 
-	// Show Content-Type (decode from header position 0)
-	if len(response.Headers) > 0 && response.Headers[0] != "" {
-		contentTypeCode, err := strconv.Atoi(response.Headers[0])
+	if contentTypeStr, ok := response.Headers["Content-Type"]; ok && contentTypeStr != "" {
+		contentTypeCode, err := strconv.Atoi(contentTypeStr)
 		if err == nil {
-			sb.WriteString(fmt.Sprintf("Content:    %s\n", protocol.ContentType(contentTypeCode).String()))
+			sb.WriteString(fmt.Sprintf("Content:    %s\n", qh.ContentType(contentTypeCode).String()))
 		}
 	}
 
-	if formattedDate != "" {
-		sb.WriteString(fmt.Sprintf("Timestamp:  %s\n", formattedDate))
+	if dateStr, ok := response.Headers["Date"]; ok && dateStr != "" {
+		unixTime, err := strconv.ParseInt(dateStr, 10, 64)
+		if err == nil {
+			formattedDate := time.Unix(unixTime, 0).Format("02.01.2006 15:04")
+			sb.WriteString(fmt.Sprintf("Timestamp:  %s\n", formattedDate))
+		}
 	}
-	// Show body size and preview for binary data
+
+	// Special handling for redirect response logging
+	if response.StatusCode >= 300 && response.StatusCode < 400 {
+		if location, ok := response.Headers["Location"]; ok {
+			sb.WriteString(fmt.Sprintf("Location:   %s\n", location))
+		}
+	}
+
 	bodyPreview := string(response.Body)
 	if len(response.Body) > 100 {
 		bodyPreview = string(response.Body[:100]) + "... (truncated)"

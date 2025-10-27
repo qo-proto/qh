@@ -1,11 +1,13 @@
-module qh
+module github.com/qh-project/qh
 
 go 1.25.1
 
 require (
+	github.com/andybalholm/brotli v1.2.0
+	github.com/klauspost/compress v1.18.0
 	github.com/google/gopacket v1.1.19
 	github.com/stretchr/testify v1.11.1
-	github.com/tbocek/qotp v0.1.1
+	github.com/tbocek/qotp v0.2.2
 )
 
 // The replace directive tells the Go compiler to use the local qotp module

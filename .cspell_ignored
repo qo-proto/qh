@@ -2,8 +2,10 @@ Clickjacking
 SAMEORIGIN
 Zstandard
 abempty
+chacha
 hostnames
 nosniff
 qotp
+QPACK
 subtag
 subtags
