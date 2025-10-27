@@ -78,7 +78,7 @@ func main() {
 		}
 
 		// Check if it's a QOTP Data packet (type 4)
-		msgType := qotp.MsgType(udp.Payload[0] >> 5)
+		msgType := qotp.CryptoMsgType(udp.Payload[0] >> 5)
 		if msgType != qotp.Data {
 			if err := w.WritePacket(packet.Metadata().CaptureInfo, packet.Data()); err != nil {
 				slog.Error("Failed to write non-Data packet", "error", err)
