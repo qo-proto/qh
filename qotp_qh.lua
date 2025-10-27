@@ -27,6 +27,7 @@ local f_qh_status_compact = ProtoField.uint8("qh.status_code_compact", "Status C
 local f_qh_status = ProtoField.uint16("qh.status_code", "Status Code", base.DEC)
 -- Common fields
 local f_qh_headers = ProtoField.string("qh.headers", "Headers", base.ASCII)
+local f_qh_header_item = ProtoField.string("qh.header", "Header", base.ASCII)
 local f_qh_body = ProtoField.bytes("qh.body", "Body", base.NONE)
 local f_qh_body_str = ProtoField.string("qh.body_str", "Body (as String)", base.ASCII)
 
@@ -34,27 +35,46 @@ qh_protocol.fields = {
     f_qh_version, f_qh_method, f_qh_host, f_qh_path, f_qh_status_compact, f_qh_status, f_qh_headers, f_qh_body, f_qh_body_str
 }
 
--- Request header names mapping (from protocol/types.go)
+-- Request header names mapping (from types.go)
 local req_header_names = {
-    [0] = "Accept",
-    [1] = "Accept-Encoding",
-    [2] = "Content-Type",
-    [3] = "Content-Length",
+    [0]  = "Custom",
+    [1]  = "Accept",
+    [2]  = "Accept-Encoding",
+    [4]  = "Accept-Language",
+    [5]  = "Content-Type",
+    [6]  = "Content-Length",
+    [7]  = "Authorization",
+    [8]  = "Cookie",
+    [9]  = "User-Agent",
+    [10] = "Referer",
+    [11] = "Origin",
+    [12] = "If-None-Match",
+    [13] = "If-Modified-Since",
+    [14] = "Range",
+    [15] = "X-Payment",
 }
 
--- Response header names mapping (from protocol/types.go)
+-- Response header names mapping (from types.go)
 local resp_header_names = {
-    [0] = "Content-Type",
-    [1] = "Content-Length",
-    [2] = "Cache-Control",
-    [3] = "Content-Encoding",
-    [4] = "Authorization",
-    [5] = "CORS",
-    [6] = "ETag",
-    [7] = "Date",
-    [8] = "CSP",
-    [9] = "X-Content-Type-Options",
-    [10] = "X-Frame-Options",
+    [0]  = "Custom",
+    [1]  = "Content-Type",
+    [2]  = "Content-Length",
+    [4]  = "Cache-Control",
+    [5]  = "Content-Encoding",
+    [6]  = "Date",
+    [7]  = "ETag",
+    [8]  = "Expires",
+    [9]  = "Last-Modified",
+    [10] = "Access-Control-Allow-Origin",
+    [11] = "Access-Control-Allow-Methods",
+    [12] = "Access-Control-Allow-Headers",
+    [13] = "Set-Cookie",
+    [14] = "Location",
+    [15] = "Content-Security-Policy",
+    [16] = "X-Content-Type-Options",
+    [17] = "X-Frame-Options",
+    [18] = "Vary",
+    [19] = "X-Payment-Response",
 }
 
 local function get_qh_dissector()
@@ -98,12 +118,30 @@ function qh_protocol.dissector(buffer, pinfo, tree)
         return -- Cannot continue dissection
     end
 
-    -- Calculate length of header parts (after first byte, before ETX)
-    local header_len = math.max(0, etx_offset - 1 - offset) -- etx_offset is 1-based, offset is 0-based
-    local header_data_tvbr = buffer(offset, header_len)
-    local header_parts = {}
-    for part in header_data_tvbr:string():gmatch("([^\0]*)") do
-        table.insert(header_parts, part)
+    -- This function parses the binary header format: <id>\0<value>\0...
+    local function parse_headers(header_buffer, header_map, headers_tree)
+        local header_offset = 0
+        while header_offset < header_buffer:len() do
+            local header_id = header_buffer(header_offset, 1):uint()
+            header_offset = header_offset + 1
+            if header_offset >= header_buffer:len() or header_buffer(header_offset, 1):uint() ~= 0 then break end
+            header_offset = header_offset + 1 -- Skip null after ID
+
+            local key = header_map[header_id] or "Unknown Header (" .. header_id .. ")"
+            if header_id == 0 then -- Custom header
+                local key_end = string.find(header_buffer:raw(), string.char(0), header_offset + 1, true)
+                if not key_end then break end
+                key = header_buffer(header_offset, key_end - 1 - header_offset):string()
+                header_offset = key_end -- Move offset to null after key
+            end
+
+            local value_end = string.find(header_buffer:raw(), string.char(0), header_offset + 1, true)
+            if not value_end then break end
+            local value = header_buffer(header_offset, value_end - 1 - header_offset):string()
+            header_offset = value_end -- Move offset to null after value
+
+            headers_tree:add(f_qh_header_item, string.format("%s: %s", key, value))
+        end
     end
 
     if is_response then
@@ -113,17 +151,11 @@ function qh_protocol.dissector(buffer, pinfo, tree)
         if version_field then
             version_field:add_le(f_qh_status_compact, buffer(offset - 1, 1), compact_status)
         end
-        -- We can't decode to the full HTTP status without a large mapping table in Lua.
-        -- The compact code is sufficient for debugging.
         pinfo.cols.info:set(string.format("Response, Status (Compact): %d", compact_status))
 
-        local headers_tree = subtree:add(header_data_tvbr, "Headers")
-        for i, header_val in ipairs(header_parts) do -- header_parts is 1-indexed
-            local header_idx = i - 1 -- Map to 0-indexed protocol header index
-            local header_name = resp_header_names[header_idx] or "Unknown Header (" .. header_idx .. ")"
-            headers_tree:add(f_qh_headers, header_name .. ": " .. header_val)
-        end
-    -- ...existing code...
+        local header_data_len = etx_offset - 1 - offset
+        local headers_tree = subtree:add(buffer(offset, header_data_len), "Headers")
+        parse_headers(buffer(offset, header_data_len), resp_header_names, headers_tree)
 
     else
         -- Dissect as a Request
@@ -146,18 +178,17 @@ function qh_protocol.dissector(buffer, pinfo, tree)
         local path = data:sub(host_end + 1, path_end - 1)
         if path == "" then path = "/" end
 
-        -- Debug print to verify values
-        print(string.format("Found host: '%s' (%d bytes), path: '%s' (%d bytes)", 
-            host, #host, path, #path))
-
         -- Add fields to tree with proper ranges
         subtree:add(f_qh_host, buffer(offset, host_end - 1), host)
         subtree:add(f_qh_path, buffer(offset + host_end, path_end - host_end - 1), path)
 
         pinfo.cols.info:set(string.format("Request: %s %s", method_str, path))
 
-        -- Update offset for remaining headers
-        offset = offset + path_end
+        -- Dissect remaining headers
+        local headers_start_offset = offset + path_end
+        local header_data_len = etx_offset - 1 - headers_start_offset
+        local headers_tree = subtree:add(buffer(headers_start_offset, header_data_len), "Headers")
+        parse_headers(buffer(headers_start_offset, header_data_len), req_header_names, headers_tree)
     end
 
     -- The body is everything after the ETX character
