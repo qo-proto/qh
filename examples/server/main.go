@@ -71,6 +71,18 @@ func main() {
 		return qh.NewResponse(200, content, headers)
 	})
 
+	// A HEAD request should return the same headers as a GET request, but with no body.
+	// This is useful for checking resource metadata without downloading the content.
+	srv.HandleFunc("/file", qh.HEAD, func(_ *qh.Request) *qh.Response {
+		slog.Info("Handling request", "method", "HEAD", "path", "/file")
+		// We don't need to read the file, just set the headers.
+		headers := map[string]string{
+			"Content-Type": qh.TextPlain.HeaderValue(),
+		}
+		// For HEAD, the body is nil, and Content-Length should be set to 0.
+		return qh.NewResponse(200, nil, headers)
+	})
+
 	srv.HandleFunc("/image", qh.GET, func(_ *qh.Request) *qh.Response {
 		slog.Info("Handling request", "method", "GET", "path", "/image")
 		content, err := os.ReadFile("examples/server/files/cloud.jpeg")
@@ -95,6 +107,18 @@ func main() {
 		return qh.NewResponse(301, nil, headers)
 	})
 
+	// A HEAD request should return the same headers as a GET request, but with no body.
+	// This is useful for checking resource metadata without downloading the content.
+	srv.HandleFunc("/file", qh.HEAD, func(_ *qh.Request) *qh.Response {
+		slog.Info("Handling request", "method", "HEAD", "path", "/file")
+		// We don't need to read the file, just set the headers.
+		headers := map[string]string{
+			"Content-Type": qh.TextPlain.HeaderValue(),
+		}
+		// For HEAD, the body is nil, and Content-Length should be set to 0.
+		return qh.NewResponse(200, nil, headers)
+	})
+
 	srv.HandleFunc("/permanent-hello", qh.GET, func(_ *qh.Request) *qh.Response {
 		slog.Info("Handling request", "method", "GET", "path", "/permanent-hello")
 		return qh.TextResponse(200, "Hello from the new, permanent location!")
@@ -103,6 +127,17 @@ func main() {
 	srv.HandleFunc("/api/user", qh.PUT, func(req *qh.Request) *qh.Response {
 		slog.Info("Handling request", "method", "PUT", "path", "/api/user", "body", string(req.Body))
 		return qh.JSONResponse(200, `{"message": "User updated", "id": 123}`)
+	})
+
+	srv.HandleFunc("/api/user", qh.PATCH, func(req *qh.Request) *qh.Response {
+		slog.Info("Handling request", "method", "PATCH", "path", "/api/user", "body", string(req.Body))
+		return qh.JSONResponse(200, `{"message": "User partially updated", "id": 123}`)
+	})
+
+	srv.HandleFunc("/api/user", qh.DELETE, func(req *qh.Request) *qh.Response {
+		slog.Info("Handling request", "method", "DELETE", "path", "/api/user")
+		// A 204 No Content response is appropriate for a successful DELETE with no body.
+		return qh.NewResponse(204, nil, nil)
 	})
 
 	// listening with auto-generated keys

@@ -35,7 +35,9 @@ func main() {
 		{method: "POST", path: "/echo", body: "Hello QH World!"},
 		{method: "POST", path: "/data", body: "Updated data!"},
 		{method: "PUT", path: "/api/user", body: `{"name": "Jane Doe", "id": 123}`},
+		{method: "PATCH", path: "/api/user", body: `{"status": "inactive"}`},
 		{method: "POST", path: "/large-post", body: strings.Repeat("LARGE_DATA_", 20000)}, // ~220KB
+		{method: "HEAD", path: "/file"},
 		{method: "GET", path: "/file"},
 		{method: "GET", path: "/image"},
 		{method: "GET", path: "/not-found"}, // This will trigger a 404
@@ -73,6 +75,18 @@ func main() {
 				"Content-Type": qh.JSON.HeaderValue(),
 			}
 			resp, err = c.PUT(hostname, req.path, []byte(req.body), headers)
+		case "PATCH":
+			headers := map[string]string{
+				"Accept":       qh.AcceptHeader(qh.JSON),
+				"Content-Type": qh.JSON.HeaderValue(),
+			}
+			resp, err = c.PATCH(hostname, req.path, []byte(req.body), headers)
+		case "DELETE":
+			// DELETE requests often have no body and expect a 204 No Content response.
+			resp, err = c.DELETE(hostname, req.path, nil)
+		case "HEAD":
+			// HEAD requests have no body and expect headers only.
+			resp, err = c.HEAD(hostname, req.path, nil)
 		default:
 			slog.Error("Unsupported method", "error", errUnsupportedMethod, "method", req.method, "path", req.path)
 			continue
@@ -94,7 +108,7 @@ func main() {
 			filename = "examples/client/downloaded_files/downloaded_cloud.jpeg"
 		}
 
-		if filename != "" {
+		if filename != "" && len(resp.Body) > 0 {
 			// Create directory if it doesn't exist
 			if err := os.MkdirAll("examples/client/downloaded_files", 0o755); err != nil {
 				slog.Error("Failed to create directory", "path", "examples/client/downloaded_files", "error", err)
