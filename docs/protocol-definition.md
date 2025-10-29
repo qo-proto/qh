@@ -342,7 +342,7 @@ Host: example.com
 **Complete byte sequence:**
 
 ```
-\x00\x0Bexample.com\x06/hello\x00\x00
+\x00 \x0B example.com \x06 /hello \x00 \x00
 ```
 
 **Breakdown:**
@@ -404,7 +404,7 @@ Body: "Hello QH World!"
 **Complete byte sequence:**
 
 ```
-\x08\x0Bexample.com\x05/echo\x02\x01\x032,1\x04\x011\x0FHello QH World!
+\x08 \x0B example.com \x05 /echo \x02 \x01 \x03 2,1 \x04 \x01 1 \x0F Hello QH World!
 ```
 
 **Breakdown:**
@@ -597,7 +597,7 @@ Body: "Hello from QH Protocol!"
 **Complete byte sequence:**
 
 ```
-\x00\x01\x01\x011\x17Hello from QH Protocol!
+\x00 \x01 \x01 \x01 1 \x17 Hello from QH Protocol!
 ```
 
 **Breakdown:**
@@ -640,7 +640,7 @@ Body: "Not Found"
 **Complete byte sequence:**
 
 ```
-\x01\x01\x04\x011\x09Not Found
+\x01 \x01 \x04 \x01 1 \x09 Not Found
 ```
 
 **Breakdown:**
@@ -701,7 +701,7 @@ Body: {"name":"John Doe","id":123,"active":true}
 **Complete byte sequence:**
 
 ```
-\x00\x03\x04\x012\x05\x0Cmax-age=3600\x06\x0A1758784800\x2A{"name":"John Doe","id":123,"active":true}
+\x00 \x03 \x04 \x01 2 \x05 \x0C max-age=3600 \x06 \x0A 1758784800 \x2A {"name":"John Doe","id":123,"active":true}
 ```
 
 **Breakdown:**
@@ -816,7 +816,7 @@ Breakdown:
 Header: Date: 1758784800
 
 Wire format:
-\x26\x0A1758784800
+\x26 \x0A 1758784800
 
 Breakdown:
 - \x26: Header ID (Date name)
@@ -831,7 +831,7 @@ Breakdown:
 Header: X-Request-ID: abc123
 
 Wire format:
-\x00\x0CX-Request-ID\x06abc123
+\x00 \x0C X-Request-ID \x06 abc123
 
 Breakdown:
 - \x00: Custom header indicator
@@ -846,11 +846,11 @@ Breakdown:
 
 TODO: for `complete pair` update with the actual wire format ID, once static header table is done
 
-| Format        | Example                          | Wire Format                      | Wire Size | Use Case                            |
-| ------------- | -------------------------------- | -------------------------------- | --------- | ----------------------------------- |
-| Complete pair | `Content-Type: application/json` | `\x01`                           | 1 byte    | Most common combinations            |
-| Name + value  | `Date: 1758784800`               | `\x26\x0A1758784800`             | 12 bytes  | Common headers with variable values |
-| Custom        | `X-Request-ID: abc123`           | `\x00\x0CX-Request-ID\x06abc123` | 21 bytes  | Application-specific headers        |
+| Format        | Example                          | Wire Format                              | Wire Size | Use Case                            |
+| ------------- | -------------------------------- | ---------------------------------------- | --------- | ----------------------------------- |
+| Complete pair | `Content-Type: application/json` | `\x01`                                   | 1 byte    | Most common combinations            |
+| Name + value  | `Date: 1758784800`               | `\x26 \x0A 1758784800`                   | 12 bytes  | Common headers with variable values |
+| Custom        | `X-Request-ID: abc123`           | `\x00 \x0C X-Request-ID \x06 abc123`     | 21 bytes  | Application-specific headers        |
 
 **Usage Notes:**
 

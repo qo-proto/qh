@@ -19,8 +19,8 @@ X - 0xFF    = Header names only (X header names, value transmitted separately)
 QH uses three header formats:
 
 1. **Complete pairs (0x01-X)**: Single byte → `\x01` = `Content-Type: application/json`
-2. **Name + value (X-0xFF)**: ID + varint length + value → `\x72\x0A1758784800` = `Date: 1758784800`
-3. **Custom (0x00)**: Full key and value → `\x00\x0CX-Request-ID\x06abc123` = `X-Request-ID: abc123`
+2. **Name + value (X-0xFF)**: ID + varint length + value → `\x72 \x0A 1758784800` = `Date: 1758784800`
+3. **Custom (0x00)**: Full key and value → `\x00 \x0C X-Request-ID \x06 abc123` = `X-Request-ID: abc123`
 
 The tables below define the static ID-to-header mappings.
 
@@ -66,7 +66,7 @@ Headers where the name is common but values vary:
 
 ```
 Response with custom cache control:
-Wire: \x71\x0Cmax-age=7200
+Wire: \x71 \x0C max-age=7200
 Means: Cache-Control: max-age=7200
 Size: 14 bytes (ID + varint length + value)
 ```
@@ -88,14 +88,14 @@ When using numeric content type codes (for custom Content-Type values):
 
 For headers not in the static table:
 
-**Wire format:** `\x00<varint:keyLen><key><varint:valueLen><value>`
+**Wire format:** `\x00 <varint:keyLen> <key> <varint:valueLen> <value>`
 
 **Example:**
 
 ```
 Header: X-Request-ID: abc123
 
-Wire: \x00\x0CX-Request-ID\x06abc123
+Wire: \x00 \x0C X-Request-ID \x06 abc123
 
 Breakdown:
 - \x00: Custom header indicator
@@ -154,7 +154,7 @@ Content-Type: application/json
 (no body)
 
 QH wire format:
-\x00\x02\x00\x0AX-Trace-ID\x0Ctrace-12345\x01\x00
+\x00 \x02 \x00 \x0A X-Trace-ID \x0C trace-12345 \x01 \x00
 
 Breakdown:
 - \x00: Status byte (200 OK)
