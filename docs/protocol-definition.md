@@ -18,6 +18,9 @@ Status: Draft
     - [2.3 Content Encoding](#23-content-encoding)
     - [2.4 qh URI Scheme](#24-qh-uri-scheme)
   - [3. Message Format](#3-message-format)
+    - [3.1 Varint Encoding](#31-varint-encoding)
+    - [3.2 Protocol Limits](#32-protocol-limits)
+    - [3.3 Message Structure](#33-message-structure)
   - [4. Request](#4-request)
     - [4.1 Methods](#41-methods)
     - [4.2 Request Format](#42-request-format)
@@ -28,8 +31,8 @@ Status: Draft
   - [5. Response](#5-response)
     - [5.1 Status Codes](#51-status-codes)
       - [Status Code Encoding](#status-code-encoding)
-      - [5.1.2 Redirection](#512-redirection)
       - [5.1.1 Supported Status Codes](#511-supported-status-codes)
+      - [5.1.2 Redirection](#512-redirection)
     - [5.2 Response Format](#52-response-format)
     - [5.3 Response Examples](#53-response-examples)
       - [Example 1: Simple 200 OK Response](#example-1-simple-200-ok-response)
@@ -37,6 +40,8 @@ Status: Draft
       - [Example 3: JSON Response with Headers](#example-3-json-response-with-headers)
       - [Response Wire Format Legend](#response-wire-format-legend)
   - [6. Headers](#6-headers)
+    - [6.1 Header Format](#61-header-format)
+    - [6.2 Header Compression](#62-header-compression)
   - [7. Transport](#7-transport)
     - [7.1 Connection Establishment](#71-connection-establishment)
       - [7.1.1 Certificate Exchange](#711-certificate-exchange)
@@ -45,6 +50,11 @@ Status: Draft
       - [7.2.2 Reusing Connections for Multiple Origins](#722-reusing-connections-for-multiple-origins)
   - [8. Security Considerations](#8-security-considerations)
   - [9. Domain Name System](#9-domain-name-system)
+    - [DNS Record Format](#dns-record-format)
+      - [TXT Record Structure](#txt-record-structure)
+      - [Underscore Prefix](#underscore-prefix)
+      - [Example Record](#example-record)
+      - [Fallback Behavior](#fallback-behavior)
   - [10. Versioning](#10-versioning)
 
 ## 1. Introduction
@@ -58,7 +68,7 @@ QH uses a **request/response model**.
 - The client sends a request message to the server.
 - The server replies with a response message.
 - Messages use binary encoding for metadata (version, method, status codes) and UTF-8 for text content.
-- The header section is separated from the body by the End of Text (ETX) character `\x03`.
+- All fields use varint length prefixes for efficient, binary-safe framing.
 
 ### 1.1 Purpose
 
@@ -182,30 +192,64 @@ Resources made available via the "qh" scheme have no shared identity with resour
 
 ## 3. Message Format
 
-All QH messages follow this structure:
+QH uses a length-prefixed binary format with varint encoding for efficiency and binary safety.
+
+### 3.1 Varint Encoding
+
+QH uses unsigned LEB128 (Little Endian Base 128) varint encoding for all length fields. This is the same encoding used by Protocol Buffers and other binary protocols.
+
+**Encoding rules:**
+
+- Each byte uses 7 bits for data and 1 bit (MSB) as a continuation flag
+- MSB = 1: more bytes follow
+- MSB = 0: last byte
+- Values are encoded little-endian
+
+**Examples:**
 
 ```
-<1-byte-header>[<header-id>\0<value>\0...]\x03<optional-body>
+Value 0:       0x00                    (1 byte)
+Value 127:     0x7F                    (1 byte)
+Value 128:     0x80 0x01               (2 bytes)
+Value 300:     0xAC 0x02               (2 bytes)
+Value 16,384:  0x80 0x80 0x01          (3 bytes)
 ```
+
+**Size efficiency:**
+
+- 0-127: 1 byte
+- 128-16,383: 2 bytes
+- 16,384-2,097,151: 3 bytes
+- Maximum: 10 bytes for uint64
+
+### 3.2 Protocol Limits
+
+QH does not mandate specific limits. Implementations SHOULD enforce reasonable limits based on their deployment environment to prevent resource exhaustion attacks.
+
+**Recommended guidelines:**
+
+- For broad interoperability, implementations SHOULD support paths up to 8 KB and header sections up to 16 KB
+- Body size limits are application-specific
+
+Implementations that reject messages due to size constraints SHOULD return:
+
+- `414 URI Too Long` - path exceeds limit
+- `431 Request Header Fields Too Large` - headers exceed limit
+- `413 Payload Too Large` - body exceeds limit
+
+### 3.3 Message Structure
 
 **Key principles:**
 
 - **First byte**: Encodes version + method/status (see sections 4.1 and 5.1)
-- **Headers**: Key-value pairs separated by null bytes (`key\0value\0`)
-- **Separator**: End-of-Text (`\x03`) separates headers from body
+- **Varint length prefixes**: All variable-length fields use varint-encoded lengths
+- **Binary-safe**: No reserved separator bytes (all data is binary-safe)
 - **Body**: Optional content (JSON, HTML, binary data, etc.)
 
 **Message completeness:**
 
-- If `Content-Length` header is present, read until body reaches specified length
-- If absent or empty, message is complete after `\x03` separator
-
-**Header value restrictions:**
-
-- Header keys and values must not contain null bytes (`\x00`) or ETX (`\x03`)
-- These bytes are reserved as protocol separators
-- Header values should be UTF-8 text or base64-encoded binary data
-- The message body is binary-safe and can contain any bytes including `\x00` and `\x03`
+- Read varints to determine exact field boundaries
+- Message length is deterministic from length prefixes
 
 ## 4. Request
 
@@ -255,16 +299,20 @@ Byte value \x28 (HEAD):   00 101 000 = Version 0, Method 5 (HEAD), Reserved 0
 ### 4.2 Request Format
 
 ```
-<1-byte-method><Host>\0<Path>\0[<header-id>\0<value>\0...]\x03<Body>
+<1-byte-method><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen><body>
 ```
 
 **Fields:**
 
 - **First byte**: Version + Method encoding (see [4.1](#41-methods))
+- **Host length** (varint): Length of host field in bytes
 - **Host**: Target hostname (required, non-empty)
+- **Path length** (varint): Length of path field in bytes
 - **Path**: Resource path (defaults to `/` if empty)
-- **Headers**: Key-value pairs (see [6.1](#61-request-headers))
-- **Body**: Optional (typically used with POST)
+- **Number of headers** (varint): Count of header key-value pairs
+- **Headers**: Sequence of header entries (see [6. Headers](#6-headers) for format details)
+- **Body length** (varint): Length of body in bytes (0 if no body)
+- **Body**: Optional request body
 
 ### 4.3 Request Examples
 
@@ -278,101 +326,120 @@ Host: example.com
 **Wire format structure (minimal request without headers):**
 
 ```
-┌──────┐  ┌─────────────┐  ┌────────┐  ┌──────┐
-│ 0x00 │──│ example.com │──│ /hello │──│ \x03 │
-└──────┘  └─────────────┘  └────────┘  └──────┘
-   │            │              │          │
-   │            │              │          └─ ETX separator
-   │            │              └──────────── Path
-   │            └─────────────────────────── Host
-   └──────────────────────────────────────── First byte (V=0, Method=GET)
+┌──────┐  ┌──────┐  ┌─────────────┐  ┌──────┐  ┌────────┐  ┌──────┐  ┌──────┐
+│ 0x00 │──│ 0x0B │──│ example.com │──│ 0x06 │──│ /hello │──│ 0x00 │──│ 0x00 │
+└──────┘  └──────┘  └─────────────┘  └──────┘  └────────┘  └──────┘  └──────┘
+   │         │             │             │           │          │         │
+   │         │             │             │           │          │         └─ Body length: 0
+   │         │             │             │           │          └─────────── Num headers: 0
+   │         │             │             │           └────────────────────── Path: "/hello"
+   │         │             │             └────────────────────────────────── Path length: 6
+   │         │             └──────────────────────────────────────────────── Host: "example.com"
+   │         └────────────────────────────────────────────────────────────── Host length: 11
+   └──────────────────────────────────────────────────────────────────────── First byte (V=0, Method=GET)
 ```
 
 **Complete byte sequence:**
 
 ```
-\x00example.com\0/hello\0\x03
+\x00 \x0B example.com \x06 /hello \x00 \x00
 ```
 
 **Breakdown:**
 
 - `\x00`: First byte (Version=0, Method=GET, Reserved=0)
-- `example.com`: Host value
-- `\0`: Separator
-- `/hello`: Path value
-- `\0`: Separator
-- `\x03`: ETX separator
-- (no body)
+- `\x0B`: Host length (11 bytes, varint)
+- `example.com`: Host value (11 bytes)
+- `\x06`: Path length (6 bytes, varint)
+- `/hello`: Path value (6 bytes)
+- `\x00`: Number of headers (0, varint)
+- `\x00`: Body length (0 bytes, varint)
+
+**Total size: 22 bytes**
 
 #### Example 2: POST Request with Body
 
 ```
 POST /echo
 Host: example.com
-Accept: JSON, text
-Content-Type: text/plain (code 1)
+Accept: 2,1 (JSON, text/plain)
+Content-Type: 1 (text/plain)
 Body: "Hello QH World!"
 ```
 
 **Wire format structure:**
 
 ```
-┌──────┐  ┌─────────────┐  ┌───────┐  ┌──────┐  ┌─────┐  ┌──────┐  ┌───┐  ┌──────┐  ┌────┐  ┌──────┐  ┌──────────────────┐
-│ 0x08 │──│ example.com │──│ /echo │──│ \x01 │──│ 2,1 │──│ \x04 │──│ 1 │──│ \x05 │──│ 15 │──│ \x03 │──│ Hello QH World!  │
-└──────┘  └─────────────┘  └───────┘  └──────┘  └─────┘  └──────┘  └───┘  └──────┘  └────┘  └──────┘  └──────────────────┘
-   │            │              │         │         │        │        │       │         │       │              │
-   │            │              │         │         │        │        │       │         │       │              └─ Body (15 bytes)
-   │            │              │         │         │        │        │       │         │       └──────────────── ETX separator
-   │            │              │         │         │        │        │       │         └──────────────────────── Content-Length value
-   │            │              │         │         │        │        │       └────────────────────────────────── Content-Length ID (5)
-   │            │              │         │         │        │        └────────────────────────────────────────── Content-Type value: 1
-   │            │              │         │         │        └─────────────────────────────────────────────────── Content-Type ID (4)
-   │            │              │         │         └──────────────────────────────────────────────────────────── Accept value: 2,1
-   │            │              │         └────────────────────────────────────────────────────────────────────── Accept ID (1)
-   │            │              └──────────────────────────────────────────────────────────────────────────────── Path
-   │            └─────────────────────────────────────────────────────────────────────────────────────────────── Host
-   └──────────────────────────────────────────────────────────────────────────────────────────────────────────── First byte (V=0, Method=POST)
+┌─────────────────────────────────────────┐
+│ 0x08                                    │  First byte (V=0, Method=POST)
+├─────────────────────────────────────────┤
+│ 0x0B                                    │  Host length: 11
+├─────────────────────────────────────────┤
+│ example.com                             │  Host
+├─────────────────────────────────────────┤
+│ 0x05                                    │  Path length: 5
+├─────────────────────────────────────────┤
+│ /echo                                   │  Path
+├─────────────────────────────────────────┤
+│ 0x02                                    │  Number of headers: 2
+├─────────────────────────────────────────┤
+│ 0x01                                    │  Header 1: Accept ID
+├─────────────────────────────────────────┤
+│ 0x03                                    │  Accept value length: 3
+├─────────────────────────────────────────┤
+│ 2,1                                     │  Accept value
+├─────────────────────────────────────────┤
+│ 0x04                                    │  Header 2: Content-Type ID
+├─────────────────────────────────────────┤
+│ 0x01                                    │  Content-Type value length: 1
+├─────────────────────────────────────────┤
+│ 1                                       │  Content-Type value
+├─────────────────────────────────────────┤
+│ 0x0F                                    │  Body length: 15
+├─────────────────────────────────────────┤
+│ Hello QH World!                         │  Body
+└─────────────────────────────────────────┘
 ```
 
 **Complete byte sequence:**
 
 ```
-\x08example.com\0/echo\0\x01\02,1\0\x04\01\0\x05\015\0\x03Hello QH World!
+\x08 \x0B example.com \x05 /echo \x02 \x01 \x03 2,1 \x04 \x01 1 \x0F Hello QH World!
 ```
 
 **Breakdown:**
 
-- `\x08`: First byte (Version=0, Method=POST, Reserved=0)
+- `\x08`: First byte (Version=0, Method=POST)
+- `\x0B`: Host length (11 bytes)
 - `example.com`: Host value
-- `\0`: Separator
+- `\x05`: Path length (5 bytes)
 - `/echo`: Path value
-- `\0`: Separator
-- `\x01`: Header ID 1 (Accept)
-- `\0`: Separator
-- `2,1`: Header value (JSON, text/plain codes)
-- `\0`: Separator
-- `\x04`: Header ID 4 (Content-Type)
-- `\0`: Separator
-- `1`: Header value (text/plain code)
-- `\0`: Separator
-- `\x05`: Header ID 5 (Content-Length)
-- `\0`: Separator
-- `15`: Header value
-- `\0`: Separator
-- `\x03`: ETX separator
-- `Hello QH World!`: Body (15 bytes)
+- `\x02`: Number of headers (2)
+- **Header 1 (Accept):**
+  - `\x01`: Header ID (Accept)
+  - `\x03`: Value length (3 bytes, varint)
+  - `2,1`: Value (JSON, text/plain codes)
+- **Header 2 (Content-Type):**
+  - `\x04`: Header ID (Content-Type)
+  - `\x01`: Value length (1 byte, varint)
+  - `1`: Value (text/plain code)
+- `\x0F`: Body length (15 bytes)
+- `Hello QH World!`: Body content
+
+**Total size: 44 bytes**
 
 #### Request Wire Format Legend
 
 ```mermaid
 flowchart LR
-    A["First Byte<br/>(V+M+R)"] --> B["Host"]
-    B --> C["\\x00"]
-    C --> D["Path"]
-    D --> E["\\x00"]
-    E --> F["Header Pairs<br/>(key\\x00value\\x00...)"]
-    F --> G["\\x03<br/>(ETX)"]
-    G --> H["Body<br/>(optional)"]
+    A["First Byte<br/>(V+M+R)"] --> B["varint:<br/>hostLen"]
+    B --> C["Host"]
+    C --> D["varint:<br/>pathLen"]
+    D --> E["Path"]
+    E --> F["varint:<br/>numHeaders"]
+    F --> G["Headers<br/>(ID+len+val...)"]
+    G --> H["varint:<br/>bodyLen"]
+    H --> I["Body<br/>(optional)"]
 ```
 
 ## 5. Response
@@ -490,13 +557,15 @@ Upon receiving a redirect, a client MUST make a new `GET` request to the new loc
 ### 5.2 Response Format
 
 ```
-<1-byte-status>[<header-id>\0<value>\0...]\x03<Body>
+<1-byte-status><varint:numHeaders>[headers]<varint:bodyLen><body>
 ```
 
 **Fields:**
 
 - **First byte**: Version + Status encoding (see [5.1](#51-status-codes))
-- **Headers**: Key-value pairs (see [6.2](#62-response-headers))
+- **Number of headers** (varint): Count of header key-value pairs
+- **Headers**: Sequence of header entries (see [6. Headers](#6-headers) for format details)
+- **Body length** (varint): Length of body in bytes (0 if no body)
 - **Body**: Optional response content
 
 ### 5.3 Response Examples
@@ -505,45 +574,44 @@ Upon receiving a redirect, a client MUST make a new `GET` request to the new loc
 
 ```
 Status: 200 OK
-Content-Type: text/plain (code 1)
+Content-Type: 1 (text/plain)
 Body: "Hello from QH Protocol!"
 ```
 
 **Wire format structure:**
 
 ```
-┌──────┐  ┌──────┐  ┌───┐  ┌──────┐  ┌────┐  ┌──────┐  ┌──────────────────────────┐
-│ 0x00 │──│ \x01 │──│ 1 │──│ \x02 │──│ 23 │──│ \x03 │──│ Hello from QH Protocol!  │
-└──────┘  └──────┘  └───┘  └──────┘  └────┘  └──────┘  └──────────────────────────┘
-   │         │       │        │        │       │                   │
-   │         │       │        │        │       │                   └─── Body (23 bytes)
-   │         │       │        │        │       └─────────────────────── ETX separator
-   │         │       │        │        └─────────────────────────────── Content-Length value
-   │         │       │        └──────────────────────────────────────── Content-Length ID (2)
-   │         │       └───────────────────────────────────────────────── Content-Type value: 1
-   │         └───────────────────────────────────────────────────────── Content-Type ID (1)
-   └─────────────────────────────────────────────────────────────────── First byte (V=0, Status=0 → HTTP 200)
+┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌───┐  ┌──────┐  ┌──────────────────────────┐
+│ 0x00 │──│ 0x01 │──│ 0x01 │──│ 0x01 │──│ 1 │──│ 0x17 │──│ Hello from QH Protocol!  │
+└──────┘  └──────┘  └──────┘  └──────┘  └───┘  └──────┘  └──────────────────────────┘
+   │         │         │         │        │        │                   │
+   │         │         │         │        │        │                   └─── Body (23 bytes)
+   │         │         │         │        │        └─────────────────────── Body length: 23
+   │         │         │         │        └──────────────────────────────── Content-Type value: "1"
+   │         │         │         └───────────────────────────────────────── Content-Type value len: 1
+   │         │         └─────────────────────────────────────────────────── Content-Type ID (0x01)
+   │         └───────────────────────────────────────────────────────────── Number of headers: 1
+   └─────────────────────────────────────────────────────────────────────── First byte (V=0, Status=0 → HTTP 200)
 ```
 
 **Complete byte sequence:**
 
 ```
-\x00\x01\01\0\x02\023\0\x03Hello from QH Protocol!
+\x00 \x01 \x01 \x01 1 \x17 Hello from QH Protocol!
 ```
 
 **Breakdown:**
 
 - `\x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
-- `\x01`: Header ID 1 (Content-Type)
-- `\0`: Separator
-- `1`: Header value (text/plain)
-- `\0`: Separator
-- `\x02`: Header ID 2 (Content-Length)
-- `\0`: Separator
-- `23`: Header value
-- `\0`: Separator
-- `\x03`: ETX separator
-- `Hello from QH Protocol!`: Body (23 bytes)
+- `\x01`: Number of headers (1)
+- **Header 1:**
+  - `\x01`: Header ID (Content-Type)
+  - `\x01`: Value length (1 byte)
+  - `1`: Value (text/plain code)
+- `\x17`: Body length (23 bytes)
+- `Hello from QH Protocol!`: Body content
+
+**Total size: 29 bytes**
 
 #### Example 2: 404 Not Found Response
 
@@ -553,25 +621,40 @@ Content-Type: text/plain (code 1)
 Body: "Not Found"
 ```
 
-**Wire format:**
+**Wire format structure:**
 
 ```
-\x01\x01\01\0\x02\09\0\x03Not Found
+┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌───┐  ┌──────┐  ┌───────────┐
+│ 0x01 │──│ 0x01 │──│ 0x04 │──│ 0x01 │──│ 1 │──│ 0x09 │──│ Not Found │
+└──────┘  └──────┘  └──────┘  └──────┘  └───┘  └──────┘  └───────────┘
+   │         │         │         │        │        │            │
+   │         │         │         │        │        │            └─ Body (9 bytes)
+   │         │         │         │        │        └──────────────── Body length: 9
+   │         │         │         │        └───────────────────────── Content-Type value: "1"
+   │         │         │         └────────────────────────────────── Content-Type value len: 1
+   │         │         └──────────────────────────────────────────── Content-Type ID (0x04)
+   │         └────────────────────────────────────────────────────── Number of headers: 1
+   └──────────────────────────────────────────────────────────────── First byte (V=0, Status=1 → HTTP 404)
+```
+
+**Complete byte sequence:**
+
+```
+\x01 \x01 \x04 \x01 1 \x09 Not Found
 ```
 
 **Breakdown:**
 
 - `\x01`: First byte (Version=0, Compact Status=1 → HTTP 404)
-- `\x01`: Header ID 1 (Content-Type)
-- `\0`: Separator
-- `1`: Header value (text/plain)
-- `\0`: Separator
-- `\x02`: Header ID 2 (Content-Length)
-- `\0`: Separator
-- `9`: Header value
-- `\0`: Separator
-- `\x03`: ETX separator
-- `Not Found`: Body (9 bytes)
+- `\x01`: Number of headers (1)
+- **Header 1 (Content-Type):**
+  - `\x04`: Header ID (Content-Type)
+  - `\x01`: Value length (1 byte, varint)
+  - `1`: Value (text/plain code)
+- `\x09`: Body length (9 bytes)
+- `Not Found`: Body content
+
+**Total size: 15 bytes**
 
 #### Example 3: JSON Response with Headers
 
@@ -586,77 +669,197 @@ Body: {"name":"John Doe","id":123,"active":true}
 **Wire format structure:**
 
 ```
-┌──────┐  ┌──────┐  ┌───┐  ┌──────┐  ┌────┐  ┌──────┐  ┌──────────────┐  ┌──────┐  ┌────────────┐  ┌──────┐  ┌───────────────────────────────────┐
-│ 0x00 │──│ \x01 │──│ 2 │──│ \x02 │──│ 42 │──│ \x04 │──│ max-age=3600 │──│ \x06 │──│ 1758784800 │──│ \x03 │──│ {"name":"John Doe","id":123,...} │
-└──────┘  └──────┘  └───┘  └──────┘  └────┘  └──────┘  └──────────────┘  └──────┘  └────────────┘  └──────┘  └───────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ 0x00                                    │  First byte (V=0, Status=0 → HTTP 200)
+├─────────────────────────────────────────┤
+│ 0x03                                    │  Number of headers: 3
+├─────────────────────────────────────────┤
+│ 0x04                                    │  Header 1: Content-Type ID
+├─────────────────────────────────────────┤
+│ 0x01                                    │  Content-Type value length: 1
+├─────────────────────────────────────────┤
+│ 2                                       │  Content-Type value (JSON code)
+├─────────────────────────────────────────┤
+│ 0x05                                    │  Header 2: Cache-Control ID
+├─────────────────────────────────────────┤
+│ 0x0C                                    │  Cache-Control value length: 12
+├─────────────────────────────────────────┤
+│ max-age=3600                            │  Cache-Control value
+├─────────────────────────────────────────┤
+│ 0x06                                    │  Header 3: Date ID
+├─────────────────────────────────────────┤
+│ 0x0A                                    │  Date value length: 10
+├─────────────────────────────────────────┤
+│ 1758784800                              │  Date value (Unix timestamp)
+├─────────────────────────────────────────┤
+│ 0x2A                                    │  Body length: 42
+├─────────────────────────────────────────┤
+│ {"name":"John Doe","id":123,...}        │  Body
+└─────────────────────────────────────────┘
 ```
 
 **Complete byte sequence:**
 
 ```
-\x00\x01\02\0\x02\042\0\x04\0max-age=3600\0\x06\01758784800\0\x03{"name":"John Doe","id":123,"active":true}
+\x00 \x03 \x04 \x01 2 \x05 \x0C max-age=3600 \x06 \x0A 1758784800 \x2A {"name":"John Doe","id":123,"active":true}
 ```
 
 **Breakdown:**
 
 - `\x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
-- `\x01`: Header ID 1 (Content-Type)
-- `\0`: Separator
-- `2`: Header value (JSON)
-- `\0`: Separator
-- `\x02`: Header ID 2 (Content-Length)
-- `\0`: Separator
-- `42`: Header value
-- `\0`: Separator
-- `\x04`: Header ID 4 (Cache-Control)
-- `\0`: Separator
-- `max-age=3600`: Header value
-- `\0`: Separator
-- `\x06`: Header ID 6 (Date)
-- `\0`: Separator
-- `1758784800`: Header value
-- `\0`: Separator
-- `\x03`: ETX separator
-- `{"name":"John Doe","id":123,"active":true}`: Body (42 bytes)
+- `\x03`: Number of headers (3)
+- **Header 1 (Content-Type):**
+  - `\x04`: Header ID (Content-Type)
+  - `\x01`: Value length (1 byte, varint)
+  - `2`: Value (JSON code)
+- **Header 2 (Cache-Control):**
+  - `\x05`: Header ID (Cache-Control)
+  - `\x0C`: Value length (12 bytes, varint)
+  - `max-age=3600`: Value
+- **Header 3 (Date):**
+  - `\x06`: Header ID (Date)
+  - `\x0A`: Value length (10 bytes, varint)
+  - `1758784800`: Value (Unix timestamp)
+- `\x2A`: Body length (42 bytes)
+- `{"name":"John Doe","id":123,"active":true}`: Body content
+
+**Total size: 74 bytes**
 
 #### Response Wire Format Legend
 
 ```mermaid
 flowchart LR
-    A["First Byte<br/>(V+S)"] --> B["Header Pairs<br/>(key\\x00value\\x00...)"]
-    B --> C["\\x03<br/>(ETX)"]
-    C --> D["Body<br/>(optional)"]
+    A["First Byte<br/>(V+S)"] --> B["varint:<br/>numHeaders"]
+    B --> C["Headers<br/>(ID+len+val...)"]
+    C --> D["varint:<br/>bodyLen"]
+    D --> E["Body<br/>(optional)"]
 ```
 
 ## 6. Headers
 
 For the available headers, see [headers](./headers.md).
 
-**Notes:**
+### 6.1 Header Format
 
-- Headers are transmitted as key-value pairs separated by null bytes.
-- Custom headers are allowed and will be passed through
-- Requests
-  - GET requests: typically omit `Content-Type` and `Content-Length`
-  - POST requests: `Content-Type` recommended but optional (defaults to code 4 - octet-stream). `Content-Length` is calculated from the body.
-  - Accept uses numeric codes: `text/html,application/json,text/plain` → `3,2,1`
+Headers use a compact encoding with varint length prefixes for efficient, binary-safe transmission.
 
-**Header Value Restrictions:**
+QH uses a **static header table** that maps single-byte IDs to either complete header key-value pairs (most frequent combinations) or header names only (common headers with variable values). This eliminates the need for dynamic compression schemes like HPACK/QPACK.
 
-Header keys and values MUST NOT contain:
+**Header ID Space Allocation:**
 
-- `\x00` (null byte) - separator between header fields
-- `\x03` (ETX) - separator between headers and body
+```
+0x00           = Custom header (key and value both transmitted)
+0x01 - 0x1F    = Complete key-value pairs (31 most common combinations)
+0x20 - 0xFF    = Header names only (224 header names, value transmitted separately)
+```
 
-The message body is binary-safe and can contain any bytes.
+**Three header formats:**
 
-**Binary Data in Headers:**
+1. **Complete key-value pair (0x01-0x1F):** Single byte, no additional data needed
+2. **Header name with value (0x20-0xFF):** ID + value length + value
+3. **Custom header (0x00):** Full key and value with length prefixes
 
-Binary data in header values must be base64-encoded before transmission.
+**Format 1: Complete key-value pair:**
 
-Implementations must validate headers and reject those containing `\x00` or `\x03`.
+```
+<byte:headerID>
+```
 
-### 6.1 Header Compression
+For the most common header combinations:
+
+1. **Header ID** (1 byte): Complete key-value pair (0x01-0x1F, see [headers](./headers.md))
+
+**Format 2: Header name with value:**
+
+```
+<byte:headerID><varint:valueLen><value>
+```
+
+For standard headers with custom values:
+
+1. **Header ID** (1 byte): Header name (0x20-0xFF, see [headers](./headers.md))
+2. **Value length** (varint): Length of the header value in bytes
+3. **Value**: The header value
+
+**Format 3: Custom header (0x00):**
+
+```
+<byte:0x00><varint:keyLen><key><varint:valueLen><value>
+```
+
+For custom headers not in the standard header table:
+
+1. **Header ID** (1 byte): `0x00` indicates a custom header
+2. **Key length** (varint): Length of the header key name in bytes
+3. **Key**: The header key name (UTF-8)
+4. **Value length** (varint): Length of the header value in bytes
+5. **Value**: The header value
+
+**Example 1 - Complete key-value pair:**
+
+TODO: update with the actual key-value pair from table
+
+```
+Header: Content-Type: application/json
+
+Wire format:
+\x01
+
+Breakdown:
+- \x01: Complete header (Content-Type: application/json)
+- Total: 1 byte
+```
+
+**Example 2 - Header name with value:**
+
+```
+Header: Date: 1758784800
+
+Wire format:
+\x26 \x0A 1758784800
+
+Breakdown:
+- \x26: Header ID (Date name)
+- \x0A: Value length (10 bytes, varint)
+- 1758784800: Value (Unix timestamp)
+- Total: 12 bytes
+```
+
+**Example 3 - Custom Header:**
+
+```
+Header: X-Request-ID: abc123
+
+Wire format:
+\x00 \x0C X-Request-ID \x06 abc123
+
+Breakdown:
+- \x00: Custom header indicator
+- \x0C: Key length (12 bytes, varint)
+- X-Request-ID: Key name
+- \x06: Value length (6 bytes, varint)
+- abc123: Value
+- Total: 21 bytes
+```
+
+**Efficiency Comparison:**
+
+TODO: for `complete pair` update with the actual wire format ID, once static header table is done
+
+| Format        | Example                          | Wire Format                              | Wire Size | Use Case                            |
+| ------------- | -------------------------------- | ---------------------------------------- | --------- | ----------------------------------- |
+| Complete pair | `Content-Type: application/json` | `\x01`                                   | 1 byte    | Most common combinations            |
+| Name + value  | `Date: 1758784800`               | `\x26 \x0A 1758784800`                   | 12 bytes  | Common headers with variable values |
+| Custom        | `X-Request-ID: abc123`           | `\x00 \x0C X-Request-ID \x06 abc123`     | 21 bytes  | Application-specific headers        |
+
+**Usage Notes:**
+
+- GET requests: typically omit `Content-Type`
+- POST requests: `Content-Type` recommended but optional (defaults to code 4 - octet-stream)
+- Accept uses numeric codes: `text/html,application/json,text/plain` → `3,2,1`
+- The static table (see [headers](./headers.md)) defines which IDs map to complete pairs vs header names
+
+### 6.2 Header Compression
 
 Unlike HTTP/2 (HPACK) and HTTP/3 (QPACK), QH does not implement header compression schemes. This design decision is intentional.
 

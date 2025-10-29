@@ -1,172 +1,195 @@
-# QH - Header Tables
+# QH - Header Static Table
 
-QH uses 1-byte header IDs instead of full header names, with separate lookup tables for requests and responses.
+QH uses a **static header table** that maps single-byte IDs to either complete header key-value pairs or header names.
 
-## Wire Format
+For detailed header format specifications, see [Section 6.1 - Header Format](./protocol-definition.md#61-header-format) in the protocol definition.
+
+## Header ID Space Allocation
+
+TODO: update X and tables below once data is ready and examples
 
 ```
-<header_id>\0<value>\0...
+0x00           = Custom header (key and value both transmitted)
+0x01 - X    = Complete key-value pairs (X most common combinations)
+X - 0xFF    = Header names only (X header names, value transmitted separately)
 ```
 
-## Header ID Allocation
+## Header Formats Summary
 
-- `0` = Custom header (escape code)
-- `1-127` = Request headers (127 slots)
-- `1-127` = Response headers (127 slots)
+QH uses three header formats:
 
-## Request Headers (IDs 1-127)
+1. **Complete pairs (0x01-X)**: Single byte → `\x01` = `Content-Type: application/json`
+2. **Name + value (X-0xFF)**: ID + varint length + value → `\x72 \x0A 1758784800` = `Date: 1758784800`
+3. **Custom (0x00)**: Full key and value → `\x00 \x0C X-Request-ID \x06 abc123` = `X-Request-ID: abc123`
 
-| ID     | Header Name       | Description                         | Example                    |
-| ------ | ----------------- | ----------------------------------- | -------------------------- |
-| 1      | Accept            | Media types client can process      | `3,2,1` (HTML, JSON, text) |
-| 2      | Accept-Encoding   | Content encoding client supports    | `gzip, br, zstd`           |
-| 3      | (reserved)        | Reserved (conflicts with ETX \x03)  |                            |
-| 4      | Accept-Language   | Language preferences                | `en-US,en;q=0.9`           |
-| 5      | Content-Type      | Numeric content type code           | `2` (for JSON)             |
-| 6      | Content-Length    | Request body size in bytes          | `42`                       |
-| 7      | Authorization     | Authentication credentials          | `Bearer <token>`           |
-| 8      | Cookie            | HTTP cookies                        | `session=abc123`           |
-| 9      | User-Agent        | Client identification               | `QH-Client/1.0`            |
-| 10     | Referer           | Referring page URL                  | `qh://example.com/page`    |
-| 11     | Origin            | Request origin for CORS             | `qh://example.com`         |
-| 12     | If-None-Match     | Conditional request ETag            | `"abc123"`                 |
-| 13     | If-Modified-Since | Conditional request timestamp       | `1758784800`               |
-| 14     | Range             | Request partial content             | `bytes=0-1023`             |
-| 15     | X-Payment         | x402 payment protocol payload       | `<base64-encoded-json>`    |
-| 16-127 | (reserved)        | Reserved for future request headers |                            |
+The tables below define the static ID-to-header mappings.
 
-## Response Headers (IDs 1-127)
+## Complete Key-Value Pairs
 
-| ID     | Header Name                  | Description                        | Example                 |
-| ------ | ---------------------------- | ---------------------------------- | ----------------------- |
-| 1      | Content-Type                 | Numeric content type code          | `1` (text/plain)        |
-| 2      | Content-Length               | Response body size in bytes        | `42`                    |
-| 3      | (reserved)                   | Reserved (conflicts with ETX \x03) |                         |
-| 4      | Cache-Control                | Caching directives                 | `max-age=3600`          |
-| 5      | Content-Encoding             | Content encoding used              | `gzip`                  |
-| 6      | Date                         | Unix timestamp                     | `1758784800`            |
-| 7      | ETag                         | Entity tag for validation          | `"abc123"`              |
-| 8      | Expires                      | Response expiration time           | `1758788400`            |
-| 9      | Last-Modified                | Resource modification time         | `1758780000`            |
-| 10     | Access-Control-Allow-Origin  | CORS allowed origins               | `*`                     |
-| 11     | Access-Control-Allow-Methods | CORS allowed methods               | `GET, POST, PUT`        |
-| 12     | Access-Control-Allow-Headers | CORS allowed headers               | `Content-Type`          |
-| 13     | Set-Cookie                   | Set HTTP cookie                    | `session=abc; Secure`   |
-| 14     | Location                     | Redirect location                  | `/new-path`             |
-| 15     | Content-Security-Policy      | CSP directives                     | `default-src 'self'`    |
-| 16     | X-Content-Type-Options       | MIME sniffing protection           | `nosniff`               |
-| 17     | X-Frame-Options              | Clickjacking protection            | `SAMEORIGIN`            |
-| 18     | Vary                         | Response variance                  | `Accept-Encoding`       |
-| 19     | X-Payment-Response           | x402 settlement response           | `<base64-encoded-json>` |
-| 20-127 | (reserved)                   | Reserved for future headers        |                         |
+The most common header combinations mapped to single bytes:
+
+| ID   | Complete Header                  | Use Case           |
+| ---- | -------------------------------- | ------------------ |
+| 0x01 | `Content-Type: application/json` | JSON API responses |
+| 0x02 | `Content-Type: text/html`        | HTML pages         |
+
+**Example usage:**
+
+```
+Response with JSON content type:
+Wire: \x01
+Means: Content-Type: application/json
+Size: 1 byte
+```
+
+## Header Names Only
+
+Headers where the name is common but values vary:
+
+### Request Headers
+
+| ID   | Header Name     | Description                 | Example Value   |
+| ---- | --------------- | --------------------------- | --------------- |
+| 0x20 | Accept          | Custom accept types         | `3,2,1`         |
+| 0x21 | Accept-Encoding | Custom encoding preferences | `gzip, deflate` |
+
+### Response Headers
+
+| ID        | Header Name        | Description              | Example Value     |
+| --------- | ------------------ | ------------------------ | ----------------- |
+| 0x70      | Content-Type       | Custom content types     | `5` (custom code) |
+| 0x71      | Cache-Control      | Custom cache directives  | `max-age=7200`    |
+| 0x7E      | X-Payment-Response | x402 settlement response | `<base64-json>`   |
+| 0x7F-0xFF | (reserved)         | Future response headers  |                   |
+
+**Example usage:**
+
+```
+Response with custom cache control:
+Wire: \x71 \x0C max-age=7200
+Means: Cache-Control: max-age=7200
+Size: 14 bytes (ID + varint length + value)
+```
 
 ## Content Type Codes
 
-Content-Type and Accept headers use numeric codes instead of MIME type strings:
+When using numeric content type codes (for custom Content-Type values):
 
-| Code | MIME Type                | Description                       | Common Use Cases         |
-| ---- | ------------------------ | --------------------------------- | ------------------------ |
-| 0    | custom                   | Custom/unspecified type           | Rare, use specific types |
-| 1    | text/plain               | Plain text                        | Simple text responses    |
-| 2    | application/json         | JSON data                         | API responses, AJAX      |
-| 3    | text/html                | HTML markup                       | Web pages, SPA shells    |
-| 4    | application/octet-stream | Binary data                       | Files, images, downloads |
-| 5-15 | (reserved)               | Reserved for future content types |                          |
+| Code | MIME Type                | Description          | Common Use       |
+| ---- | ------------------------ | -------------------- | ---------------- |
+| 0    | custom                   | Custom type          | Rare             |
+| 1    | text/plain               | Plain text           | Text responses   |
+| 2    | application/json         | JSON data            | API responses    |
+| 3    | text/html                | HTML markup          | Web pages        |
+| 4    | application/octet-stream | Binary data          | Files, downloads |
+| 5-15 | (reserved)               | Future content types |                  |
 
-**Wire format:**
+## Custom Headers (0x00)
 
-```
-Content-Type: 2\0      → application/json
-Accept: 3,2,1\0        → text/html, application/json, text/plain (in order)
-```
+For headers not in the static table:
 
-## Custom Headers
+**Wire format:** `\x00 <varint:keyLen> <key> <varint:valueLen> <value>`
 
-When a header is not in the predefined table, ID 0 will be used:
-
-**Wire Format:**
+**Example:**
 
 ```
-\0<custom-header-name>\0<custom-value-123>\0
+Header: X-Request-ID: abc123
+
+Wire: \x00 \x0C X-Request-ID \x06 abc123
+
+Breakdown:
+- \x00: Custom header indicator
+- \x0C: Key length (12 bytes)
+- X-Request-ID: Key name
+- \x06: Value length (6 bytes)
+- abc123: Value
+
+Total: 21 bytes
 ```
 
-## Examples
+## Wire Format Examples
 
-### Request with Predefined Headers
-
-```mermaid
-flowchart LR
-    A["\\x00<br/>(First Byte<br/>V=0, Method=GET)"] --> B["example.com<br/>(Host)"]
-    B --> C["/api<br/>(Path)"]
-    C --> D["\\x01<br/>(Accept ID)"]
-    D --> E["application/json<br/>(Accept Value)"]
-    E --> F["\\x06<br/>(Authorization ID)"]
-    F --> G["Bearer xyz<br/>(Auth Value)"]
-    G --> H["\\x03<br/>(ETX)"]
-    H --> I["body<br/>(Body - optional)"]
-```
-
-**Complete byte sequence:**
+### Example 1: JSON Response with Standard Headers
 
 ```
-\x00example.com\0/api\0\x01\0application/json\0\x06\0Bearer xyz\0\x03body
+HTTP equivalent:
+Status: 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=3600
+Date: 1758784800
+
+{"data":"hello"}
+
+QH wire format:
+TODO
+
+Breakdown:
+TODO
 ```
 
-_Note: Body is optional for GET requests._
-
-### Response with Predefined Headers
-
-```mermaid
-flowchart LR
-    A["\\x00<br/>(First Byte<br/>V=0, Status=0)"] --> B["\\x01<br/>(Content-Type ID)"]
-    B --> C["2<br/>(JSON)"]
-    C --> D["\\x02<br/>(Content-Length ID)"]
-    D --> E["42<br/>(Length)"]
-    E --> F["\\x05<br/>(Date ID)"]
-    F --> G["1758784800<br/>(Timestamp)"]
-    G --> H["\\x03<br/>(ETX)"]
-    H --> I["{&quot;data&quot;:&quot;...&quot;}<br/>(Body - JSON)"]
-```
-
-**Complete byte sequence:**
+### Example 2: Request with Authorization
 
 ```
-\x00\x01\02\0\x02\042\0\x05\01758784800\0\x03{"data":"..."}
+HTTP equivalent:
+GET /api/users
+Host: example.com
+Accept: application/json
+Authorization: Bearer token123
+
+QH wire format:
+TODO
+
+Breakdown:
+TODO
 ```
 
-### Request with Custom Header
-
-```mermaid
-flowchart LR
-    A["\\x00<br/>(First Byte<br/>V=0, Method=GET)"] --> B["example.com<br/>(Host)"]
-    B --> C["/pay<br/>(Path)"]
-    C --> D["\\x00<br/>(Custom Header ID)"]
-    D --> E["Custom-Header<br/>(Header Name)"]
-    E --> F["custom-value-123<br/>(Header Value)"]
-    F --> G["\\x03<br/>(ETX)"]
-```
-
-**Complete byte sequence:**
+### Example 3: Response with Custom Header
 
 ```
-\x00example.com\0/pay\0\x00\0-Custom-Header\0custom-value-123\0\x03
+HTTP equivalent:
+Status: 200 OK
+X-Trace-ID: trace-12345
+Content-Type: application/json
+
+(no body)
+
+QH wire format:
+\x00 \x02 \x00 \x0A X-Trace-ID \x0C trace-12345 \x01 \x00
+
+Breakdown:
+- \x00: Status byte (200 OK)
+- \x02: Num headers (2)
+- \x00: Custom header indicator
+- \x0A: Key length (10)
+- X-Trace-ID: Key
+- \x0C: Value length (12)
+- trace-12345: Value
+- \x01: Content-Type: application/json (complete pair, 1 byte)
+- \x00: Body length (0 bytes, no body)
 ```
+
+## Efficiency Comparison
+
+| Format        | Example                          | Wire Size |
+| ------------- | -------------------------------- | --------- |
+| Complete pair | `Content-Type: application/json` | 1 byte    |
+| Name + value  | `Date: 1758784800`               | 12 bytes  |
+| Custom        | `X-Request-ID: abc123`           | 21 bytes  |
 
 ## Payment Protocol Support (x402)
 
-QH supports the [x402 payment protocol](https://github.com/coinbase/x402), an open standard for web payments that enables blockchain micropayments with fast settlement and no fees.
+QH supports the [x402 payment protocol](https://github.com/coinbase/x402).
 
-**Required Protocol Features:**
+**Required headers:**
 
-- `X-Payment` header (Request Header ID 15)
-- `X-Payment-Response` header (Response Header ID 19)
-- `402 Payment Required` status code (compact code 38)
-- JSON content type (code 2) for payment payloads
+- `X-Payment` (Request: TODO ADD CODE)
+- `X-Payment-Response` (Response: TODO ADD CODE)
+- `402 Payment Required` status code
 
-**Basic Flow:**
+**Flow:**
 
-1. Client requests resource → Server responds with `402` and payment requirements (JSON)
-2. Client submits payment via `X-Payment` header → Server verifies and settles
-3. Server returns resource with `X-Payment-Response` header containing settlement proof
+1. Client requests → Server responds 402 with payment requirements
+2. Client sends payment via `X-Payment` header
+3. Server validates and returns resource with `X-Payment-Response`
 
-For more information, see the [x402 repository](https://github.com/coinbase/x402) and [ecosystem](https://x402.org/ecosystem)
+For details: [x402 repository](https://github.com/coinbase/x402) | [ecosystem](https://x402.org/ecosystem)
