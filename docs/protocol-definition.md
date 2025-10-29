@@ -224,31 +224,19 @@ Value 16,384:  0x80 0x80 0x01          (3 bytes)
 
 ### 3.2 Protocol Limits
 
-TODO: review the limits again, similar to http/2 currently
+QH does not mandate specific limits. Implementations SHOULD enforce reasonable limits based on their deployment environment to prevent resource exhaustion attacks.
 
-QH defines the following limits. Implementations must support at least these values and may support larger values.
+**Recommended guidelines:**
 
-**Required minimum limits:**
+- Clients SHOULD assume servers may reject messages with paths >8 KB or header sections >16 KB
+- Servers SHOULD support at least 8 KB paths and 16 KB header sections for broad compatibility
+- Body size limits are application-specific
 
-| Field                | Minimum Required     | Rationale                                      |
-| -------------------- | -------------------- | ---------------------------------------------- |
-| Host                 | 255 bytes            | DNS hostname limit is 253 characters           |
-| Path                 | 8,192 bytes (8 KB)   | Matches HTTP/1.1 recommendation                |
-| Headers per message  | 128                  | Sufficient for all practical use cases         |
-| Header key (custom)  | 128 bytes            | Reasonable application header name length      |
-| Header value         | 8,192 bytes (8 KB)   | Accommodates tokens, cookies, base64 data      |
-| Total header section | 16,384 bytes (16 KB) | All headers combined                           |
-| Body                 | Unlimited            | Constrained by application and transport layer |
+Implementations that reject messages due to size constraints SHOULD return:
 
-**Implementation requirements:**
-
-- Implementations must reject messages exceeding their supported limits
-- Rejection should use appropriate status codes:
-  - `414 URI Too Long` - path exceeds limit
-  - `431 Request Header Fields Too Large` - header size exceeds limit
-  - `413 Payload Too Large` - body exceeds limit
-- Implementations may support larger limits but should document them
-- Clients should not send messages near limit boundaries without prior knowledge of server capabilities
+- `414 URI Too Long` - path exceeds limit
+- `431 Request Header Fields Too Large` - headers exceed limit
+- `413 Payload Too Large` - body exceeds limit
 
 ### 3.3 Message Structure
 
@@ -542,7 +530,6 @@ When a client receives a `3xx` status code (e.g., 300, 301, 302), it indicates t
 
 1.  **Custom `host` and `path` Headers:**
     The server can provide the new location using two separate headers: `host` for the new hostname and `path` for the new resource path. This is the preferred mechanism for QH-specific redirects.
-
     - `host`: The hostname of the new origin.
     - `path`: The path to the resource on the new host.
 
