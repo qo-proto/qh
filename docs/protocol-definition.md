@@ -228,8 +228,7 @@ QH does not mandate specific limits. Implementations SHOULD enforce reasonable l
 
 **Recommended guidelines:**
 
-- Clients SHOULD assume servers may reject messages with paths >8 KB or header sections >16 KB
-- Servers SHOULD support at least 8 KB paths and 16 KB header sections for broad compatibility
+- For broad interoperability, implementations SHOULD support paths up to 8 KB and header sections up to 16 KB
 - Body size limits are application-specific
 
 Implementations that reject messages due to size constraints SHOULD return:
