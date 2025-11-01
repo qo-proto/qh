@@ -272,15 +272,87 @@ func (r *Response) Format() []byte {
 	return result
 }
 
-// parseHeaders is a helper that parses headers from the wire format.
-// It reads numHeaders headers from data starting at offset, using the provided headerNames lookup table.
-// Returns the parsed headers map and the new offset after reading all headers.
-func parseHeaders(data []byte, offset int, numHeaders uint64, headerNames map[byte]string) (map[string]string, int, error) {
+func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
+	keyLen, n, readErr := ReadUvarint(data, offset)
+	if readErr != nil {
+		return "", "", offset, fmt.Errorf("failed to read custom header key length: %w", readErr)
+	}
+	offset += n
+
+	keyLenInt := int(keyLen)
+	if offset+keyLenInt > len(data) {
+		return "", "", offset, errors.New("custom header key length exceeds buffer")
+	}
+	key := string(data[offset : offset+keyLenInt])
+	offset += keyLenInt
+
+	valueLen, n, readErr := ReadUvarint(data, offset)
+	if readErr != nil {
+		return "", "", offset, fmt.Errorf("failed to read custom header value length: %w", readErr)
+	}
+	offset += n
+
+	valueLenInt := int(valueLen)
+	if offset+valueLenInt > len(data) {
+		return "", "", offset, errors.New("custom header value length exceeds buffer")
+	}
+	value := string(data[offset : offset+valueLenInt])
+	offset += valueLenInt
+
+	return key, value, offset, nil
+}
+
+func parseKnownHeader(data []byte, offset int) (string, int, error) {
+	valueLen, n, readErr := ReadUvarint(data, offset)
+	if readErr != nil {
+		return "", offset, fmt.Errorf("failed to read header value length: %w", readErr)
+	}
+	offset += n
+
+	valueLenInt := int(valueLen)
+	if offset+valueLenInt > len(data) {
+		return "", offset, errors.New("header value length exceeds buffer")
+	}
+	value := string(data[offset : offset+valueLenInt])
+	offset += valueLenInt
+
+	return value, offset, nil
+}
+
+func parseHeaderEntry(
+	data []byte,
+	offset int,
+	headerID byte,
+	headerNames map[byte]string,
+) (string, string, int, error) {
+	if headerID == HeaderCustom {
+		// Format 3: Custom header <0x00><varint:keyLen><key><varint:valueLen><value>
+		return parseCustomHeader(data, offset)
+	}
+
+	if name, exists := headerNames[headerID]; exists {
+		// Format 2: Known header <headerID><varint:valueLen><value>
+		value, newOffset, err := parseKnownHeader(data, offset)
+		return name, value, newOffset, err
+	}
+
+	// Unknown header ID: skip value (forward compatibility), return empty key
+	_, newOffset, err := parseKnownHeader(data, offset)
+	if err != nil {
+		return "", "", offset, fmt.Errorf("failed to read unknown header value length: %w", err)
+	}
+	return "", "", newOffset, nil
+}
+
+func parseHeaders(
+	data []byte,
+	offset int,
+	numHeaders uint64,
+	headerNames map[byte]string,
+) (map[string]string, int, error) {
 	headers := make(map[string]string)
 
-	for i := uint64(0); i < numHeaders; i++ {
-		var key, value string
-
+	for range numHeaders {
 		if offset >= len(data) {
 			return nil, offset, errors.New("unexpected end while reading headers")
 		}
@@ -288,58 +360,14 @@ func parseHeaders(data []byte, offset int, numHeaders uint64, headerNames map[by
 		headerID := data[offset]
 		offset++
 
-		if headerID == HeaderCustom {
-			// Format 3: Custom header <0x00><varint:keyLen><key><varint:valueLen><value>
-			keyLen, n, err := ReadUvarint(data, offset)
-			if err != nil {
-				return nil, offset, fmt.Errorf("failed to read custom header key length: %w", err)
-			}
-			offset += n
+		key, value, newOffset, err := parseHeaderEntry(data, offset, headerID, headerNames)
+		if err != nil {
+			return nil, offset, err
+		}
+		offset = newOffset
 
-			if offset+int(keyLen) > len(data) {
-				return nil, offset, errors.New("custom header key length exceeds buffer")
-			}
-			key = string(data[offset : offset+int(keyLen)])
-			offset += int(keyLen)
-
-			valueLen, n, err := ReadUvarint(data, offset)
-			if err != nil {
-				return nil, offset, fmt.Errorf("failed to read custom header value length: %w", err)
-			}
-			offset += n
-
-			if offset+int(valueLen) > len(data) {
-				return nil, offset, errors.New("custom header value length exceeds buffer")
-			}
-			value = string(data[offset : offset+int(valueLen)])
-			offset += int(valueLen)
-		} else if name, exists := headerNames[headerID]; exists {
-			// Format 2: Known header <headerID><varint:valueLen><value>
-			key = name
-
-			valueLen, n, err := ReadUvarint(data, offset)
-			if err != nil {
-				return nil, offset, fmt.Errorf("failed to read header value length: %w", err)
-			}
-			offset += n
-
-			if offset+int(valueLen) > len(data) {
-				return nil, offset, errors.New("header value length exceeds buffer")
-			}
-			value = string(data[offset : offset+int(valueLen)])
-			offset += int(valueLen)
-		} else {
-			// Unknown header ID: skip value (forward compatibility)
-			valueLen, n, err := ReadUvarint(data, offset)
-			if err != nil {
-				return nil, offset, fmt.Errorf("failed to read unknown header value length: %w", err)
-			}
-			offset += n
-
-			if offset+int(valueLen) > len(data) {
-				return nil, offset, errors.New("unknown header value length exceeds buffer")
-			}
-			offset += int(valueLen)
+		// Skip unknown headers
+		if key == "" {
 			continue
 		}
 
@@ -357,42 +385,43 @@ func IsRequestComplete(data []byte) (bool, error) {
 	offset := 1 // Skip first byte (version + method)
 
 	// Helper function to reduce duplication
-	checkField := func(fieldName string) (uint64, bool, error) {
+	checkField := func(fieldName string) (bool, error) {
 		length, n, err := ReadUvarint(data, offset)
-		if err == ErrVarintIncomplete {
-			return 0, false, nil
+		if errors.Is(err, ErrVarintIncomplete) {
+			return false, nil
 		}
 		if err != nil {
-			return 0, false, fmt.Errorf("reading %s length: %w", fieldName, err)
+			return false, fmt.Errorf("reading %s length: %w", fieldName, err)
 		}
 
 		// Prevent integer overflow and DoS
 		if length > uint64(len(data)) {
-			return 0, false, fmt.Errorf("%s length too large: %d", fieldName, length)
+			return false, fmt.Errorf("%s length too large: %d", fieldName, length)
 		}
 
 		offset += n
-		if offset+int(length) > len(data) {
-			return 0, false, nil // Need more data
+		lengthInt := int(length)
+		if offset+lengthInt > len(data) {
+			return false, nil // Need more data
 		}
 
-		offset += int(length)
-		return length, true, nil
+		offset += lengthInt
+		return true, nil
 	}
 
 	// Read host
-	if _, complete, err := checkField("host"); !complete {
+	if complete, err := checkField("host"); !complete {
 		return false, err
 	}
 
 	// Read path
-	if _, complete, err := checkField("path"); !complete {
+	if complete, err := checkField("path"); !complete {
 		return false, err
 	}
 
 	// Read headers count
 	numHeaders, n, err := ReadUvarint(data, offset)
-	if err == ErrVarintIncomplete {
+	if errors.Is(err, ErrVarintIncomplete) {
 		return false, nil
 	}
 	if err != nil {
@@ -401,7 +430,7 @@ func IsRequestComplete(data []byte) (bool, error) {
 	offset += n
 
 	// Process headers
-	for i := uint64(0); i < numHeaders; i++ {
+	for range numHeaders {
 		if offset >= len(data) {
 			return false, nil
 		}
@@ -411,18 +440,18 @@ func IsRequestComplete(data []byte) (bool, error) {
 
 		// Custom header has key + value, others just value
 		if headerID == HeaderCustom {
-			if _, complete, err := checkField("header key"); !complete {
+			if complete, err := checkField("header key"); !complete {
 				return false, err
 			}
 		}
 
-		if _, complete, err := checkField("header value"); !complete {
+		if complete, err := checkField("header value"); !complete {
 			return false, err
 		}
 	}
 
 	// Read body
-	if _, complete, err := checkField("body"); !complete {
+	if complete, err := checkField("body"); !complete {
 		return false, err
 	}
 
@@ -437,32 +466,33 @@ func IsResponseComplete(data []byte) (bool, error) {
 	offset := 1 // Skip first byte (version + status)
 
 	// Helper function to reduce duplication
-	checkField := func(fieldName string) (uint64, bool, error) {
+	checkField := func(fieldName string) (bool, error) {
 		length, n, err := ReadUvarint(data, offset)
-		if err == ErrVarintIncomplete {
-			return 0, false, nil
+		if errors.Is(err, ErrVarintIncomplete) {
+			return false, nil
 		}
 		if err != nil {
-			return 0, false, fmt.Errorf("reading %s length: %w", fieldName, err)
+			return false, fmt.Errorf("reading %s length: %w", fieldName, err)
 		}
 
 		// Prevent integer overflow and DoS
 		if length > uint64(len(data)) {
-			return 0, false, fmt.Errorf("%s length too large: %d", fieldName, length)
+			return false, fmt.Errorf("%s length too large: %d", fieldName, length)
 		}
 
 		offset += n
-		if offset+int(length) > len(data) {
-			return 0, false, nil // Need more data
+		lengthInt := int(length)
+		if offset+lengthInt > len(data) {
+			return false, nil // Need more data
 		}
 
-		offset += int(length)
-		return length, true, nil
+		offset += lengthInt
+		return true, nil
 	}
 
 	// Read headers count
 	numHeaders, n, err := ReadUvarint(data, offset)
-	if err == ErrVarintIncomplete {
+	if errors.Is(err, ErrVarintIncomplete) {
 		return false, nil
 	}
 	if err != nil {
@@ -471,7 +501,7 @@ func IsResponseComplete(data []byte) (bool, error) {
 	offset += n
 
 	// Process headers
-	for i := uint64(0); i < numHeaders; i++ {
+	for range numHeaders {
 		if offset >= len(data) {
 			return false, nil
 		}
@@ -481,18 +511,18 @@ func IsResponseComplete(data []byte) (bool, error) {
 
 		// Custom header has key + value, others just value
 		if headerID == HeaderCustom {
-			if _, complete, err := checkField("header key"); !complete {
+			if complete, err := checkField("header key"); !complete {
 				return false, err
 			}
 		}
 
-		if _, complete, err := checkField("header value"); !complete {
+		if complete, err := checkField("header value"); !complete {
 			return false, err
 		}
 	}
 
 	// Read body
-	if _, complete, err := checkField("body"); !complete {
+	if complete, err := checkField("body"); !complete {
 		return false, err
 	}
 
@@ -540,10 +570,11 @@ func ParseResponse(data []byte) (*Response, error) {
 	}
 	offset += n
 
-	if offset+int(bodyLen) > len(data) {
+	bodyLenInt := int(bodyLen)
+	if offset+bodyLenInt > len(data) {
 		return nil, errors.New("invalid response: body length exceeds buffer")
 	}
-	body := data[offset : offset+int(bodyLen)]
+	body := data[offset : offset+bodyLenInt]
 
 	resp := &Response{
 		Version:    version,
@@ -587,11 +618,12 @@ func ParseRequest(data []byte) (*Request, error) {
 	}
 	offset += n
 
-	if offset+int(hostLen) > len(data) {
+	hostLenInt := int(hostLen)
+	if offset+hostLenInt > len(data) {
 		return nil, errors.New("invalid request: host length exceeds buffer")
 	}
-	host := string(data[offset : offset+int(hostLen)])
-	offset += int(hostLen)
+	host := string(data[offset : offset+hostLenInt])
+	offset += hostLenInt
 
 	if host == "" {
 		return nil, errors.New("invalid request: empty host")
@@ -604,11 +636,12 @@ func ParseRequest(data []byte) (*Request, error) {
 	}
 	offset += n
 
-	if offset+int(pathLen) > len(data) {
+	pathLenInt := int(pathLen)
+	if offset+pathLenInt > len(data) {
 		return nil, errors.New("invalid request: path length exceeds buffer")
 	}
-	path := string(data[offset : offset+int(pathLen)])
-	offset += int(pathLen)
+	path := string(data[offset : offset+pathLenInt])
+	offset += pathLenInt
 
 	if path == "" {
 		path = "/"
@@ -635,10 +668,11 @@ func ParseRequest(data []byte) (*Request, error) {
 	}
 	offset += n
 
-	if offset+int(bodyLen) > len(data) {
+	bodyLenInt := int(bodyLen)
+	if offset+bodyLenInt > len(data) {
 		return nil, errors.New("invalid request: body length exceeds buffer")
 	}
-	body := data[offset : offset+int(bodyLen)]
+	body := data[offset : offset+bodyLenInt]
 
 	req := &Request{
 		Method:  method,
