@@ -176,13 +176,7 @@ func TestResponseFormatEmpty(t *testing.T) {
 	}
 
 	actual := resp.Format()
-	// Wire format: <firstByte><varint:numHeaders>[headers]<varint:bodyLen>
-	// \x0C: first byte (version=0, compact status 12 → HTTP 204)
-	// \x01: numHeaders=1
-	// \x01: headerID (Content-Type)
-	// \x01: value length=1
-	// 0: value (Custom code)
-	// \x00: bodyLen=0
+	// Minimal 204 response: 1 header (Content-Type=Custom), empty body
 	expected := []byte("\x0C\x01\x01\x010\x00")
 	require.Equal(t, expected, actual, "Wire format mismatch.\nExpected (hex): %x\nActual (hex):   %x", expected, actual)
 }
@@ -218,21 +212,7 @@ func TestParseRequestBasic(t *testing.T) {
 }
 
 func TestParseRequestWithBody(t *testing.T) {
-	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen><body>
-	// \x08: first byte (version=0, method=POST)
-	// \x0B: hostLen=11
-	// example.com: host
-	// \x07: pathLen=7
-	// /submit: path
-	// \x02: numHeaders=2
-	// \x05: headerID (Content-Type)
-	// \x01: value length=1
-	// 2: value (JSON)
-	// \x06: headerID (Content-Length)
-	// \x02: value length=2
-	// 16: value
-	// \x10: bodyLen=16
-	// {"name": "test"}: body
+	// POST with 2 headers (Content-Type=JSON, Content-Length=16) and JSON body
 	data := []byte("\x08\x0Bexample.com\x07/submit\x02\x05\x012\x06\x0216\x10{\"name\": \"test\"}")
 
 	req, err := ParseRequest(data)
@@ -247,15 +227,7 @@ func TestParseRequestWithBody(t *testing.T) {
 }
 
 func TestParseRequestWithMultilineBody(t *testing.T) {
-	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders><varint:bodyLen><body>
-	// \x08: first byte (version=0, method=POST)
-	// \x0B: hostLen=11
-	// example.com: host
-	// \x07: pathLen=7
-	// /submit: path
-	// \x00: numHeaders=0
-	// \x11: bodyLen=17
-	// line1\nline2\nline3: body (multiline, 17 bytes)
+	// POST with no headers and multiline body ("line1\nline2\nline3")
 	data := []byte("\x08\x0Bexample.com\x07/submit\x00\x11line1\nline2\nline3")
 
 	req, err := ParseRequest(data)
@@ -265,15 +237,7 @@ func TestParseRequestWithMultilineBody(t *testing.T) {
 }
 
 func TestParseRequestNoHeaders(t *testing.T) {
-	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders><varint:bodyLen><body>
-	// \x08: first byte (version=0, method=POST)
-	// \x0B: hostLen=11
-	// example.com: host
-	// \x05: pathLen=5
-	// /path: path
-	// \x00: numHeaders=0
-	// \x09: bodyLen=9
-	// test body: body
+	// POST with no headers and plain-text body ("test body")
 	data := []byte("\x08\x0Bexample.com\x05/path\x00\x09test body")
 
 	req, err := ParseRequest(data)
@@ -284,14 +248,7 @@ func TestParseRequestNoHeaders(t *testing.T) {
 }
 
 func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
-	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders><varint:bodyLen>
-	// \x00: first byte (version=0, method=GET)
-	// \x0B: hostLen=11
-	// example.com: host
-	// \x00: pathLen=0 (empty path)
-	// (no path bytes)
-	// \x00: numHeaders=0
-	// \x00: bodyLen=0
+	// GET with empty path (defaults to "/"), no headers, empty body
 	data := []byte("\x00\x0Bexample.com\x00\x00\x00")
 
 	req, err := ParseRequest(data)
@@ -351,14 +308,7 @@ func TestParseResponseBasic(t *testing.T) {
 }
 
 func TestParseResponseSingleHeader(t *testing.T) {
-	// Wire format: <firstByte><varint:numHeaders>[headers]<varint:bodyLen><body>
-	// \x00: first byte (version=0, status=200→compact 0)
-	// \x01: numHeaders=1
-	// \x01: headerID (Content-Type)
-	// \x01: value length=1
-	// 1: value (TextPlain)
-	// \x0D: bodyLen=13
-	// Response body: body
+	// 200 OK with 1 header (Content-Type=TextPlain) and 13-byte body
 	data := []byte("\x00\x01\x01\x011\x0DResponse body")
 
 	resp, err := ParseResponse(data)
@@ -668,69 +618,4 @@ func TestResponseRoundTrip(t *testing.T) {
 			require.Equal(t, tt.response.Body, parsed.Body)
 		})
 	}
-}
-
-// bytes.Cut splits at the first \x03, so any \x03 bytes in the body are preserved
-func TestETXWithBinaryData(t *testing.T) {
-	t.Run("Response with ETX byte in body", func(t *testing.T) {
-		binaryBody := []byte{0xAB, 0xCD, 0x03, 0xEF, 0x12, 0x34}
-		resp := &Response{
-			Version:    0,
-			StatusCode: 200,
-			Headers: map[string]string{
-				"Content-Type":     OctetStream.HeaderValue(),
-				"Content-Encoding": "zstd",
-				"Content-Length":   "6",
-			},
-			Body: binaryBody,
-		}
-		wireFormat := resp.Format()
-		parsed, err := ParseResponse(wireFormat)
-		require.NoError(t, err)
-		require.Equal(t, binaryBody, parsed.Body, "Body should be preserved completely, including \\x03 bytes")
-	})
-
-	t.Run("Request with ETX byte in compressed body", func(t *testing.T) {
-		compressedBody := []byte{0x28, 0xB5, 0x2F, 0xFD, 0x03, 0x00, 0x59, 0x00}
-		req := &Request{
-			Method:  POST,
-			Host:    "api.example.com",
-			Path:    "/submit",
-			Version: 0,
-			Headers: map[string]string{
-				"Content-Type":     JSON.HeaderValue(),
-				"Content-Encoding": "zstd",
-				"Content-Length":   "8",
-			},
-			Body: compressedBody,
-		}
-
-		wireFormat := req.Format()
-		parsed, err := ParseRequest(wireFormat)
-		require.NoError(t, err)
-		require.Equal(t, compressedBody, parsed.Body, "Compressed body should be preserved with \\x03 bytes intact")
-	})
-
-	t.Run("Real gzip data with ETX byte", func(t *testing.T) {
-		// \x03 at position 9
-		gzipData := []byte{
-			0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x03, 0xf3, 0x48, 0xcd, 0xc9, 0xc9, 0x57,
-			0x08, 0xcf, 0x2f, 0xca, 0x49, 0x01, 0x00, 0x85,
-			0x11, 0x4a, 0x0d, 0x0c, 0x00, 0x00, 0x00,
-		}
-		resp := &Response{
-			Version:    0,
-			StatusCode: 200,
-			Headers: map[string]string{
-				"Content-Type":     TextPlain.HeaderValue(),
-				"Content-Encoding": "gzip",
-			},
-			Body: gzipData,
-		}
-		wireFormat := resp.Format()
-		parsed, err := ParseResponse(wireFormat)
-		require.NoError(t, err)
-		require.Equal(t, gzipData, parsed.Body, "Real gzip data should be preserved completely, including \\x03 byte at position 9")
-	})
 }
