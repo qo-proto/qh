@@ -15,15 +15,15 @@ func ReadUvarint(buf []byte, offset int) (uint64, int, error) {
 		return 0, 0, ErrVarintIncomplete
 	}
 
-	value, n := binary.Uvarint(buf[offset:])
-	if n == 0 {
+	val, n := binary.Uvarint(buf[offset:])
+	switch {
+	case n == 0:
 		return 0, 0, ErrVarintIncomplete
-	}
-	if n < 0 {
+	case n < 0:
 		return 0, 0, ErrVarintOverflow
+	default:
+		return val, n, nil
 	}
-
-	return value, n, nil
 }
 
 func AppendUvarint(buf []byte, v uint64) []byte {
