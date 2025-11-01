@@ -8,14 +8,14 @@ import (
 
 // Wire format structure Request:
 //
-//	<firstByte>         - Upper 4 bits: version (0-15), Lower 4 bits: method (0-7)
+//	<firstByte>         - Upper 2 bits: version (0-3), Middle 3 bits: method (0-7), Lower 3 bits: reserved
 //	<varint:hostLen>    - Length of host string
 //	<host>              - Host string bytes
 //	<varint:pathLen>    - Length of path string
 //	<path>              - Path string bytes
 //	<varint:numHeaders> - Number of headers
 //	[headers]           - For each header:
-//	                        <varint:headerID> - Standard header ID (1-15) or 0 for custom
+//	                        <headerID>        - Standard header ID (1-15) or 0 for custom
 //	                        <varint:valueLen> - Length of value string
 //	                        <value>           - Value string bytes
 //	                        [if headerID==0:  - Only for custom headers:
@@ -79,10 +79,10 @@ func TestRequestFormat(t *testing.T) {
 
 // Wire format structure Response:
 //
-//	<firstByte>         - Upper 4 bits: version (0-15), Lower 4 bits: compact status code (see protocol docs)
+//	<firstByte>         - Upper 2 bits: version (0-3), Lower 6 bits: compact status code (0-63)
 //	<varint:numHeaders> - Number of headers
 //	[headers]           - For each header:
-//	                        <varint:headerID> - Standard header ID (1-15) or 0 for custom
+//	                        <headerID>        - Standard header ID (1-19) or 0 for custom
 //	                        <varint:valueLen> - Length of value string
 //	                        <value>           - Value string bytes
 //	                        [if headerID==0:  - Only for custom headers:
