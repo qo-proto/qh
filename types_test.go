@@ -6,6 +6,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Wire format structure Request:
+//
+//	<firstByte>         - Upper 4 bits: version (0-15), Lower 4 bits: method (0-7)
+//	<varint:hostLen>    - Length of host string
+//	<host>              - Host string bytes
+//	<varint:pathLen>    - Length of path string
+//	<path>              - Path string bytes
+//	<varint:numHeaders> - Number of headers
+//	[headers]           - For each header:
+//	                        <varint:headerID> - Standard header ID (1-15) or 0 for custom
+//	                        <varint:valueLen> - Length of value string
+//	                        <value>           - Value string bytes
+//	                        [if headerID==0:  - Only for custom headers:
+//	                          <varint:nameLen>  - Length of custom header name
+//	                          <name>]           - Custom header name bytes
+//	<varint:bodyLen>    - Length of body
+//	<body>              - Body bytes
 func TestRequestFormat(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -21,14 +38,6 @@ func TestRequestFormat(t *testing.T) {
 				Version: 0,
 				Headers: map[string]string{},
 			},
-			// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders><varint:bodyLen>
-			// \x00: first byte (version=0, method=GET)
-			// \x0B: hostLen=11 (varint)
-			// example.com: host
-			// \x06: pathLen=6 (varint)
-			// /hello: path
-			// \x00: numHeaders=0 (varint)
-			// \x00: bodyLen=0 (varint)
 			expected: []byte("\x00\x0Bexample.com\x06/hello\x00\x00"),
 		},
 		{
@@ -42,17 +51,6 @@ func TestRequestFormat(t *testing.T) {
 					"Accept": JSON.HeaderValue(),
 				},
 			},
-			// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen>
-			// \x00: first byte (version=0, method=GET)
-			// \x0B: hostLen=11
-			// example.com: host
-			// \x04: pathLen=4
-			// /api: path
-			// \x01: numHeaders=1
-			// \x01: headerID (Accept)
-			// \x01: value length=1
-			// 2: value (JSON code)
-			// \x00: bodyLen=0
 			expected: []byte("\x00\x0Bexample.com\x04/api\x01\x01\x012\x00"),
 		},
 		{
@@ -67,7 +65,6 @@ func TestRequestFormat(t *testing.T) {
 				},
 				Body: []byte(`{"key":"val"}`),
 			},
-			// Format: <firstByte><hostLen><host><pathLen><path><numHeaders>[headers]<bodyLen><body>
 			expected: []byte("\x08\x0Fapi.example.com\x07/submit\x01\x05\x012\x0D{\"key\":\"val\"}"),
 		},
 	}
@@ -80,6 +77,19 @@ func TestRequestFormat(t *testing.T) {
 	}
 }
 
+// Wire format structure Response:
+//
+//	<firstByte>         - Upper 4 bits: version (0-15), Lower 4 bits: compact status code (see protocol docs)
+//	<varint:numHeaders> - Number of headers
+//	[headers]           - For each header:
+//	                        <varint:headerID> - Standard header ID (1-15) or 0 for custom
+//	                        <varint:valueLen> - Length of value string
+//	                        <value>           - Value string bytes
+//	                        [if headerID==0:  - Only for custom headers:
+//	                          <varint:nameLen>  - Length of custom header name
+//	                          <name>]           - Custom header name bytes
+//	<varint:bodyLen>    - Length of body
+//	<body>              - Body bytes
 func TestResponseFormat(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -94,7 +104,6 @@ func TestResponseFormat(t *testing.T) {
 				Headers:    map[string]string{},
 				Body:       []byte("OK"),
 			},
-			// Wire format: <firstByte><numHeaders><bodyLen><body>
 			expected: []byte("\x00\x00\x02OK"),
 		},
 		{
@@ -107,14 +116,6 @@ func TestResponseFormat(t *testing.T) {
 				},
 				Body: []byte("Hello"),
 			},
-			// Wire format: <firstByte><varint:numHeaders>[headers]<varint:bodyLen><body>
-			// \x00: first byte (version=0, status=200→compact 0)
-			// \x01: numHeaders=1
-			// \x01: headerID (Content-Type, which is HeaderRespContentType)
-			// \x01: value length=1
-			// 1: value (TextPlain code)
-			// \x05: bodyLen=5
-			// Hello: body
 			expected: []byte("\x00\x01\x01\x011\x05Hello"),
 		},
 		{
@@ -127,14 +128,6 @@ func TestResponseFormat(t *testing.T) {
 				},
 				Body: []byte("Not Found"),
 			},
-			// Wire format: <firstByte><varint:numHeaders>[headers]<varint:bodyLen><body>
-			// \x01: first byte (version=0, compact status 1 → HTTP 404)
-			// \x01: numHeaders=1
-			// \x01: headerID (Content-Type)
-			// \x01: value length=1
-			// 1: value (TextPlain code)
-			// \x09: bodyLen=9
-			// Not Found: body
 			expected: []byte("\x01\x01\x01\x011\x09Not Found"),
 		},
 		{
@@ -147,7 +140,6 @@ func TestResponseFormat(t *testing.T) {
 				},
 				Body: []byte{},
 			},
-			// Format: <firstByte><numHeaders>[headers]<bodyLen>
 			expected: []byte("\x0C\x01\x01\x010\x00"),
 		},
 	}
@@ -159,8 +151,6 @@ func TestResponseFormat(t *testing.T) {
 		})
 	}
 }
-
-
 
 func TestParseRequestBasic(t *testing.T) {
 	data := []byte("\x00\x0Bexample.com\x0A/hello.txt\x02\x01\x011\x00\x0FAccept-Language\x0Een-US,en;q=0.5\x00")
@@ -216,7 +206,7 @@ func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, GET, req.Method)
 	require.Equal(t, "example.com", req.Host)
-	require.Equal(t, "/", req.Path) // Empty path should default to "/"
+	require.Equal(t, "/", req.Path)
 	require.Equal(t, uint8(0), req.Version)
 	require.Empty(t, req.Headers)
 	require.Empty(t, req.Body)
@@ -348,7 +338,6 @@ func TestContentTypeHeaderValue(t *testing.T) {
 	}
 }
 
-// Round-trip tests verify that Format() and Parse() are consistent
 func assertRequestEqual(t *testing.T, expected, actual *Request) {
 	t.Helper()
 	require.Equal(t, expected.Method, actual.Method)
