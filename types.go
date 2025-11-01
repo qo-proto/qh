@@ -544,7 +544,7 @@ func ParseResponse(data []byte) (*Response, error) {
 	version := firstByte >> 6               // Extract upper 2 bits
 	compactStatus := firstByte & 0b00111111 // Extract lower 6 bits
 
-	if version > 3 { // 2 bits can hold values 0-3
+	if version > 3 {
 		return nil, fmt.Errorf("invalid version: %d", version)
 	}
 
@@ -607,6 +607,10 @@ func ParseRequest(data []byte) (*Request, error) {
 
 	version := firstByte >> 6                       // Extract upper 2 bits
 	method := Method((firstByte >> 3) & 0b00000111) // Extract middle 3 bits
+
+	if version > 3 {
+		return nil, fmt.Errorf("invalid version: %d", version)
+	}
 
 	if method < GET || method > HEAD { // valid methods are 0-5
 		return nil, fmt.Errorf("invalid method value: %d", method)
