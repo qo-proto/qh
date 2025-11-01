@@ -65,7 +65,7 @@ func TestRequestFormat(t *testing.T) {
 				},
 				Body: []byte(`{"key":"val"}`),
 			},
-			expected: []byte("\x08\x0Fapi.example.com\x07/submit\x01\x05\x012\x0D{\"key\":\"val\"}"),
+			expected: []byte("\x08\x0Fapi.example.com\x07/submit\x01\x04\x012\x0D{\"key\":\"val\"}"),
 		},
 	}
 
@@ -167,7 +167,7 @@ func TestParseRequestBasic(t *testing.T) {
 }
 
 func TestParseRequestWithBody(t *testing.T) {
-	data := []byte("\x08\x0Bexample.com\x07/submit\x02\x05\x012\x06\x0216\x10{\"name\": \"test\"}")
+	data := []byte("\x08\x0Bexample.com\x07/submit\x02\x04\x012\x05\x0216\x10{\"name\": \"test\"}")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -232,7 +232,7 @@ func TestParseRequestErrors(t *testing.T) {
 }
 
 func TestParseResponseBasic(t *testing.T) {
-	data := []byte("\x00\x03\x01\x011\x02\x0213\x06\x0A1758784800\x0DHello, world!")
+	data := []byte("\x00\x03\x01\x011\x02\x0213\x05\x0A1758784800\x0DHello, world!")
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)

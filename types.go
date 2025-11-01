@@ -91,41 +91,39 @@ func AcceptHeader(types ...ContentType) string {
 const (
 	HeaderCustom byte = 0
 
-	HeaderReqAccept         byte = 1
-	HeaderReqAcceptEncoding byte = 2
-	// ID 3 is reserved (conflicts with ETX separator \x03)
-	HeaderReqAcceptLanguage  byte = 4
-	HeaderReqContentType     byte = 5
-	HeaderReqContentLength   byte = 6
-	HeaderReqAuthorization   byte = 7
-	HeaderReqCookie          byte = 8
-	HeaderReqUserAgent       byte = 9
-	HeaderReqReferer         byte = 10
-	HeaderReqOrigin          byte = 11
-	HeaderReqIfNoneMatch     byte = 12
-	HeaderReqIfModifiedSince byte = 13
-	HeaderReqRange           byte = 14
-	HeaderReqXPayment        byte = 15
+	HeaderReqAccept          byte = 1
+	HeaderReqAcceptEncoding  byte = 2
+	HeaderReqAcceptLanguage  byte = 3
+	HeaderReqContentType     byte = 4
+	HeaderReqContentLength   byte = 5
+	HeaderReqAuthorization   byte = 6
+	HeaderReqCookie          byte = 7
+	HeaderReqUserAgent       byte = 8
+	HeaderReqReferer         byte = 9
+	HeaderReqOrigin          byte = 10
+	HeaderReqIfNoneMatch     byte = 11
+	HeaderReqIfModifiedSince byte = 12
+	HeaderReqRange           byte = 13
+	HeaderReqXPayment        byte = 14
 
-	HeaderRespContentType   byte = 1
-	HeaderRespContentLength byte = 2
-	// ID 3 is reserved (conflicts with ETX separator \x03)
-	HeaderRespCacheControl              byte = 4
-	HeaderRespContentEncoding           byte = 5
-	HeaderRespDate                      byte = 6
-	HeaderRespETag                      byte = 7
-	HeaderRespExpires                   byte = 8
-	HeaderRespLastModified              byte = 9
-	HeaderRespAccessControlAllowOrigin  byte = 10
-	HeaderRespAccessControlAllowMethods byte = 11
-	HeaderRespAccessControlAllowHeaders byte = 12
-	HeaderRespSetCookie                 byte = 13
-	HeaderRespLocation                  byte = 14
-	HeaderRespContentSecurityPolicy     byte = 15
-	HeaderRespXContentTypeOptions       byte = 16
-	HeaderRespXFrameOptions             byte = 17
-	HeaderRespVary                      byte = 18
-	HeaderRespXPaymentResponse          byte = 19
+	HeaderRespContentType               byte = 1
+	HeaderRespContentLength             byte = 2
+	HeaderRespCacheControl              byte = 3
+	HeaderRespContentEncoding           byte = 4
+	HeaderRespDate                      byte = 5
+	HeaderRespETag                      byte = 6
+	HeaderRespExpires                   byte = 7
+	HeaderRespLastModified              byte = 8
+	HeaderRespAccessControlAllowOrigin  byte = 9
+	HeaderRespAccessControlAllowMethods byte = 10
+	HeaderRespAccessControlAllowHeaders byte = 11
+	HeaderRespSetCookie                 byte = 12
+	HeaderRespLocation                  byte = 13
+	HeaderRespContentSecurityPolicy     byte = 14
+	HeaderRespXContentTypeOptions       byte = 15
+	HeaderRespXFrameOptions             byte = 16
+	HeaderRespVary                      byte = 17
+	HeaderRespXPaymentResponse          byte = 18
 )
 
 var requestHeaderTable = map[string]byte{
