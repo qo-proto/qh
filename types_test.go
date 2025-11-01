@@ -55,6 +55,21 @@ func TestRequestFormat(t *testing.T) {
 			// \x00: bodyLen=0
 			expected: []byte("\x00\x0Bexample.com\x04/api\x01\x01\x012\x00"),
 		},
+		{
+			name: "POST with body",
+			request: &Request{
+				Method:  POST,
+				Host:    "api.example.com",
+				Path:    "/submit",
+				Version: 0,
+				Headers: map[string]string{
+					"Content-Type": JSON.HeaderValue(),
+				},
+				Body: []byte(`{"key":"val"}`),
+			},
+			// Format: <firstByte><hostLen><host><pathLen><path><numHeaders>[headers]<bodyLen><body>
+			expected: []byte("\x08\x0Fapi.example.com\x07/submit\x01\x05\x012\x0D{\"key\":\"val\"}"),
+		},
 	}
 
 	for _, tt := range tests {
@@ -63,35 +78,6 @@ func TestRequestFormat(t *testing.T) {
 			require.Equal(t, tt.expected, actual, "Wire format mismatch.\nExpected (hex): %x\nActual (hex):   %x", tt.expected, actual)
 		})
 	}
-}
-
-func TestRequestFormatWithBody(t *testing.T) {
-	req := &Request{
-		Method:  POST,
-		Host:    "api.example.com",
-		Path:    "/submit",
-		Version: 0,
-		Headers: map[string]string{
-			"Content-Type": JSON.HeaderValue(),
-		},
-		Body: []byte(`{"key":"val"}`),
-	}
-
-	actual := req.Format()
-	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen><body>
-	// \x08: first byte (version=0, method=POST=1, bits: 00 001 000)
-	// \x0F: hostLen=15
-	// api.example.com: host
-	// \x07: pathLen=7
-	// /submit: path
-	// \x01: numHeaders=1
-	// \x05: headerID (Content-Type, which is HeaderReqContentType)
-	// \x01: value length=1
-	// 2: value (JSON code)
-	// \x0D: bodyLen=13
-	// {"key":"val"}: body
-	expected := []byte("\x08\x0Fapi.example.com\x07/submit\x01\x05\x012\x0D{\"key\":\"val\"}")
-	require.Equal(t, expected, actual, "Wire format mismatch.\nExpected (hex): %x\nActual (hex):   %x", expected, actual)
 }
 
 func TestResponseFormat(t *testing.T) {
@@ -108,11 +94,7 @@ func TestResponseFormat(t *testing.T) {
 				Headers:    map[string]string{},
 				Body:       []byte("OK"),
 			},
-			// Wire format: <firstByte><varint:numHeaders><varint:bodyLen><body>
-			// \x00: first byte (version=0, status=200→compact 0)
-			// \x00: numHeaders=0
-			// \x02: bodyLen=2
-			// OK: body
+			// Wire format: <firstByte><numHeaders><bodyLen><body>
 			expected: []byte("\x00\x00\x02OK"),
 		},
 		{
@@ -155,6 +137,19 @@ func TestResponseFormat(t *testing.T) {
 			// Not Found: body
 			expected: []byte("\x01\x01\x01\x011\x09Not Found"),
 		},
+		{
+			name: "204 No Content empty",
+			response: &Response{
+				Version:    0,
+				StatusCode: 204,
+				Headers: map[string]string{
+					"Content-Type": Custom.HeaderValue(),
+				},
+				Body: []byte{},
+			},
+			// Format: <firstByte><numHeaders>[headers]<bodyLen>
+			expected: []byte("\x0C\x01\x01\x010\x00"),
+		},
 	}
 
 	for _, tt := range tests {
@@ -165,39 +160,9 @@ func TestResponseFormat(t *testing.T) {
 	}
 }
 
-func TestResponseFormatEmpty(t *testing.T) {
-	resp := &Response{
-		Version:    0,
-		StatusCode: 204,
-		Headers: map[string]string{
-			"Content-Type": Custom.HeaderValue(),
-		},
-		Body: []byte{},
-	}
 
-	actual := resp.Format()
-	// Minimal 204 response: 1 header (Content-Type=Custom), empty body
-	expected := []byte("\x0C\x01\x01\x010\x00")
-	require.Equal(t, expected, actual, "Wire format mismatch.\nExpected (hex): %x\nActual (hex):   %x", expected, actual)
-}
 
 func TestParseRequestBasic(t *testing.T) {
-	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen>
-	// \x00: first byte (version=0, method=GET)
-	// \x0B: hostLen=11
-	// example.com: host
-	// \x0A: pathLen=10
-	// /hello.txt: path
-	// \x02: numHeaders=2
-	// \x01: headerID (Accept)
-	// \x01: value length=1
-	// 1: value
-	// \x00: headerID=0 (custom header)
-	// \x0F: key length=15
-	// Accept-Language: key
-	// \x0E: value length=14
-	// en-US,en;q=0.5: value (14 bytes)
-	// \x00: bodyLen=0
 	data := []byte("\x00\x0Bexample.com\x0A/hello.txt\x02\x01\x011\x00\x0FAccept-Language\x0Een-US,en;q=0.5\x00")
 
 	req, err := ParseRequest(data)
@@ -212,7 +177,6 @@ func TestParseRequestBasic(t *testing.T) {
 }
 
 func TestParseRequestWithBody(t *testing.T) {
-	// POST with 2 headers (Content-Type=JSON, Content-Length=16) and JSON body
 	data := []byte("\x08\x0Bexample.com\x07/submit\x02\x05\x012\x06\x0216\x10{\"name\": \"test\"}")
 
 	req, err := ParseRequest(data)
@@ -227,7 +191,6 @@ func TestParseRequestWithBody(t *testing.T) {
 }
 
 func TestParseRequestWithMultilineBody(t *testing.T) {
-	// POST with no headers and multiline body ("line1\nline2\nline3")
 	data := []byte("\x08\x0Bexample.com\x07/submit\x00\x11line1\nline2\nline3")
 
 	req, err := ParseRequest(data)
@@ -237,7 +200,6 @@ func TestParseRequestWithMultilineBody(t *testing.T) {
 }
 
 func TestParseRequestNoHeaders(t *testing.T) {
-	// POST with no headers and plain-text body ("test body")
 	data := []byte("\x08\x0Bexample.com\x05/path\x00\x09test body")
 
 	req, err := ParseRequest(data)
@@ -248,7 +210,6 @@ func TestParseRequestNoHeaders(t *testing.T) {
 }
 
 func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
-	// GET with empty path (defaults to "/"), no headers, empty body
 	data := []byte("\x00\x0Bexample.com\x00\x00\x00")
 
 	req, err := ParseRequest(data)
@@ -281,20 +242,6 @@ func TestParseRequestErrors(t *testing.T) {
 }
 
 func TestParseResponseBasic(t *testing.T) {
-	// Wire format: <firstByte><varint:numHeaders>[headers]<varint:bodyLen><body>
-	// \x00: first byte (version=0, status=200→compact 0)
-	// \x03: numHeaders=3
-	// \x01: headerID (Content-Type)
-	// \x01: value length=1
-	// 1: value (TextPlain)
-	// \x02: headerID (Content-Length)
-	// \x02: value length=2
-	// 13: value
-	// \x06: headerID (Date)
-	// \x0A: value length=10
-	// 1758784800: value
-	// \x0D: bodyLen=13
-	// Hello, world!: body
 	data := []byte("\x00\x03\x01\x011\x02\x0213\x06\x0A1758784800\x0DHello, world!")
 
 	resp, err := ParseResponse(data)
@@ -308,7 +255,6 @@ func TestParseResponseBasic(t *testing.T) {
 }
 
 func TestParseResponseSingleHeader(t *testing.T) {
-	// 200 OK with 1 header (Content-Type=TextPlain) and 13-byte body
 	data := []byte("\x00\x01\x01\x011\x0DResponse body")
 
 	resp, err := ParseResponse(data)
@@ -403,6 +349,16 @@ func TestContentTypeHeaderValue(t *testing.T) {
 }
 
 // Round-trip tests verify that Format() and Parse() are consistent
+func assertRequestEqual(t *testing.T, expected, actual *Request) {
+	t.Helper()
+	require.Equal(t, expected.Method, actual.Method)
+	require.Equal(t, expected.Host, actual.Host)
+	require.Equal(t, expected.Path, actual.Path)
+	require.Equal(t, expected.Version, actual.Version)
+	require.Equal(t, expected.Headers, actual.Headers)
+	require.Equal(t, expected.Body, actual.Body)
+}
+
 func TestRequestRoundTrip(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -524,14 +480,17 @@ func TestRequestRoundTrip(t *testing.T) {
 			formatted := tt.request.Format()
 			parsed, err := ParseRequest(formatted)
 			require.NoError(t, err)
-			require.Equal(t, tt.request.Method, parsed.Method)
-			require.Equal(t, tt.request.Host, parsed.Host)
-			require.Equal(t, tt.request.Path, parsed.Path)
-			require.Equal(t, tt.request.Version, parsed.Version)
-			require.Equal(t, tt.request.Headers, parsed.Headers)
-			require.Equal(t, tt.request.Body, parsed.Body)
+			assertRequestEqual(t, tt.request, parsed)
 		})
 	}
+}
+
+func assertResponseEqual(t *testing.T, expected, actual *Response) {
+	t.Helper()
+	require.Equal(t, expected.Version, actual.Version)
+	require.Equal(t, expected.StatusCode, actual.StatusCode)
+	require.Equal(t, expected.Headers, actual.Headers)
+	require.Equal(t, expected.Body, actual.Body)
 }
 
 func TestResponseRoundTrip(t *testing.T) {
@@ -612,10 +571,7 @@ func TestResponseRoundTrip(t *testing.T) {
 			formatted := tt.response.Format()
 			parsed, err := ParseResponse(formatted)
 			require.NoError(t, err)
-			require.Equal(t, tt.response.Version, parsed.Version)
-			require.Equal(t, tt.response.StatusCode, parsed.StatusCode)
-			require.Equal(t, tt.response.Headers, parsed.Headers)
-			require.Equal(t, tt.response.Body, parsed.Body)
+			assertResponseEqual(t, tt.response, parsed)
 		})
 	}
 }
