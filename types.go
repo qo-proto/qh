@@ -378,12 +378,18 @@ func checkField(data []byte, offset *int, fieldName string) (bool, error) {
 		return false, fmt.Errorf("reading %s length: %w", fieldName, err)
 	}
 
-	if length > uint64(len(data)) {
+	const maxInt = int(^uint(0) >> 1)
+	if length > uint64(maxInt) {
 		return false, fmt.Errorf("%s length too large: %d", fieldName, length)
 	}
 
-	*offset += n
 	lengthInt := int(length)
+
+	if *offset > maxInt-lengthInt {
+		return false, fmt.Errorf("%s offset overflow", fieldName)
+	}
+
+	*offset += n
 	if *offset+lengthInt > len(data) {
 		return false, nil // Need more data
 	}
