@@ -1,7 +1,6 @@
 package qh
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -198,139 +197,156 @@ type Response struct {
 	Body       []byte
 }
 
-func validateHeaderValue(value string) error {
-	for i := range len(value) {
-		b := value[i]
-		if b == '\x00' {
-			return errors.New("header value contains null byte (\\x00) which is reserved as separator")
-		}
-		if b == '\x03' {
-			return errors.New("header value contains ETX byte (\\x03) which is reserved as headers/body separator")
-		}
-	}
-	return nil
-}
-
-func validateHeaderKey(key string) error {
-	for i := range len(key) {
-		b := key[i]
-		if b == '\x00' {
-			return errors.New("header key contains null byte (\\x00) which is reserved as separator")
-		}
-		if b == '\x03' {
-			return errors.New("header key contains ETX byte (\\x03) which is reserved as headers/body separator")
-		}
-	}
-	return nil
-}
-
-func (r *Request) Validate() error {
-	if err := validateHeaderValue(r.Host); err != nil {
-		return fmt.Errorf("invalid host: %w", err)
-	}
-	if err := validateHeaderValue(r.Path); err != nil {
-		return fmt.Errorf("invalid path: %w", err)
-	}
-
-	// Validate all headers
-	for key, value := range r.Headers {
-		// only check for custom headers (not in predefined table)
-		if _, exists := requestHeaderTable[key]; !exists {
-			if err := validateHeaderKey(key); err != nil {
-				return fmt.Errorf("invalid header key %q: %w", key, err)
-			}
-		}
-		if err := validateHeaderValue(value); err != nil {
-			return fmt.Errorf("invalid header value for %q: %w", key, err)
-		}
-	}
-
-	return nil
-}
-
-// Note: Pre-allocation was benchmarked and is not worth it
-// format QH request into wire format
-// ensure Validate() is called first to guarantee protocol compliance
+// Format encodes a QH request into the wire format using varint length prefixes.
+// Wire format: <1-byte-method><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen><body>
 func (r *Request) Format() []byte {
 	// The first byte contains: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
 	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
 	firstByte := (r.Version << 6) | (byte(r.Method) << 3)
-
-	// Build message: first byte + headers + ETX + body
 	result := []byte{firstByte}
+	result = AppendUvarint(result, uint64(len(r.Host)))
 	result = append(result, []byte(r.Host)...)
-	result = append(result, '\x00')
+	result = AppendUvarint(result, uint64(len(r.Path)))
 	result = append(result, []byte(r.Path)...)
-	result = append(result, '\x00')
+	result = AppendUvarint(result, uint64(len(r.Headers)))
 
+	// Headers: each header has format based on header ID
+	// TODO: Format 1 not implemented yet
+	// Format 1 (complete key-value pairs): <headerID>
+	// Format 2 (header name): <headerID><varint:valueLen><value>
+	// Format 3 (custom header 0x00): <0x00><varint:keyLen><key><varint:valueLen><value>
 	for key, value := range r.Headers {
 		if headerID, exists := requestHeaderTable[key]; exists {
+			// Format 2: Known header name, encode ID + value
 			result = append(result, headerID)
-			result = append(result, '\x00')
+			result = AppendUvarint(result, uint64(len(value)))
 			result = append(result, []byte(value)...)
-			result = append(result, '\x00')
 		} else {
+			// Format 3: Custom header, encode 0x00 + key + value
 			result = append(result, HeaderCustom)
-			result = append(result, '\x00')
+			result = AppendUvarint(result, uint64(len(key)))
 			result = append(result, []byte(key)...)
-			result = append(result, '\x00')
+			result = AppendUvarint(result, uint64(len(value)))
 			result = append(result, []byte(value)...)
-			result = append(result, '\x00')
 		}
 	}
 
-	result = append(result, '\x03')
+	result = AppendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
+
 	return result
 }
 
-// Validate checks that the response doesn't contain invalid protocol control characters
-func (r *Response) Validate() error {
-	// Validate all headers
-	for key, value := range r.Headers {
-		// only check for custom headers (not in predefined table)
-		if _, exists := responseHeaderTable[key]; !exists {
-			if err := validateHeaderKey(key); err != nil {
-				return fmt.Errorf("invalid header key %q: %w", key, err)
-			}
-		}
-		if err := validateHeaderValue(value); err != nil {
-			return fmt.Errorf("invalid header value for %q: %w", key, err)
-		}
-	}
-
-	return nil
-}
-
-// format QH response into wire format
-// ensure Validate() is called first to guarantee protocol compliance
+// Format encodes a QH response into the wire format using varint length prefixes.
+// Wire format: <1-byte-status><varint:numHeaders>[headers]<varint:bodyLen><body>
 func (r *Response) Format() []byte {
 	compactStatus := EncodeStatusCode(r.StatusCode)
 	// First byte: Version (upper 2 bits) + Status Code (lower 6 bits)
 	firstByte := (r.Version << 6) | compactStatus
-
-	// Build message: first byte + headers + ETX + body
 	result := []byte{firstByte}
+	result = AppendUvarint(result, uint64(len(r.Headers)))
 
+	// Headers: each header has format based on header ID
+	// TODO: Format 1 is not implemented yet
+	// Format 1 (complete key-value pairs): <headerID>
+	// Format 2 (header name): <headerID><varint:valueLen><value>
+	// Format 3 (custom header 0x00): <0x00><varint:keyLen><key><varint:valueLen><value>
 	for key, value := range r.Headers {
 		if headerID, exists := responseHeaderTable[key]; exists {
+			// Format 2: Known header name, encode ID + value
 			result = append(result, headerID)
-			result = append(result, '\x00')
+			result = AppendUvarint(result, uint64(len(value)))
 			result = append(result, []byte(value)...)
-			result = append(result, '\x00')
 		} else {
+			// Format 3: Custom header, encode 0x00 + key + value
 			result = append(result, HeaderCustom)
-			result = append(result, '\x00')
+			result = AppendUvarint(result, uint64(len(key)))
 			result = append(result, []byte(key)...)
-			result = append(result, '\x00')
+			result = AppendUvarint(result, uint64(len(value)))
 			result = append(result, []byte(value)...)
-			result = append(result, '\x00')
 		}
 	}
-
-	result = append(result, '\x03')
+	result = AppendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
+
 	return result
+}
+
+// parseHeaders is a helper that parses headers from the wire format.
+// It reads numHeaders headers from data starting at offset, using the provided headerNames lookup table.
+// Returns the parsed headers map and the new offset after reading all headers.
+func parseHeaders(data []byte, offset int, numHeaders uint64, headerNames map[byte]string) (map[string]string, int, error) {
+	headers := make(map[string]string)
+
+	for i := uint64(0); i < numHeaders; i++ {
+		var key, value string
+
+		if offset >= len(data) {
+			return nil, offset, errors.New("unexpected end while reading headers")
+		}
+
+		headerID := data[offset]
+		offset++
+
+		if headerID == HeaderCustom {
+			// Format 3: Custom header <0x00><varint:keyLen><key><varint:valueLen><value>
+			keyLen, n, err := ReadUvarint(data, offset)
+			if err != nil {
+				return nil, offset, fmt.Errorf("failed to read custom header key length: %w", err)
+			}
+			offset += n
+
+			if offset+int(keyLen) > len(data) {
+				return nil, offset, errors.New("custom header key length exceeds buffer")
+			}
+			key = string(data[offset : offset+int(keyLen)])
+			offset += int(keyLen)
+
+			valueLen, n, err := ReadUvarint(data, offset)
+			if err != nil {
+				return nil, offset, fmt.Errorf("failed to read custom header value length: %w", err)
+			}
+			offset += n
+
+			if offset+int(valueLen) > len(data) {
+				return nil, offset, errors.New("custom header value length exceeds buffer")
+			}
+			value = string(data[offset : offset+int(valueLen)])
+			offset += int(valueLen)
+		} else if name, exists := headerNames[headerID]; exists {
+			// Format 2: Known header <headerID><varint:valueLen><value>
+			key = name
+
+			valueLen, n, err := ReadUvarint(data, offset)
+			if err != nil {
+				return nil, offset, fmt.Errorf("failed to read header value length: %w", err)
+			}
+			offset += n
+
+			if offset+int(valueLen) > len(data) {
+				return nil, offset, errors.New("header value length exceeds buffer")
+			}
+			value = string(data[offset : offset+int(valueLen)])
+			offset += int(valueLen)
+		} else {
+			// Unknown header ID: skip value (forward compatibility)
+			valueLen, n, err := ReadUvarint(data, offset)
+			if err != nil {
+				return nil, offset, fmt.Errorf("failed to read unknown header value length: %w", err)
+			}
+			offset += n
+
+			if offset+int(valueLen) > len(data) {
+				return nil, offset, errors.New("unknown header value length exceeds buffer")
+			}
+			offset += int(valueLen)
+			continue
+		}
+
+		headers[key] = value
+	}
+
+	return headers, offset, nil
 }
 
 func IsRequestComplete(data []byte) (bool, error) {
@@ -338,104 +354,79 @@ func IsRequestComplete(data []byte) (bool, error) {
 		return false, nil
 	}
 
-	allHeaders, bodyBytes, found := bytes.Cut(data, []byte{'\x03'})
-	if !found {
-		return false, nil
+	offset := 1 // Skip first byte (version + method)
+
+	// Helper function to reduce duplication
+	checkField := func(fieldName string) (uint64, bool, error) {
+		length, n, err := ReadUvarint(data, offset)
+		if err == ErrVarintIncomplete {
+			return 0, false, nil
+		}
+		if err != nil {
+			return 0, false, fmt.Errorf("reading %s length: %w", fieldName, err)
+		}
+
+		// Prevent integer overflow and DoS
+		if length > uint64(len(data)) {
+			return 0, false, fmt.Errorf("%s length too large: %d", fieldName, length)
+		}
+
+		offset += n
+		if offset+int(length) > len(data) {
+			return 0, false, nil // Need more data
+		}
+
+		offset += int(length)
+		return length, true, nil
 	}
 
-	headerBytes := allHeaders[1:]
+	// Read host
+	if _, complete, err := checkField("host"); !complete {
+		return false, err
+	}
 
-	// ensure we have at least host\x00path\x00 (minimum 2 null bytes)
-	// NOTE: This is faster than parsing the full header structure as before
-	offset := 0
-	nullCount := 0
-	for offset < len(headerBytes) {
-		if headerBytes[offset] == '\x00' {
-			nullCount++
-			if nullCount >= 2 {
-				break
+	// Read path
+	if _, complete, err := checkField("path"); !complete {
+		return false, err
+	}
+
+	// Read headers count
+	numHeaders, n, err := ReadUvarint(data, offset)
+	if err == ErrVarintIncomplete {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("reading header count: %w", err)
+	}
+	offset += n
+
+	// Process headers
+	for i := uint64(0); i < numHeaders; i++ {
+		if offset >= len(data) {
+			return false, nil
+		}
+
+		headerID := data[offset]
+		offset++
+
+		// Custom header has key + value, others just value
+		if headerID == HeaderCustom {
+			if _, complete, err := checkField("header key"); !complete {
+				return false, err
 			}
 		}
-		offset++
-	}
-	if nullCount < 2 {
-		return false, nil
-	}
 
-	headers := parseRequestHeaders(headerBytes)
-
-	if contentLengthStr, ok := headers["Content-Length"]; ok {
-		expectedLen, err := strconv.Atoi(contentLengthStr)
-		if err != nil {
-			return false, fmt.Errorf("invalid Content-Length: %s", contentLengthStr)
+		if _, complete, err := checkField("header value"); !complete {
+			return false, err
 		}
-		return len(bodyBytes) >= expectedLen, nil
+	}
+
+	// Read body
+	if _, complete, err := checkField("body"); !complete {
+		return false, err
 	}
 
 	return true, nil
-}
-
-func parseRequestHeaders(headerBytes []byte) map[string]string {
-	headers := make(map[string]string)
-	offset := 0
-
-	// Skip host field (already parsed by ParseRequest)
-	for offset < len(headerBytes) && headerBytes[offset] != 0 {
-		offset++
-	}
-	offset++ // Skip \x00 separator
-
-	// Skip path field (already parsed by ParseRequest)
-	for offset < len(headerBytes) && headerBytes[offset] != 0 {
-		offset++
-	}
-	offset++ // Skip \x00 separator
-
-	// Parse headers: each is <header-id>\x00<value>\x00
-	// Custom headers: \x00\x00<key-name>\x00<value>\x00
-	for offset < len(headerBytes) {
-		headerID := headerBytes[offset]
-		offset++
-
-		// Expect separator after header ID
-		if offset >= len(headerBytes) || headerBytes[offset] != 0 {
-			break
-		}
-		offset++ // Skip \x00 separator
-
-		var key string
-		if headerID == HeaderCustom {
-			// Custom header: read key name
-			keyStart := offset
-			for offset < len(headerBytes) && headerBytes[offset] != 0 {
-				offset++
-			}
-			key = string(headerBytes[keyStart:offset])
-			offset++ // Skip \x00 separator
-		} else if name, exists := requestHeaderNames[headerID]; exists {
-			// Known header: look up name from ID
-			key = name
-		} else {
-			// Unknown header ID: skip value and continue
-			for offset < len(headerBytes) && headerBytes[offset] != 0 {
-				offset++
-			}
-			offset++ // Skip \x00 separator
-			continue
-		}
-
-		// Read header value
-		valueStart := offset
-		for offset < len(headerBytes) && headerBytes[offset] != 0 {
-			offset++
-		}
-		value := string(headerBytes[valueStart:offset])
-		offset++ // Skip \x00 separator
-
-		headers[key] = value
-	}
-
-	return headers
 }
 
 func IsResponseComplete(data []byte) (bool, error) {
@@ -443,75 +434,69 @@ func IsResponseComplete(data []byte) (bool, error) {
 		return false, nil
 	}
 
-	allHeaders, bodyBytes, found := bytes.Cut(data, []byte{'\x03'})
-	if !found {
-		return false, nil
+	offset := 1 // Skip first byte (version + status)
+
+	// Helper function to reduce duplication
+	checkField := func(fieldName string) (uint64, bool, error) {
+		length, n, err := ReadUvarint(data, offset)
+		if err == ErrVarintIncomplete {
+			return 0, false, nil
+		}
+		if err != nil {
+			return 0, false, fmt.Errorf("reading %s length: %w", fieldName, err)
+		}
+
+		// Prevent integer overflow and DoS
+		if length > uint64(len(data)) {
+			return 0, false, fmt.Errorf("%s length too large: %d", fieldName, length)
+		}
+
+		offset += n
+		if offset+int(length) > len(data) {
+			return 0, false, nil // Need more data
+		}
+
+		offset += int(length)
+		return length, true, nil
 	}
 
-	headerBytes := allHeaders[1:]
+	// Read headers count
+	numHeaders, n, err := ReadUvarint(data, offset)
+	if err == ErrVarintIncomplete {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("reading header count: %w", err)
+	}
+	offset += n
 
-	headers := parseResponseHeaders(headerBytes)
-
-	if contentLengthStr, ok := headers["Content-Length"]; ok {
-		expectedLen, err := strconv.Atoi(contentLengthStr)
-		if err != nil {
-			return false, fmt.Errorf("invalid Content-Length: %s", contentLengthStr)
+	// Process headers
+	for i := uint64(0); i < numHeaders; i++ {
+		if offset >= len(data) {
+			return false, nil
 		}
-		return len(bodyBytes) >= expectedLen, nil
+
+		headerID := data[offset]
+		offset++
+
+		// Custom header has key + value, others just value
+		if headerID == HeaderCustom {
+			if _, complete, err := checkField("header key"); !complete {
+				return false, err
+			}
+		}
+
+		if _, complete, err := checkField("header value"); !complete {
+			return false, err
+		}
+	}
+
+	// Read body
+	if _, complete, err := checkField("body"); !complete {
+		return false, err
 	}
 
 	return true, nil
-}
-
-func parseResponseHeaders(headerBytes []byte) map[string]string {
-	headers := make(map[string]string)
-	offset := 0
-
-	// Parse headers: each is <header-id>\x00<value>\x00
-	// Custom headers: \x00\x00<key-name>\x00<value>\x00
-	for offset < len(headerBytes) {
-		headerID := headerBytes[offset]
-		offset++
-
-		// Expect separator after header ID
-		if offset >= len(headerBytes) || headerBytes[offset] != 0 {
-			break
-		}
-		offset++ // Skip \x00 separator
-
-		var key string
-		if headerID == HeaderCustom {
-			// Custom header: read key name
-			keyStart := offset
-			for offset < len(headerBytes) && headerBytes[offset] != 0 {
-				offset++
-			}
-			key = string(headerBytes[keyStart:offset])
-			offset++ // Skip \x00 separator
-		} else if name, exists := responseHeaderNames[headerID]; exists {
-			// Known header: look up name from ID
-			key = name
-		} else {
-			// Unknown header ID: skip value and continue
-			for offset < len(headerBytes) && headerBytes[offset] != 0 {
-				offset++
-			}
-			offset++ // Skip \x00 separator
-			continue
-		}
-
-		// Read header value
-		valueStart := offset
-		for offset < len(headerBytes) && headerBytes[offset] != 0 {
-			offset++
-		}
-		value := string(headerBytes[valueStart:offset])
-		offset++ // Skip \x00 separator
-
-		headers[key] = value
-	}
-
-	return headers
 }
 
 func ParseResponse(data []byte) (*Response, error) {
@@ -519,15 +504,12 @@ func ParseResponse(data []byte) (*Response, error) {
 		return nil, errors.New("invalid response: empty data")
 	}
 
-	// Split at ETX (\x03) separator between headers and body
-	allHeaders, body, found := bytes.Cut(data, []byte{'\x03'})
-	if !found {
-		return nil, errors.New("invalid response: missing body separator")
-	}
+	offset := 0
 
 	// Parse first byte: Version (2 bits, bits 7-6) | Status Code (6 bits, bits 5-0)
-	// Wire format: <first-byte>[<header-id>\x00<value>\x00...]\x03<body>
-	firstByte := allHeaders[0]
+	firstByte := data[offset]
+	offset++
+
 	version := firstByte >> 6               // Extract upper 2 bits
 	compactStatus := firstByte & 0b00111111 // Extract lower 6 bits
 
@@ -537,8 +519,31 @@ func ParseResponse(data []byte) (*Response, error) {
 
 	httpStatusCode := DecodeStatusCode(compactStatus)
 
-	headerBytes := allHeaders[1:]
-	headers := parseResponseHeaders(headerBytes)
+	// Read number of headers
+	numHeaders, n, err := ReadUvarint(data, offset)
+	if err != nil {
+		return nil, fmt.Errorf("invalid response: failed to read header count: %w", err)
+	}
+	offset += n
+
+	// Parse headers
+	headers, newOffset, err := parseHeaders(data, offset, numHeaders, responseHeaderNames)
+	if err != nil {
+		return nil, fmt.Errorf("invalid response: %w", err)
+	}
+	offset = newOffset
+
+	// Read body length and body
+	bodyLen, n, err := ReadUvarint(data, offset)
+	if err != nil {
+		return nil, fmt.Errorf("invalid response: failed to read body length: %w", err)
+	}
+	offset += n
+
+	if offset+int(bodyLen) > len(data) {
+		return nil, errors.New("invalid response: body length exceeds buffer")
+	}
+	body := data[offset : offset+int(bodyLen)]
 
 	resp := &Response{
 		Version:    version,
@@ -562,14 +567,12 @@ func ParseRequest(data []byte) (*Request, error) {
 		return nil, errors.New("invalid request: empty data")
 	}
 
-	// Split at ETX (\x03) separator between headers and body
-	allHeaders, body, found := bytes.Cut(data, []byte{'\x03'})
-	if !found {
-		return nil, errors.New("invalid request: missing body separator")
-	}
+	offset := 0
 
 	// Parse first byte: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
-	firstByte := allHeaders[0]
+	firstByte := data[offset]
+	offset++
+
 	version := firstByte >> 6                       // Extract upper 2 bits
 	method := Method((firstByte >> 3) & 0b00000111) // Extract middle 3 bits
 
@@ -577,44 +580,65 @@ func ParseRequest(data []byte) (*Request, error) {
 		return nil, fmt.Errorf("invalid method value: %d", method)
 	}
 
-	// Parse host and path from header section
-	// Wire format: <first-byte><host>\x00<path>\x00[<header-id>\x00<value>\x00...]\x03<body>
-	headerBytes := allHeaders[1:]
-	offset := 0
-
-	// Extract host (required)
-	hostStart := offset
-	for offset < len(headerBytes) && headerBytes[offset] != 0 {
-		offset++
+	// Read host length and host
+	hostLen, n, err := ReadUvarint(data, offset)
+	if err != nil {
+		return nil, fmt.Errorf("invalid request: failed to read host length: %w", err)
 	}
-	host := string(headerBytes[hostStart:offset])
+	offset += n
 
-	// Check if we found a null terminator or reached the end
-	if offset >= len(headerBytes) {
-		return nil, errors.New("invalid request: missing null terminator after host")
+	if offset+int(hostLen) > len(data) {
+		return nil, errors.New("invalid request: host length exceeds buffer")
 	}
-	offset++ // Skip \x00 separator
+	host := string(data[offset : offset+int(hostLen)])
+	offset += int(hostLen)
 
 	if host == "" {
 		return nil, errors.New("invalid request: empty host")
 	}
 
-	// Extract path (defaults to "/" if empty)
-	// Path may be empty or missing, both default to "/"
-	var path string
-	if offset < len(headerBytes) {
-		pathStart := offset
-		for offset < len(headerBytes) && headerBytes[offset] != 0 {
-			offset++
-		}
-		path = string(headerBytes[pathStart:offset])
+	// Read path length and path
+	pathLen, n, err := ReadUvarint(data, offset)
+	if err != nil {
+		return nil, fmt.Errorf("invalid request: failed to read path length: %w", err)
 	}
+	offset += n
+
+	if offset+int(pathLen) > len(data) {
+		return nil, errors.New("invalid request: path length exceeds buffer")
+	}
+	path := string(data[offset : offset+int(pathLen)])
+	offset += int(pathLen)
 
 	if path == "" {
 		path = "/"
 	}
 
-	headers := parseRequestHeaders(headerBytes)
+	// Read number of headers
+	numHeaders, n, err := ReadUvarint(data, offset)
+	if err != nil {
+		return nil, fmt.Errorf("invalid request: failed to read header count: %w", err)
+	}
+	offset += n
+
+	// Parse headers
+	headers, newOffset, err := parseHeaders(data, offset, numHeaders, requestHeaderNames)
+	if err != nil {
+		return nil, fmt.Errorf("invalid request: %w", err)
+	}
+	offset = newOffset
+
+	// Read body length and body
+	bodyLen, n, err := ReadUvarint(data, offset)
+	if err != nil {
+		return nil, fmt.Errorf("invalid request: failed to read body length: %w", err)
+	}
+	offset += n
+
+	if offset+int(bodyLen) > len(data) {
+		return nil, errors.New("invalid request: body length exceeds buffer")
+	}
+	body := data[offset : offset+int(bodyLen)]
 
 	req := &Request{
 		Method:  method,

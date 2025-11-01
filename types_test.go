@@ -1,7 +1,6 @@
 package qh
 
 import (
-	"encoding/base64"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,7 +21,15 @@ func TestRequestFormat(t *testing.T) {
 				Version: 0,
 				Headers: map[string]string{},
 			},
-			expected: []byte("\x00example.com\x00/hello\x00\x03"),
+			// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders><varint:bodyLen>
+			// \x00: first byte (version=0, method=GET)
+			// \x0B: hostLen=11 (varint)
+			// example.com: host
+			// \x06: pathLen=6 (varint)
+			// /hello: path
+			// \x00: numHeaders=0 (varint)
+			// \x00: bodyLen=0 (varint)
+			expected: []byte("\x00\x0Bexample.com\x06/hello\x00\x00"),
 		},
 		{
 			name: "GET with Accept header",
@@ -35,7 +42,18 @@ func TestRequestFormat(t *testing.T) {
 					"Accept": JSON.HeaderValue(),
 				},
 			},
-			expected: []byte("\x00example.com\x00/api\x00\x01\x002\x00\x03"),
+			// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen>
+			// \x00: first byte (version=0, method=GET)
+			// \x0B: hostLen=11
+			// example.com: host
+			// \x04: pathLen=4
+			// /api: path
+			// \x01: numHeaders=1
+			// \x01: headerID (Accept)
+			// \x01: value length=1
+			// 2: value (JSON code)
+			// \x00: bodyLen=0
+			expected: []byte("\x00\x0Bexample.com\x04/api\x01\x01\x012\x00"),
 		},
 	}
 
@@ -60,8 +78,19 @@ func TestRequestFormatWithBody(t *testing.T) {
 	}
 
 	actual := req.Format()
-	// First byte: 0x08 = version 0 (00), method POST (001), reserved (000)
-	expected := []byte("\x08api.example.com\x00/submit\x00\x05\x002\x00\x03{\"key\":\"val\"}")
+	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen><body>
+	// \x08: first byte (version=0, method=POST=1, bits: 00 001 000)
+	// \x0F: hostLen=15
+	// api.example.com: host
+	// \x07: pathLen=7
+	// /submit: path
+	// \x01: numHeaders=1
+	// \x05: headerID (Content-Type, which is HeaderReqContentType)
+	// \x01: value length=1
+	// 2: value (JSON code)
+	// \x0D: bodyLen=13
+	// {"key":"val"}: body
+	expected := []byte("\x08\x0Fapi.example.com\x07/submit\x01\x05\x012\x0D{\"key\":\"val\"}")
 	require.Equal(t, expected, actual, "Wire format mismatch.\nExpected (hex): %x\nActual (hex):   %x", expected, actual)
 }
 
@@ -79,7 +108,12 @@ func TestResponseFormat(t *testing.T) {
 				Headers:    map[string]string{},
 				Body:       []byte("OK"),
 			},
-			expected: []byte("\x00\x03OK"),
+			// Wire format: <firstByte><varint:numHeaders><varint:bodyLen><body>
+			// \x00: first byte (version=0, status=200→compact 0)
+			// \x00: numHeaders=0
+			// \x02: bodyLen=2
+			// OK: body
+			expected: []byte("\x00\x00\x02OK"),
 		},
 		{
 			name: "200 OK with Content-Type",
@@ -91,7 +125,15 @@ func TestResponseFormat(t *testing.T) {
 				},
 				Body: []byte("Hello"),
 			},
-			expected: []byte("\x00\x01\x001\x00\x03Hello"),
+			// Wire format: <firstByte><varint:numHeaders>[headers]<varint:bodyLen><body>
+			// \x00: first byte (version=0, status=200→compact 0)
+			// \x01: numHeaders=1
+			// \x01: headerID (Content-Type, which is HeaderRespContentType)
+			// \x01: value length=1
+			// 1: value (TextPlain code)
+			// \x05: bodyLen=5
+			// Hello: body
+			expected: []byte("\x00\x01\x01\x011\x05Hello"),
 		},
 		{
 			name: "404 Not Found",
@@ -103,8 +145,15 @@ func TestResponseFormat(t *testing.T) {
 				},
 				Body: []byte("Not Found"),
 			},
-			// First byte: 0x01 = version 0 (00), compact status 1 (000001) → HTTP 404
-			expected: []byte("\x01\x01\x001\x00\x03Not Found"),
+			// Wire format: <firstByte><varint:numHeaders>[headers]<varint:bodyLen><body>
+			// \x01: first byte (version=0, compact status 1 → HTTP 404)
+			// \x01: numHeaders=1
+			// \x01: headerID (Content-Type)
+			// \x01: value length=1
+			// 1: value (TextPlain code)
+			// \x09: bodyLen=9
+			// Not Found: body
+			expected: []byte("\x01\x01\x01\x011\x09Not Found"),
 		},
 	}
 
@@ -127,12 +176,35 @@ func TestResponseFormatEmpty(t *testing.T) {
 	}
 
 	actual := resp.Format()
-	expected := []byte("\x0C\x01\x000\x00\x03")
+	// Wire format: <firstByte><varint:numHeaders>[headers]<varint:bodyLen>
+	// \x0C: first byte (version=0, compact status 12 → HTTP 204)
+	// \x01: numHeaders=1
+	// \x01: headerID (Content-Type)
+	// \x01: value length=1
+	// 0: value (Custom code)
+	// \x00: bodyLen=0
+	expected := []byte("\x0C\x01\x01\x010\x00")
 	require.Equal(t, expected, actual, "Wire format mismatch.\nExpected (hex): %x\nActual (hex):   %x", expected, actual)
 }
 
 func TestParseRequestBasic(t *testing.T) {
-	data := []byte("\x00example.com\x00/hello.txt\x00\x01\x001\x00\x00\x00Accept-Language\x00en-US,en;q=0.5\x00\x03")
+	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen>
+	// \x00: first byte (version=0, method=GET)
+	// \x0B: hostLen=11
+	// example.com: host
+	// \x0A: pathLen=10
+	// /hello.txt: path
+	// \x02: numHeaders=2
+	// \x01: headerID (Accept)
+	// \x01: value length=1
+	// 1: value
+	// \x00: headerID=0 (custom header)
+	// \x0F: key length=15
+	// Accept-Language: key
+	// \x0E: value length=14
+	// en-US,en;q=0.5: value (14 bytes)
+	// \x00: bodyLen=0
+	data := []byte("\x00\x0Bexample.com\x0A/hello.txt\x02\x01\x011\x00\x0FAccept-Language\x0Een-US,en;q=0.5\x00")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -146,7 +218,22 @@ func TestParseRequestBasic(t *testing.T) {
 }
 
 func TestParseRequestWithBody(t *testing.T) {
-	data := []byte("\x08example.com\x00/submit\x00\x05\x002\x00\x06\x0016\x00\x03{\"name\": \"test\"}")
+	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen><body>
+	// \x08: first byte (version=0, method=POST)
+	// \x0B: hostLen=11
+	// example.com: host
+	// \x07: pathLen=7
+	// /submit: path
+	// \x02: numHeaders=2
+	// \x05: headerID (Content-Type)
+	// \x01: value length=1
+	// 2: value (JSON)
+	// \x06: headerID (Content-Length)
+	// \x02: value length=2
+	// 16: value
+	// \x10: bodyLen=16
+	// {"name": "test"}: body
+	data := []byte("\x08\x0Bexample.com\x07/submit\x02\x05\x012\x06\x0216\x10{\"name\": \"test\"}")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -160,7 +247,16 @@ func TestParseRequestWithBody(t *testing.T) {
 }
 
 func TestParseRequestWithMultilineBody(t *testing.T) {
-	data := []byte("\x08example.com\x00/submit\x03line1\nline2\nline3")
+	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders><varint:bodyLen><body>
+	// \x08: first byte (version=0, method=POST)
+	// \x0B: hostLen=11
+	// example.com: host
+	// \x07: pathLen=7
+	// /submit: path
+	// \x00: numHeaders=0
+	// \x11: bodyLen=17
+	// line1\nline2\nline3: body (multiline, 17 bytes)
+	data := []byte("\x08\x0Bexample.com\x07/submit\x00\x11line1\nline2\nline3")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -169,7 +265,16 @@ func TestParseRequestWithMultilineBody(t *testing.T) {
 }
 
 func TestParseRequestNoHeaders(t *testing.T) {
-	data := []byte("\x08example.com\x00/path\x03test body")
+	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders><varint:bodyLen><body>
+	// \x08: first byte (version=0, method=POST)
+	// \x0B: hostLen=11
+	// example.com: host
+	// \x05: pathLen=5
+	// /path: path
+	// \x00: numHeaders=0
+	// \x09: bodyLen=9
+	// test body: body
+	data := []byte("\x08\x0Bexample.com\x05/path\x00\x09test body")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -179,7 +284,15 @@ func TestParseRequestNoHeaders(t *testing.T) {
 }
 
 func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
-	data := []byte("\x00example.com\x00\x03")
+	// Wire format: <firstByte><varint:hostLen><host><varint:pathLen><path><varint:numHeaders><varint:bodyLen>
+	// \x00: first byte (version=0, method=GET)
+	// \x0B: hostLen=11
+	// example.com: host
+	// \x00: pathLen=0 (empty path)
+	// (no path bytes)
+	// \x00: numHeaders=0
+	// \x00: bodyLen=0
+	data := []byte("\x00\x0Bexample.com\x00\x00\x00")
 
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
@@ -211,7 +324,21 @@ func TestParseRequestErrors(t *testing.T) {
 }
 
 func TestParseResponseBasic(t *testing.T) {
-	data := []byte("\x00\x01\x001\x00\x02\x0013\x00\x06\x001758784800\x00\x03Hello, world!")
+	// Wire format: <firstByte><varint:numHeaders>[headers]<varint:bodyLen><body>
+	// \x00: first byte (version=0, status=200→compact 0)
+	// \x03: numHeaders=3
+	// \x01: headerID (Content-Type)
+	// \x01: value length=1
+	// 1: value (TextPlain)
+	// \x02: headerID (Content-Length)
+	// \x02: value length=2
+	// 13: value
+	// \x06: headerID (Date)
+	// \x0A: value length=10
+	// 1758784800: value
+	// \x0D: bodyLen=13
+	// Hello, world!: body
+	data := []byte("\x00\x03\x01\x011\x02\x0213\x06\x0A1758784800\x0DHello, world!")
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
@@ -224,7 +351,15 @@ func TestParseResponseBasic(t *testing.T) {
 }
 
 func TestParseResponseSingleHeader(t *testing.T) {
-	data := []byte("\x00\x01\x001\x00\x03Response body")
+	// Wire format: <firstByte><varint:numHeaders>[headers]<varint:bodyLen><body>
+	// \x00: first byte (version=0, status=200→compact 0)
+	// \x01: numHeaders=1
+	// \x01: headerID (Content-Type)
+	// \x01: value length=1
+	// 1: value (TextPlain)
+	// \x0D: bodyLen=13
+	// Response body: body
+	data := []byte("\x00\x01\x01\x011\x0DResponse body")
 
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
@@ -598,253 +733,4 @@ func TestETXWithBinaryData(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, gzipData, parsed.Body, "Real gzip data should be preserved completely, including \\x03 byte at position 9")
 	})
-}
-
-func TestRequestValidation(t *testing.T) {
-	t.Run("Valid request passes", func(t *testing.T) {
-		req := &Request{
-			Method:  GET,
-			Host:    "example.com",
-			Path:    "/path",
-			Version: 0,
-			Headers: map[string]string{
-				"Accept":       AcceptHeader(JSON, TextPlain),
-				"User-Agent":   "QH-Client/1.0",
-				"X-Custom-Key": "custom-value",
-			},
-		}
-		err := req.Validate()
-		require.NoError(t, err)
-	})
-
-	t.Run("Host with control characters rejected", func(t *testing.T) {
-		tests := []struct {
-			name      string
-			host      string
-			errSubstr string
-		}{
-			{"null byte", "example\x00.com", "null byte"},
-			{"ETX byte", "example\x03.com", "ETX"},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				req := &Request{
-					Method:  GET,
-					Host:    tt.host,
-					Path:    "/path",
-					Version: 0,
-				}
-				err := req.Validate()
-				require.Contains(t, err.Error(), "invalid host")
-				require.Contains(t, err.Error(), tt.errSubstr)
-			})
-		}
-	})
-
-	t.Run("Path with control characters rejected", func(t *testing.T) {
-		tests := []struct {
-			name      string
-			path      string
-			errSubstr string
-		}{
-			{"null byte", "/path\x00/sub", "null byte"},
-			{"ETX byte", "/path\x03/sub", "ETX"},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				req := &Request{
-					Method:  GET,
-					Host:    "example.com",
-					Path:    tt.path,
-					Version: 0,
-				}
-				err := req.Validate()
-				require.Contains(t, err.Error(), "invalid path")
-				require.Contains(t, err.Error(), tt.errSubstr)
-			})
-		}
-	})
-
-	t.Run("Predefined header value with control character rejected", func(t *testing.T) {
-		req := &Request{
-			Method:  GET,
-			Host:    "example.com",
-			Path:    "/path",
-			Version: 0,
-			Headers: map[string]string{
-				"User-Agent": "QH\x03Client",
-			},
-		}
-		err := req.Validate()
-		require.Contains(t, err.Error(), "User-Agent")
-		require.Contains(t, err.Error(), "ETX")
-	})
-
-	t.Run("Custom header key with control character rejected", func(t *testing.T) {
-		tests := []struct {
-			name      string
-			key       string
-			errSubstr string
-		}{
-			{"null byte", "X-Custom\x00Key", "null byte"},
-			{"ETX byte", "X-Custom\x03Key", "ETX"},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				req := &Request{
-					Method:  GET,
-					Host:    "example.com",
-					Path:    "/path",
-					Version: 0,
-					Headers: map[string]string{
-						tt.key: "value",
-					},
-				}
-				err := req.Validate()
-				require.Contains(t, err.Error(), "invalid header key")
-				require.Contains(t, err.Error(), tt.errSubstr)
-			})
-		}
-	})
-
-	t.Run("Custom header value with control character rejected", func(t *testing.T) {
-		tests := []struct {
-			name      string
-			value     string
-			errSubstr string
-		}{
-			{"null byte", "value\x00data", "null byte"},
-			{"ETX byte", "value\x03data", "ETX"},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				req := &Request{
-					Method:  GET,
-					Host:    "example.com",
-					Path:    "/path",
-					Version: 0,
-					Headers: map[string]string{
-						"X-Custom": tt.value,
-					},
-				}
-				err := req.Validate()
-				require.Contains(t, err.Error(), "X-Custom")
-				require.Contains(t, err.Error(), tt.errSubstr)
-			})
-		}
-	})
-}
-
-func TestResponseValidation(t *testing.T) {
-	t.Run("Valid response passes", func(t *testing.T) {
-		resp := &Response{
-			Version:    0,
-			StatusCode: 200,
-			Headers: map[string]string{
-				"Content-Type":      JSON.HeaderValue(),
-				"Cache-Control":     "max-age=3600",
-				"X-Custom-Response": "custom-value",
-			},
-			Body: []byte("test body"),
-		}
-
-		err := resp.Validate()
-		require.NoError(t, err)
-	})
-
-	t.Run("Header value with control character rejected", func(t *testing.T) {
-		tests := []struct {
-			name      string
-			header    map[string]string
-			errHeader string
-			errSubstr string
-		}{
-			{"null byte", map[string]string{"Cache-Control": "max-age\x00=3600"}, "Cache-Control", "null byte"},
-			{"ETX byte", map[string]string{"Content-Type": JSON.HeaderValue() + "\x03"}, "Content-Type", "ETX"},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				resp := &Response{
-					Version:    0,
-					StatusCode: 200,
-					Headers:    tt.header,
-				}
-				err := resp.Validate()
-				require.Contains(t, err.Error(), tt.errHeader)
-				require.Contains(t, err.Error(), tt.errSubstr)
-			})
-		}
-	})
-
-	t.Run("Custom header key with control character rejected", func(t *testing.T) {
-		tests := []struct {
-			name      string
-			key       string
-			errSubstr string
-		}{
-			{"null byte", "X-Bad\x00Key", "null byte"},
-			{"ETX byte", "X-Bad\x03Key", "ETX"},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				resp := &Response{
-					Version:    0,
-					StatusCode: 200,
-					Headers: map[string]string{
-						tt.key: "value",
-					},
-				}
-				err := resp.Validate()
-				require.Contains(t, err.Error(), "invalid header key")
-				require.Contains(t, err.Error(), tt.errSubstr)
-			})
-		}
-	})
-
-	t.Run("Body can contain control characters", func(t *testing.T) {
-		resp := &Response{
-			Version:    0,
-			StatusCode: 200,
-			Headers: map[string]string{
-				"Content-Type": OctetStream.HeaderValue(),
-			},
-			Body: []byte{0x00, 0x01, 0x03, 0xFF},
-		}
-
-		err := resp.Validate()
-		require.NoError(t, err, "Body should be allowed to contain any bytes")
-	})
-}
-
-func TestWireFormatCorruption(t *testing.T) {
-	// Without validation: ETX in headers corrupts wire format
-	req := &Request{
-		Method:  GET,
-		Host:    "example.com",
-		Path:    "/test",
-		Headers: map[string]string{"X-Data": "before\x03after"},
-	}
-
-	wireFormat := req.Format()
-	parsed, _ := ParseRequest(wireFormat)
-	require.NotEqual(t, "before\x03after", parsed.Headers["X-Data"])
-	require.Equal(t, "before", parsed.Headers["X-Data"], "Truncated at ETX byte")
-
-	// With validation: Error before corruption
-	err := req.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "ETX")
-
-	// Fix with base64 encoding
-	req.Headers = make(map[string]string)
-	req.Headers["Content-Type"] = TextPlain.HeaderValue()
-	encoded := base64.StdEncoding.EncodeToString([]byte("before\x03after"))
-	req.Headers["X-Data"] = encoded
-	require.NoError(t, req.Validate())
-
-	// Round-trip preserves data
-	wireFormat = req.Format()
-	parsed, _ = ParseRequest(wireFormat)
-	data, _ := base64.StdEncoding.DecodeString(parsed.Headers["X-Data"])
-	require.Equal(t, []byte("before\x03after"), data)
 }
