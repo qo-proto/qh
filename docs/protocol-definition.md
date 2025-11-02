@@ -355,8 +355,6 @@ Host: example.com
 - `\x00`: Number of headers (0, varint)
 - `\x00`: Body length (0 bytes, varint)
 
-**Total size: 22 bytes**
-
 #### Example 2: POST Request with Body
 
 ```
@@ -425,8 +423,6 @@ Body: "Hello QH World!"
   - `1`: Value (text/plain code)
 - `\x0F`: Body length (15 bytes)
 - `Hello QH World!`: Body content
-
-**Total size: 44 bytes**
 
 #### Request Wire Format Legend
 
@@ -611,8 +607,6 @@ Body: "Hello from QH Protocol!"
 - `\x17`: Body length (23 bytes)
 - `Hello from QH Protocol!`: Body content
 
-**Total size: 29 bytes**
-
 #### Example 2: 404 Not Found Response
 
 ```
@@ -653,8 +647,6 @@ Body: "Not Found"
   - `1`: Value (text/plain code)
 - `\x09`: Body length (9 bytes)
 - `Not Found`: Body content
-
-**Total size: 15 bytes**
 
 #### Example 3: JSON Response with Headers
 
@@ -723,8 +715,6 @@ Body: {"name":"John Doe","id":123,"active":true}
 - `\x2A`: Body length (42 bytes)
 - `{"name":"John Doe","id":123,"active":true}`: Body content
 
-**Total size: 74 bytes**
-
 #### Response Wire Format Legend
 
 ```mermaid
@@ -748,16 +738,17 @@ QH uses a **static header table** that maps single-byte IDs to either complete h
 **Header ID Space Allocation:**
 
 ```
-0x00           = Custom header (key and value both transmitted)
-0x01 - 0x1F    = Complete key-value pairs (31 most common combinations)
-0x20 - 0xFF    = Header names only (224 header names, value transmitted separately)
+0x00     = Custom header (key and value both transmitted)
+0x01 - X = Complete key-value pairs (X most common combinations)
+X - X    = Header names only (X header names, value transmitted separately)
+X - X    = Reserved (future use)
 ```
 
 **Three header formats:**
 
-1. **Complete key-value pair (0x01-0x1F):** Single byte, no additional data needed
-2. **Header name with value (0x20-0xFF):** ID + value length + value
-3. **Custom header (0x00):** Full key and value with length prefixes
+1. **Complete key-value pair:** Single byte, no additional data needed
+2. **Header name with value:** ID + value length + value
+3. **Custom header:** Full key and value with length prefixes
 
 **Format 1: Complete key-value pair:**
 
@@ -767,7 +758,7 @@ QH uses a **static header table** that maps single-byte IDs to either complete h
 
 For the most common header combinations:
 
-1. **Header ID** (1 byte): Complete key-value pair (0x01-0x1F, see [headers](./headers.md))
+1. **Header ID** (1 byte): Complete key-value pair (see [headers](./headers.md))
 
 **Format 2: Header name with value:**
 
@@ -777,7 +768,7 @@ For the most common header combinations:
 
 For standard headers with custom values:
 
-1. **Header ID** (1 byte): Header name (0x20-0xFF, see [headers](./headers.md))
+1. **Header ID** (1 byte): Header name (see [headers](./headers.md))
 2. **Value length** (varint): Length of the header value in bytes
 3. **Value**: The header value
 
@@ -807,7 +798,6 @@ Wire format:
 
 Breakdown:
 - \x01: Complete header (Content-Type: application/json)
-- Total: 1 byte
 ```
 
 **Example 2 - Header name with value:**
@@ -822,7 +812,6 @@ Breakdown:
 - \x26: Header ID (Date name)
 - \x0A: Value length (10 bytes, varint)
 - 1758784800: Value (Unix timestamp)
-- Total: 12 bytes
 ```
 
 **Example 3 - Custom Header:**
@@ -839,18 +828,17 @@ Breakdown:
 - X-Request-ID: Key name
 - \x06: Value length (6 bytes, varint)
 - abc123: Value
-- Total: 21 bytes
 ```
 
 **Efficiency Comparison:**
 
 TODO: for `complete pair` update with the actual wire format ID, once static header table is done
 
-| Format        | Example                          | Wire Format                              | Wire Size | Use Case                            |
-| ------------- | -------------------------------- | ---------------------------------------- | --------- | ----------------------------------- |
-| Complete pair | `Content-Type: application/json` | `\x01`                                   | 1 byte    | Most common combinations            |
-| Name + value  | `Date: 1758784800`               | `\x26 \x0A 1758784800`                   | 12 bytes  | Common headers with variable values |
-| Custom        | `X-Request-ID: abc123`           | `\x00 \x0C X-Request-ID \x06 abc123`     | 21 bytes  | Application-specific headers        |
+| Format        | Example                          | Wire Format                          | Wire Size | Use Case                            |
+| ------------- | -------------------------------- | ------------------------------------ | --------- | ----------------------------------- |
+| Complete pair | `Content-Type: application/json` | `\x01`                               | 1 byte    | Most common combinations            |
+| Name + value  | `Date: 1758784800`               | `\x26 \x0A 1758784800`               | 12 bytes  | Common headers with variable values |
+| Custom        | `X-Request-ID: abc123`           | `\x00 \x0C X-Request-ID \x06 abc123` | 21 bytes  | Application-specific headers        |
 
 **Usage Notes:**
 
