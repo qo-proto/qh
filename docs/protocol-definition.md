@@ -851,11 +851,13 @@ TODO: for `complete pair` update with the actual wire format ID, once static hea
 
 Unlike HTTP/2 (HPACK) and HTTP/3 (QPACK), QH does not implement header compression schemes. This design decision is intentional.
 
-The main reason why QH doesn't use header compression is that the protocol is compact by design:
+The main reason QH doesn't use header compression is that the protocol is compact by design through multiple optimizations:
 
-- Headers use numeric IDs (`\x01`) instead of strings ("Accept")
-- Content types are single digits (`2` instead of "application/json")
-- Status codes use 6-bit encoding
+- **Static header table**: Uses a built-in static header table for the most common key-value pair mappings and header names
+- **Numeric methods**: HTTP methods encoded as single bytes (`\x00` = GET, `\x08` = POST, etc.)
+- **Compact content types**: Single-byte encoding (`2` = application/json)
+- **Status codes**: 6-bit status code encoding
+- **Varint lengths**: Variable-length integer encoding for header/body sizes
 
 This binary-first approach trades maximum compression efficiency for simplicity, eliminating the overhead and complexity of dynamic compression tables (like HPACK/QPACK).
 
