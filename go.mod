@@ -10,6 +10,8 @@ require (
 	github.com/tbocek/qotp v0.2.2
 )
 
+replace github.com/tbocek/qotp => ../qotp
+
 require (
 	github.com/MatusOllah/slogcolor v1.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
