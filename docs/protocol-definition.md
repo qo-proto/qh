@@ -847,6 +847,19 @@ TODO: for `complete pair` update with the actual wire format ID, once static hea
 - Accept uses numeric codes: `text/html,application/json,text/plain` → `3,2,1`
 - The static table (see [headers](./headers.md)) defines which IDs map to complete pairs vs header names
 
+#### 6.1.1 Header Name Normalization
+
+Header field names in QH/0 are case-insensitive per HTTP semantics (RFC 7230).
+
+However, for encoding efficiency and consistency with HTTP/2 (RFC 7540), header
+names MUST be converted to lowercase before transmission and table lookup.
+
+Implementations:
+
+- MUST normalize all header names to lowercase before encoding
+- MUST normalize all header names to lowercase after decoding
+- MAY accept mixed-case headers from legacy clients but MUST normalize them
+
 ### 6.2 Header Compression
 
 Unlike HTTP/2 (HPACK) and HTTP/3 (QPACK), QH does not implement header compression schemes. This design decision is intentional.
