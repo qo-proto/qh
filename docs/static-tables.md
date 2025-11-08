@@ -110,7 +110,7 @@ Complete key-value pairs (Format 1) use a single byte. Name-only headers (Format
 
 ## Response Headers
 
-**Slot usage: 189/255**
+**Slot usage: 191/255**
 
 Complete key-value pairs (Format 1) use a single byte. Name-only headers (Format 2) include the value after the header ID.
 
@@ -269,39 +269,41 @@ Complete key-value pairs (Format 1) use a single byte. Name-only headers (Format
 | 0x97      | Name Only     | content-encoding                    | (variable)                                              |
 | 0x98      | Name Only     | x-content-type-options              | (variable)                                              |
 | 0x99      | Name Only     | timing-allow-origin                 | (variable)                                              |
-| 0x9A      | Name Only     | alt-svc                             | (variable)                                              |
-| 0x9B      | Name Only     | last-modified                       | (variable)                                              |
-| 0x9C      | Name Only     | access-control-expose-headers       | (variable)                                              |
-| 0x9D      | Name Only     | expires                             | (variable)                                              |
-| 0x9E      | Name Only     | age                                 | (variable)                                              |
-| 0x9F      | Name Only     | cross-origin-resource-policy        | (variable)                                              |
-| 0xA0      | Name Only     | x-xss-protection                    | (variable)                                              |
-| 0xA1      | Name Only     | etag                                | (variable)                                              |
-| 0xA2      | Name Only     | content-disposition                 | (variable)                                              |
-| 0xA3      | Name Only     | pragma                              | (variable)                                              |
-| 0xA4      | Name Only     | via                                 | (variable)                                              |
-| 0xA5      | Name Only     | accept-ranges                       | (variable)                                              |
-| 0xA6      | Name Only     | x-download-options                  | (variable)                                              |
-| 0xA7      | Name Only     | x-frame-options                     | (variable)                                              |
-| 0xA8      | Name Only     | accept-ch                           | (variable)                                              |
-| 0xA9      | Name Only     | access-control-allow-credentials    | (variable)                                              |
-| 0xAA      | Name Only     | access-control-allow-methods        | (variable)                                              |
-| 0xAB      | Name Only     | content-security-policy             | (variable)                                              |
-| 0xAC      | Name Only     | referrer-policy                     | (variable)                                              |
-| 0xAD      | Name Only     | access-control-allow-headers        | (variable)                                              |
-| 0xAE      | Name Only     | permissions-policy                  | (variable)                                              |
-| 0xAF      | Name Only     | content-security-policy-report-only | (variable)                                              |
-| 0xB0      | Name Only     | access-control-max-age              | (variable)                                              |
-| 0xB1      | Name Only     | x-permitted-cross-domain-policies   | (variable)                                              |
-| 0xB2      | Name Only     | Connection                          | (variable)                                              |
-| 0xB3      | Name Only     | x-robots-tag                        | (variable)                                              |
-| 0xB4      | Name Only     | location                            | (variable)                                              |
-| 0xB5      | Name Only     | link                                | (variable)                                              |
-| 0xB6      | Name Only     | set-cookie                          | (variable)                                              |
-| 0xB7      | Name Only     | origin-agent-cluster                | (variable)                                              |
-| 0xB8      | Name Only     | content-language                    | (variable)                                              |
-| 0xB9      | Name Only     | cross-origin-embedder-policy        | (variable)                                              |
-| 0xBA      | Name Only     | www-authenticate                    | (variable)                                              |
-| 0xBB      | Name Only     | Content-Range                       | (variable)                                              |
-| 0xBC      | Name Only     | retry-after                         | (variable)                                              |
-| 0xBD      | Name Only     | critical-ch                         | (variable)                                              |
+| 0x9A      | Name Only     | report-to                           | (variable)                                              |
+| 0x9B      | Name Only     | alt-svc                             | (variable)                                              |
+| 0x9C      | Name Only     | last-modified                       | (variable)                                              |
+| 0x9D      | Name Only     | access-control-expose-headers       | (variable)                                              |
+| 0x9E      | Name Only     | expires                             | (variable)                                              |
+| 0x9F      | Name Only     | age                                 | (variable)                                              |
+| 0xA0      | Name Only     | cross-origin-resource-policy        | (variable)                                              |
+| 0xA1      | Name Only     | x-xss-protection                    | (variable)                                              |
+| 0xA2      | Name Only     | etag                                | (variable)                                              |
+| 0xA3      | Name Only     | content-disposition                 | (variable)                                              |
+| 0xA4      | Name Only     | pragma                              | (variable)                                              |
+| 0xA5      | Name Only     | via                                 | (variable)                                              |
+| 0xA6      | Name Only     | accept-ranges                       | (variable)                                              |
+| 0xA7      | Name Only     | x-download-options                  | (variable)                                              |
+| 0xA8      | Name Only     | x-frame-options                     | (variable)                                              |
+| 0xA9      | Name Only     | accept-ch                           | (variable)                                              |
+| 0xAA      | Name Only     | access-control-allow-credentials    | (variable)                                              |
+| 0xAB      | Name Only     | access-control-allow-methods        | (variable)                                              |
+| 0xAC      | Name Only     | content-security-policy             | (variable)                                              |
+| 0xAD      | Name Only     | referrer-policy                     | (variable)                                              |
+| 0xAE      | Name Only     | access-control-allow-headers        | (variable)                                              |
+| 0xAF      | Name Only     | permissions-policy                  | (variable)                                              |
+| 0xB0      | Name Only     | content-security-policy-report-only | (variable)                                              |
+| 0xB1      | Name Only     | access-control-max-age              | (variable)                                              |
+| 0xB2      | Name Only     | x-permitted-cross-domain-policies   | (variable)                                              |
+| 0xB3      | Name Only     | Connection                          | (variable)                                              |
+| 0xB4      | Name Only     | x-robots-tag                        | (variable)                                              |
+| 0xB5      | Name Only     | location                            | (variable)                                              |
+| 0xB6      | Name Only     | link                                | (variable)                                              |
+| 0xB7      | Name Only     | set-cookie                          | (variable)                                              |
+| 0xB8      | Name Only     | origin-agent-cluster                | (variable)                                              |
+| 0xB9      | Name Only     | content-language                    | (variable)                                              |
+| 0xBA      | Name Only     | cross-origin-embedder-policy        | (variable)                                              |
+| 0xBB      | Name Only     | www-authenticate                    | (variable)                                              |
+| 0xBC      | Name Only     | Content-Range                       | (variable)                                              |
+| 0xBD      | Name Only     | retry-after                         | (variable)                                              |
+| 0xBE      | Name Only     | critical-ch                         | (variable)                                              |
+| 0xBF      | Name Only     | X-Payment-Response                  | (variable)                                              |
