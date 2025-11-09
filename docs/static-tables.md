@@ -1,6 +1,6 @@
 ## Request Headers
 
-**Slot usage: 101/255**
+**Slot usage: 102/255**
 
 Complete key-value pairs (Format 1) use a single byte. Name-only headers (Format 2) include the value after the header ID.
 
@@ -107,6 +107,7 @@ Complete key-value pairs (Format 1) use a single byte. Name-only headers (Format
 | 0x63      | Name Only     | Sec-WebSocket-Extensions       | (variable)                                                                                                                              |
 | 0x64      | Name Only     | Sec-WebSocket-Key              | (variable)                                                                                                                              |
 | 0x65      | Name Only     | If-Modified-Since              | (variable)                                                                                                                              |
+| 0x66      | Name Only     | X-Payment                      | (variable)                                                                                                                              |
 
 ## Response Headers
 

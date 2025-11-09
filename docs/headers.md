@@ -139,11 +139,11 @@ Breakdown:
 
 QH supports the [x402 payment protocol](https://github.com/coinbase/x402).
 
-**Required headers:**
+**Required components:**
 
-- `X-Payment` (Request: TODO ADD CODE)
-- `X-Payment-Response` (Response: TODO ADD CODE)
-- `402 Payment Required` status code
+- `X-Payment` Request header
+- `X-Payment-Response` Response header
+- `402 Payment Required` Status code
 
 **Flow:**
 
