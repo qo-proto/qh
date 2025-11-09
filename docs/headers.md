@@ -66,67 +66,6 @@ Breakdown:
 Total: 21 bytes
 ```
 
-## Wire Format Examples
-
-### Example 1: JSON Response with Standard Headers
-
-```
-HTTP equivalent:
-Status: 200 OK
-Content-Type: application/json
-Cache-Control: public, max-age=3600
-Date: 1758784800
-
-{"data":"hello"}
-
-QH wire format:
-TODO
-
-Breakdown:
-TODO
-```
-
-### Example 2: Request with Authorization
-
-```
-HTTP equivalent:
-GET /api/users
-Host: example.com
-Accept: application/json
-Authorization: Bearer token123
-
-QH wire format:
-TODO
-
-Breakdown:
-TODO
-```
-
-### Example 3: Response with Custom Header
-
-```
-HTTP equivalent:
-Status: 200 OK
-X-Trace-ID: trace-12345
-Content-Type: application/json
-
-(no body)
-
-QH wire format:
-\x00 \x02 \x00 \x0A X-Trace-ID \x0C trace-12345 \x01 \x00
-
-Breakdown:
-- \x00: Status byte (200 OK)
-- \x02: Num headers (2)
-- \x00: Custom header indicator
-- \x0A: Key length (10)
-- X-Trace-ID: Key
-- \x0C: Value length (12)
-- trace-12345: Value
-- \x01: Content-Type: application/json (complete pair, 1 byte)
-- \x00: Body length (0 bytes, no body)
-```
-
 ## Efficiency Comparison
 
 | Format        | Example                          | Wire Size |

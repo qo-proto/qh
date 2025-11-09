@@ -788,16 +788,14 @@ For custom headers not in the standard header table:
 
 **Example 1 - Complete key-value pair:**
 
-TODO: update with the actual key-value pair from table
-
 ```
-Header: Content-Type: application/json
+Header: Content-Type: application/json; charset=UTF-8
 
 Wire format:
-\x01
+0x06
 
 Breakdown:
-- \x01: Complete header (Content-Type: application/json)
+- \x06: Complete header
 ```
 
 **Example 2 - Header name with value:**
@@ -806,10 +804,10 @@ Breakdown:
 Header: Date: 1758784800
 
 Wire format:
-\x26 \x0A 1758784800
+\0x8F \x0A 1758784800
 
 Breakdown:
-- \x26: Header ID (Date name)
+- \0x8F: Header ID (Date name)
 - \x0A: Value length (10 bytes, varint)
 - 1758784800: Value (Unix timestamp)
 ```
@@ -832,13 +830,11 @@ Breakdown:
 
 **Efficiency Comparison:**
 
-TODO: for `complete pair` update with the actual wire format ID, once static header table is done
-
-| Format        | Example                          | Wire Format                          | Wire Size | Use Case                            |
-| ------------- | -------------------------------- | ------------------------------------ | --------- | ----------------------------------- |
-| Complete pair | `Content-Type: application/json` | `\x01`                               | 1 byte    | Most common combinations            |
-| Name + value  | `Date: 1758784800`               | `\x26 \x0A 1758784800`               | 12 bytes  | Common headers with variable values |
-| Custom        | `X-Request-ID: abc123`           | `\x00 \x0C X-Request-ID \x06 abc123` | 21 bytes  | Application-specific headers        |
+| Format        | Example                           | Wire Format                          | Wire Size | Use Case                            |
+| ------------- | --------------------------------- | ------------------------------------ | --------- | ----------------------------------- |
+| Complete pair | `application/json; charset=UTF-8` | `\0x06`                              | 1 byte    | Most common combinations            |
+| Name + value  | `Date: 1758784800`                | `\0x8F \x0A 1758784800`              | 12 bytes  | Common headers with variable values |
+| Custom        | `X-Request-ID: abc123`            | `\x00 \x0C X-Request-ID \x06 abc123` | 21 bytes  | Application-specific headers        |
 
 **Usage Notes:**
 
