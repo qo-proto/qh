@@ -1,14 +1,15 @@
 # qh:// - The Quite Ok HTTP Protocol
 
-**qh://** is a simplified HTTP-like protocol. Built on top of [QOTP](https://github.com/tbocek/qotp) (Quite Ok Transport Protocol), it provides 0-RTT connections, built-in encryption and uses DNS TXT records for key distribution. The protocol uses a compact binary format which eliminates the use of header compression schemes like HPACK or QPACK.
+**qh://** is a simplified HTTP-like protocol. Built on top of [QOTP (Quite Ok Transport Protocol)](https://github.com/tbocek/qotp), it provides 0-RTT connections, built-in encryption and uses DNS TXT records for key distribution. The protocol uses a compact binary format which eliminates the use of header compression schemes like HPACK or QPACK.
 
 **STATUS:** Experimental - Under active development
 
 ## Documentation
 
-- **[Protocol Specification](./docs/protocol-definition.md)** - Complete QH protocol definition
-- **[API Documentation](./docs/api.md)** - Go API reference
-- **[Headers Reference](./docs/headers.md)** - Supported headers and encoding
+- **[Protocol Specification](./docs/protocol-definition.md)** - QH protocol definition
+- **[Headers Reference](./docs/headers.md)** - Header format
+  - [Static header table](./docs/static-tables.md)
+- **[API Documentation](./docs/api.md)** - API reference of the Go implementation
 
 ## Run example
 
@@ -20,24 +21,7 @@ go run ./examples/server/main.go
 
 # In another terminal, run the client
 go run ./examples/client/main.go
-```
 
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│            Application Layer: qh:// Protocol                │
-│  • HTTP-inspired request/response semantics                 │
-│  • Compact binary encoding                                  │
-│  • DNS TXT record key distribution                          │
-├─────────────────────────────────────────────────────────────┤
-│            Transport Layer: QOTP                            │
-│  • 0-RTT connection establishment                           │
-│  • Built-in encryption (curve25519/chacha20-poly1305)       │
-│  • UDP-based communication                                  │
-│  • Stream multiplexing                                      │
-├─────────────────────────────────────────────────────────────┤
-│               Network Layer: UDP/IP                         │
-│  • Standard network layer                                   │
-└─────────────────────────────────────────────────────────────┘
+# Or directly in tmux with a shell script
+./run-demo-tmux.sh
 ```
