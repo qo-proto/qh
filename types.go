@@ -93,98 +93,6 @@ const (
 	CustomHeader byte = 0
 )
 
-const (
-	HeaderReqAccept byte = iota + 1
-	HeaderReqAcceptEncoding
-	HeaderReqAcceptLanguage
-	HeaderReqContentType
-	HeaderReqContentLength
-	HeaderReqAuthorization
-	HeaderReqCookie
-	HeaderReqUserAgent
-	HeaderReqReferer
-	HeaderReqOrigin
-	HeaderReqIfNoneMatch
-	HeaderReqIfModifiedSince
-	HeaderReqRange
-	HeaderReqXPayment
-)
-
-const (
-	HeaderRespContentType byte = iota + 1
-	HeaderRespContentLength
-	HeaderRespCacheControl
-	HeaderRespContentEncoding
-	HeaderRespDate
-	HeaderRespETag
-	HeaderRespExpires
-	HeaderRespLastModified
-	HeaderRespAccessControlAllowOrigin
-	HeaderRespAccessControlAllowMethods
-	HeaderRespAccessControlAllowHeaders
-	HeaderRespSetCookie
-	HeaderRespLocation
-	HeaderRespContentSecurityPolicy
-	HeaderRespXContentTypeOptions
-	HeaderRespXFrameOptions
-	HeaderRespVary
-	HeaderRespXPaymentResponse
-)
-
-var requestHeaderTable = map[string]byte{
-	"Accept":            HeaderReqAccept,
-	"Accept-Encoding":   HeaderReqAcceptEncoding,
-	"Accept-Language":   HeaderReqAcceptLanguage,
-	"Content-Type":      HeaderReqContentType,
-	"Content-Length":    HeaderReqContentLength,
-	"Authorization":     HeaderReqAuthorization,
-	"Cookie":            HeaderReqCookie,
-	"User-Agent":        HeaderReqUserAgent,
-	"Referer":           HeaderReqReferer,
-	"Origin":            HeaderReqOrigin,
-	"If-None-Match":     HeaderReqIfNoneMatch,
-	"If-Modified-Since": HeaderReqIfModifiedSince,
-	"Range":             HeaderReqRange,
-	"X-Payment":         HeaderReqXPayment,
-}
-
-var requestHeaderNames map[byte]string // filled in init()
-
-var responseHeaderTable = map[string]byte{
-	"Content-Type":                 HeaderRespContentType,
-	"Content-Length":               HeaderRespContentLength,
-	"Cache-Control":                HeaderRespCacheControl,
-	"Content-Encoding":             HeaderRespContentEncoding,
-	"Date":                         HeaderRespDate,
-	"ETag":                         HeaderRespETag,
-	"Expires":                      HeaderRespExpires,
-	"Last-Modified":                HeaderRespLastModified,
-	"Access-Control-Allow-Origin":  HeaderRespAccessControlAllowOrigin,
-	"Access-Control-Allow-Methods": HeaderRespAccessControlAllowMethods,
-	"Access-Control-Allow-Headers": HeaderRespAccessControlAllowHeaders,
-	"Set-Cookie":                   HeaderRespSetCookie,
-	"Location":                     HeaderRespLocation,
-	"Content-Security-Policy":      HeaderRespContentSecurityPolicy,
-	"X-Content-Type-Options":       HeaderRespXContentTypeOptions,
-	"X-Frame-Options":              HeaderRespXFrameOptions,
-	"Vary":                         HeaderRespVary,
-	"X-Payment-Response":           HeaderRespXPaymentResponse,
-}
-
-var responseHeaderNames map[byte]string // filled in init()
-
-func init() {
-	requestHeaderNames = make(map[byte]string, len(requestHeaderTable))
-	for name, id := range requestHeaderTable {
-		requestHeaderNames[id] = name
-	}
-
-	responseHeaderNames = make(map[byte]string, len(responseHeaderTable))
-	for name, id := range responseHeaderTable {
-		responseHeaderNames[id] = name
-	}
-}
-
 type Request struct {
 	Method  Method
 	Host    string
@@ -201,27 +109,41 @@ type Response struct {
 	Body       []byte
 }
 
-// TODO: Format 1 not implemented yet
+// encodeHeaders implements the three-format header encoding:
 // Format 1 (complete key-value pairs): <headerID>
-// Format 2 (known header): <headerID><varint:valueLen><value>
+// Format 2 (known header name with value): <headerID><varint:valueLen><value>
 // Format 3 (custom header): <0x00><varint:keyLen><key><varint:valueLen><value>
-func encodeHeaders(headers map[string]string, headerTable map[string]byte) []byte {
+func encodeHeaders(
+	headers map[string]string,
+	completePairs map[string]byte,
+	nameOnly map[string]byte,
+) []byte {
 	var result []byte
+
 	for key, value := range headers {
-		if headerID, exists := headerTable[key]; exists {
-			// Format 2: Known header name, encode ID + value
+		// Try Format 1: exact match for complete key-value pair, just send header ID
+		lookupKey := key + ":" + value
+		if headerID, exists := completePairs[lookupKey]; exists {
+			result = append(result, headerID)
+			continue
+		}
+
+		// Try Format 2: name-only match with custom value, encode ID
+		if headerID, exists := nameOnly[key]; exists {
 			result = append(result, headerID)
 			result = AppendUvarint(result, uint64(len(value)))
 			result = append(result, []byte(value)...)
-		} else {
-			// Format 3: Custom header, encode 0x00 + key + value
-			result = append(result, CustomHeader)
-			result = AppendUvarint(result, uint64(len(key)))
-			result = append(result, []byte(key)...)
-			result = AppendUvarint(result, uint64(len(value)))
-			result = append(result, []byte(value)...)
+			continue
 		}
+
+		// Format 3: Custom header not in static table
+		result = append(result, CustomHeader)
+		result = AppendUvarint(result, uint64(len(key)))
+		result = append(result, []byte(key)...)
+		result = AppendUvarint(result, uint64(len(value)))
+		result = append(result, []byte(value)...)
 	}
+
 	return result
 }
 
@@ -238,7 +160,9 @@ func (r *Request) Format() []byte {
 	result = append(result, []byte(r.Path)...)
 	result = AppendUvarint(result, uint64(len(r.Headers)))
 
-	result = append(result, encodeHeaders(r.Headers, requestHeaderTable)...)
+	result = append(
+		result,
+		encodeHeaders(r.Headers, requestHeaderCompletePairs, requestHeaderNameOnly)...)
 
 	result = AppendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
@@ -255,7 +179,9 @@ func (r *Response) Format() []byte {
 	result := []byte{firstByte}
 	result = AppendUvarint(result, uint64(len(r.Headers)))
 
-	result = append(result, encodeHeaders(r.Headers, responseHeaderTable)...)
+	result = append(
+		result,
+		encodeHeaders(r.Headers, responseHeaderCompletePairs, responseHeaderNameOnly)...)
 
 	result = AppendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
@@ -314,32 +240,35 @@ func parseHeaderEntry(
 	data []byte,
 	offset int,
 	headerID byte,
-	headerNames map[byte]string,
+	staticTable map[byte]headerEntry,
 ) (string, string, int, error) {
 	if headerID == CustomHeader {
 		// Format 3: Custom header <0x00><varint:keyLen><key><varint:valueLen><value>
 		return parseCustomHeader(data, offset)
 	}
 
-	if name, exists := headerNames[headerID]; exists {
-		// Format 2: Known header <headerID><varint:valueLen><value>
+	if entry, exists := staticTable[headerID]; exists {
+		if entry.value != "" {
+			// Format 1: Complete key-value pair, just return the entry
+			return entry.name, entry.value, offset, nil
+		}
+		// Format 2: Known header name with custom value <headerID><varint:valueLen><value>
 		value, newOffset, err := parseKnownHeader(data, offset)
-		return name, value, newOffset, err
+		return entry.name, value, newOffset, err
 	}
 
-	// Unknown header ID: skip value (forward compatibility), return empty key
-	_, newOffset, err := parseKnownHeader(data, offset)
-	if err != nil {
-		return "", "", offset, fmt.Errorf("failed to read unknown header value length: %w", err)
-	}
-	return "", "", newOffset, nil
+	// Unknown header ID
+	return "", "", offset, fmt.Errorf(
+		"unknown header ID 0x%02X - protocol version mismatch or corrupted message",
+		headerID,
+	)
 }
 
 func parseHeaders(
 	data []byte,
 	offset int,
 	numHeaders uint64,
-	headerNames map[byte]string,
+	staticTable map[byte]headerEntry,
 ) (map[string]string, int, error) {
 	headers := make(map[string]string)
 
@@ -351,16 +280,11 @@ func parseHeaders(
 		headerID := data[offset]
 		offset++
 
-		key, value, newOffset, err := parseHeaderEntry(data, offset, headerID, headerNames)
+		key, value, newOffset, err := parseHeaderEntry(data, offset, headerID, staticTable)
 		if err != nil {
 			return nil, offset, err
 		}
 		offset = newOffset
-
-		// Skip unknown headers
-		if key == "" {
-			continue
-		}
 
 		headers[key] = value
 	}
@@ -520,7 +444,7 @@ func ParseResponse(data []byte) (*Response, error) {
 	}
 	offset += n
 
-	headers, newOffset, err := parseHeaders(data, offset, numHeaders, responseHeaderNames)
+	headers, newOffset, err := parseHeaders(data, offset, numHeaders, responseHeaderStaticTable)
 	if err != nil {
 		return nil, fmt.Errorf("invalid response: %w", err)
 	}
@@ -617,7 +541,7 @@ func ParseRequest(data []byte) (*Request, error) {
 	}
 	offset += n
 
-	headers, newOffset, err := parseHeaders(data, offset, numHeaders, requestHeaderNames)
+	headers, newOffset, err := parseHeaders(data, offset, numHeaders, requestHeaderStaticTable)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}

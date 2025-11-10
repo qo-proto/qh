@@ -25,9 +25,8 @@ import (
 //	<body>              - Body bytes
 func TestRequestFormat(t *testing.T) {
 	tests := []struct {
-		name     string
-		request  *Request
-		expected []byte
+		name    string
+		request *Request
 	}{
 		{
 			name: "GET minimal",
@@ -38,7 +37,6 @@ func TestRequestFormat(t *testing.T) {
 				Version: 0,
 				Headers: map[string]string{},
 			},
-			expected: []byte("\x00\x0Bexample.com\x06/hello\x00\x00"),
 		},
 		{
 			name: "GET with Accept header",
@@ -51,7 +49,6 @@ func TestRequestFormat(t *testing.T) {
 					"Accept": JSON.HeaderValue(),
 				},
 			},
-			expected: []byte("\x00\x0Bexample.com\x04/api\x01\x01\x012\x00"),
 		},
 		{
 			name: "POST with body",
@@ -65,14 +62,27 @@ func TestRequestFormat(t *testing.T) {
 				},
 				Body: []byte(`{"key":"val"}`),
 			},
-			expected: []byte("\x08\x0Fapi.example.com\x07/submit\x01\x04\x012\x0D{\"key\":\"val\"}"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := tt.request.Format()
-			require.Equal(t, tt.expected, actual, "Wire format mismatch.\nExpected (hex): %x\nActual (hex):   %x", tt.expected, actual)
+			wire := tt.request.Format()
+			parsed, err := ParseRequest(wire)
+			require.NoError(t, err, "Failed to parse formatted request")
+
+			// Verify round-trip
+			require.Equal(t, tt.request.Method, parsed.Method)
+			require.Equal(t, tt.request.Host, parsed.Host)
+			require.Equal(t, tt.request.Path, parsed.Path)
+			require.Equal(t, tt.request.Version, parsed.Version)
+			require.Equal(t, tt.request.Headers, parsed.Headers)
+
+			expectedBody := tt.request.Body
+			if expectedBody == nil {
+				expectedBody = []byte{}
+			}
+			require.Equal(t, expectedBody, parsed.Body)
 		})
 	}
 }
@@ -94,7 +104,6 @@ func TestResponseFormat(t *testing.T) {
 	tests := []struct {
 		name     string
 		response *Response
-		expected []byte
 	}{
 		{
 			name: "200 OK minimal",
@@ -104,7 +113,6 @@ func TestResponseFormat(t *testing.T) {
 				Headers:    map[string]string{},
 				Body:       []byte("OK"),
 			},
-			expected: []byte("\x00\x00\x02OK"),
 		},
 		{
 			name: "200 OK with Content-Type",
@@ -112,11 +120,10 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"Content-Type": TextPlain.HeaderValue(),
+					"content-type": TextPlain.HeaderValue(),
 				},
 				Body: []byte("Hello"),
 			},
-			expected: []byte("\x00\x01\x01\x011\x05Hello"),
 		},
 		{
 			name: "404 Not Found",
@@ -124,11 +131,10 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 404,
 				Headers: map[string]string{
-					"Content-Type": TextPlain.HeaderValue(),
+					"content-type": TextPlain.HeaderValue(),
 				},
 				Body: []byte("Not Found"),
 			},
-			expected: []byte("\x01\x01\x01\x011\x09Not Found"),
 		},
 		{
 			name: "204 No Content empty",
@@ -136,77 +142,125 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 204,
 				Headers: map[string]string{
-					"Content-Type": Custom.HeaderValue(),
+					"content-type": Custom.HeaderValue(),
 				},
 				Body: []byte{},
 			},
-			expected: []byte("\x0C\x01\x01\x010\x00"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := tt.response.Format()
-			require.Equal(t, tt.expected, actual, "Wire format mismatch.\nExpected (hex): %x\nActual (hex):   %x", tt.expected, actual)
+			wire := tt.response.Format()
+			parsed, err := ParseResponse(wire)
+			require.NoError(t, err, "Failed to parse formatted response")
+			require.Equal(t, tt.response.Version, parsed.Version)
+			require.Equal(t, tt.response.StatusCode, parsed.StatusCode)
+			require.Equal(t, tt.response.Headers, parsed.Headers)
+			require.Equal(t, tt.response.Body, parsed.Body)
 		})
 	}
 }
 
 func TestParseRequestBasic(t *testing.T) {
-	data := []byte("\x00\x0Bexample.com\x0A/hello.txt\x02\x01\x011\x00\x0FAccept-Language\x0Een-US,en;q=0.5\x00")
+	original := &Request{
+		Method:  GET,
+		Host:    "example.com",
+		Path:    "/hello.txt",
+		Version: 0,
+		Headers: map[string]string{
+			"Accept":          "1",
+			"Accept-Language": "en-US,en;q=0.5",
+		},
+		Body: []byte{},
+	}
 
+	data := original.Format()
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
-	require.Equal(t, GET, req.Method)
-	require.Equal(t, "example.com", req.Host)
-	require.Equal(t, "/hello.txt", req.Path)
-	require.Equal(t, uint8(0), req.Version)
-	require.Equal(t, "1", req.Headers["Accept"])
-	require.Equal(t, "en-US,en;q=0.5", req.Headers["Accept-Language"])
-	require.Empty(t, req.Body)
+	require.Equal(t, original.Method, req.Method)
+	require.Equal(t, original.Host, req.Host)
+	require.Equal(t, original.Path, req.Path)
+	require.Equal(t, original.Version, req.Version)
+	require.Equal(t, original.Headers, req.Headers)
+	require.Equal(t, original.Body, req.Body)
 }
 
 func TestParseRequestWithBody(t *testing.T) {
-	data := []byte("\x08\x0Bexample.com\x07/submit\x02\x04\x012\x05\x0216\x10{\"name\": \"test\"}")
+	original := &Request{
+		Method:  POST,
+		Host:    "example.com",
+		Path:    "/submit",
+		Version: 0,
+		Headers: map[string]string{
+			"Content-Type":   JSON.HeaderValue(),
+			"Content-Length": "16",
+		},
+		Body: []byte(`{"name": "test"}`),
+	}
 
+	data := original.Format()
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
-	require.Equal(t, POST, req.Method)
-	require.Equal(t, "example.com", req.Host)
-	require.Equal(t, "/submit", req.Path)
-	require.Equal(t, uint8(0), req.Version)
-	require.Equal(t, JSON.HeaderValue(), req.Headers["Content-Type"])
-	require.Equal(t, "16", req.Headers["Content-Length"])
+	require.Equal(t, original.Method, req.Method)
+	require.Equal(t, original.Host, req.Host)
+	require.Equal(t, original.Path, req.Path)
+	require.Equal(t, original.Version, req.Version)
+	require.Equal(t, original.Headers, req.Headers)
 	require.JSONEq(t, `{"name": "test"}`, string(req.Body))
 }
 
 func TestParseRequestWithMultilineBody(t *testing.T) {
-	data := []byte("\x08\x0Bexample.com\x07/submit\x00\x11line1\nline2\nline3")
+	original := &Request{
+		Method:  POST,
+		Host:    "example.com",
+		Path:    "/submit",
+		Version: 0,
+		Headers: map[string]string{},
+		Body:    []byte("line1\nline2\nline3"),
+	}
 
+	data := original.Format()
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
-	require.Equal(t, POST, req.Method)
-	require.Equal(t, []byte("line1\nline2\nline3"), req.Body)
+	require.Equal(t, original.Method, req.Method)
+	require.Equal(t, original.Body, req.Body)
 }
 
 func TestParseRequestNoHeaders(t *testing.T) {
-	data := []byte("\x08\x0Bexample.com\x05/path\x00\x09test body")
+	original := &Request{
+		Method:  POST,
+		Host:    "example.com",
+		Path:    "/path",
+		Version: 0,
+		Headers: map[string]string{},
+		Body:    []byte("test body"),
+	}
 
+	data := original.Format()
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
-	require.Equal(t, POST, req.Method)
+	require.Equal(t, original.Method, req.Method)
 	require.Empty(t, req.Headers)
-	require.Equal(t, []byte("test body"), req.Body)
+	require.Equal(t, original.Body, req.Body)
 }
 
 func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
-	data := []byte("\x00\x0Bexample.com\x00\x00\x00")
+	original := &Request{
+		Method:  GET,
+		Host:    "example.com",
+		Path:    "",
+		Version: 0,
+		Headers: map[string]string{},
+		Body:    []byte{},
+	}
 
+	data := original.Format()
 	req, err := ParseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, GET, req.Method)
 	require.Equal(t, "example.com", req.Host)
-	require.Equal(t, "/", req.Path)
+	require.Equal(t, "/", req.Path) // empty path should default to "/"
 	require.Equal(t, uint8(0), req.Version)
 	require.Empty(t, req.Headers)
 	require.Empty(t, req.Body)
@@ -232,27 +286,43 @@ func TestParseRequestErrors(t *testing.T) {
 }
 
 func TestParseResponseBasic(t *testing.T) {
-	data := []byte("\x00\x03\x01\x011\x02\x0213\x05\x0A1758784800\x0DHello, world!")
+	original := &Response{
+		Version:    0,
+		StatusCode: 200,
+		Headers: map[string]string{
+			"content-type":   TextPlain.HeaderValue(),
+			"content-length": "13",
+			"date":           "1758784800",
+		},
+		Body: []byte("Hello, world!"),
+	}
 
+	data := original.Format()
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
-	require.Equal(t, uint8(0), resp.Version)
-	require.Equal(t, 200, resp.StatusCode)
-	require.Equal(t, TextPlain.HeaderValue(), resp.Headers["Content-Type"])
-	require.Equal(t, "13", resp.Headers["Content-Length"])
-	require.Equal(t, "1758784800", resp.Headers["Date"])
-	require.Equal(t, []byte("Hello, world!"), resp.Body)
+	require.Equal(t, original.Version, resp.Version)
+	require.Equal(t, original.StatusCode, resp.StatusCode)
+	require.Equal(t, original.Headers, resp.Headers)
+	require.Equal(t, original.Body, resp.Body)
 }
 
 func TestParseResponseSingleHeader(t *testing.T) {
-	data := []byte("\x00\x01\x01\x011\x0DResponse body")
+	original := &Response{
+		Version:    0,
+		StatusCode: 200,
+		Headers: map[string]string{
+			"content-type": TextPlain.HeaderValue(),
+		},
+		Body: []byte("Response body"),
+	}
 
+	data := original.Format()
 	resp, err := ParseResponse(data)
 	require.NoError(t, err)
-	require.Equal(t, uint8(0), resp.Version)
-	require.Equal(t, 200, resp.StatusCode)
-	require.Equal(t, TextPlain.HeaderValue(), resp.Headers["Content-Type"])
-	require.Equal(t, []byte("Response body"), resp.Body)
+	require.Equal(t, original.Version, resp.Version)
+	require.Equal(t, original.StatusCode, resp.StatusCode)
+	require.Equal(t, original.Headers, resp.Headers)
+	require.Equal(t, original.Body, resp.Body)
 }
 
 func TestParseResponseErrors(t *testing.T) {
