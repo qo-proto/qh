@@ -25,3 +25,20 @@ go run ./examples/client/main.go
 # Or directly in tmux with a shell script
 ./run-demo-tmux.sh
 ```
+
+## Benchmarks
+
+- `./benchmark/` - Benchmarking tool for QH vs HTTP/1.1, HTTP/2 and HTTP/3
+
+NOTE: These benchmarks are not 100% representative of real-world bytes. Both HTTP/2 and HTTP/3 reuse dynamic header tables (HPACK/QPACK) and include additional control stream data, while these tests use fresh encoders and omit those overheads for consistency.
+
+```
+make         - Run benchmarks (default)
+make build   - Build qhbench binary
+make run     - Run benchmarks to stdout
+make detailed- Run with detailed output
+make report  - Generate report file
+make clean   - Clean build artifacts
+make test    - Run tests
+make help    - Show this help
+```
