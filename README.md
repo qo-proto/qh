@@ -25,3 +25,23 @@ go run ./examples/client/main.go
 # Or directly in tmux with a shell script
 ./run-demo-tmux.sh
 ```
+
+## Benchmarks
+
+QH protocol wire format efficiency is compared against HTTP/1.1, HTTP/2, and HTTP/3. See the [benchmark results](./docs/benchmarks/) and [methodology](./docs/benchmarks/methodology.md) for detailed analysis.
+
+### Running Benchmarks
+
+```
+make          - Run benchmarks (default)
+make build    - Build qhbench binary
+make run      - Run benchmarks to stdout
+make detailed - Run with detailed output
+make results  - Generate dated results file in docs/benchmarks/
+make report   - Generate report file
+make clean    - Clean build artifacts
+make test     - Run tests
+make help     - Show this help
+```
+
+**Note:** These benchmarks measure wire format size using fresh encoders. HTTP/2 and HTTP/3 can achieve additional compression through dynamic header table reuse across multiple requests, which is not measured here.
