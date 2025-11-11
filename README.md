@@ -28,17 +28,20 @@ go run ./examples/client/main.go
 
 ## Benchmarks
 
-- `./benchmark/` - Benchmarking tool for QH vs HTTP/1.1, HTTP/2 and HTTP/3
+QH protocol wire format efficiency is compared against HTTP/1.1, HTTP/2, and HTTP/3. See the [benchmark results](./docs/benchmarks/) and [methodology](./docs/benchmarks/methodology.md) for detailed analysis.
 
-NOTE: These benchmarks are not 100% representative of real-world bytes. Both HTTP/2 and HTTP/3 reuse dynamic header tables (HPACK/QPACK) and include additional control stream data, while these tests use fresh encoders and omit those overheads for consistency.
+### Running Benchmarks
 
 ```
-make         - Run benchmarks (default)
-make build   - Build qhbench binary
-make run     - Run benchmarks to stdout
-make detailed- Run with detailed output
-make report  - Generate report file
-make clean   - Clean build artifacts
-make test    - Run tests
-make help    - Show this help
+make          - Run benchmarks (default)
+make build    - Build qhbench binary
+make run      - Run benchmarks to stdout
+make detailed - Run with detailed output
+make results  - Generate dated results file in docs/benchmarks/
+make report   - Generate report file
+make clean    - Clean build artifacts
+make test     - Run tests
+make help     - Show this help
 ```
+
+**Note:** These benchmarks measure wire format size using fresh encoders. HTTP/2 and HTTP/3 can achieve additional compression through dynamic header table reuse across multiple requests, which is not measured here.
