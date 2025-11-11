@@ -11,7 +11,7 @@ ignorePaths:
   - "**/*.go"
   - "go.mod"
   - "go.sum"
-  - "docs/images/**"
+  - "docs/benchmark/results-*.md"
   - "examples/server/files/**"
   - .*
 includePaths:

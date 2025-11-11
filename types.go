@@ -322,6 +322,7 @@ func annotateString(sb *strings.Builder, data []byte, offset *int, length int, l
 	*offset += length
 }
 
+//nolint:nestif // acceptable, maybe fix later
 func annotateHeaders(
 	sb *strings.Builder,
 	data []byte,
