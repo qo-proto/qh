@@ -1,10 +1,10 @@
-# QH Protocol Benchmark Report
+QH Protocol Benchmark Report
 
-**Date:** November 12, 2025  
-**Commit:** `d8a4d90`  
-**Go Version:** go1.25.1  
+Date: November 12, 2025  
+Commit: `dce9752`  
+Go Version: go1.25.1  
 
-Timestamp: 2025-11-12 13:58:42
+Timestamp: 2025-11-12 14:40:06
 
 ═══════════════════════════════════════════════════════════════════════
   QH Protocol Benchmark Results
@@ -50,7 +50,7 @@ REQUEST:
     \x61 \x70 \x69 \x2e \x65 \x78 \x61 \x6d \x70 \x6c \x65 \x2e \x63 \x6f \x6d Host: api.example.com
     \x14                        Path length: 20
     \x2f \x61 \x70 \x69 \x2f \x76 \x31 \x2f \x75 \x73 \x65 \x72 \x2f \x70 \x72 \x6f \x66 \x69 \x6c \x65 Path: /api/v1/user/profile
-    \x02                        Number of headers: 2
+    \x30                        Headers length: 48
     \x46                           Header ID (Accept)
     \x01                        Value length: 1
     \x32                        Value: 2
@@ -69,7 +69,7 @@ RESPONSE:
 
   QH Wire Format (annotated):
     \x00                           First byte (Version=0, Status=200)
-    \x01                        Number of headers: 1
+    \x10                        Headers length: 16
     \x00                           Custom header
     \x0c                        Key length: 12
     \x43 \x6f \x6e \x74 \x65 \x6e \x74 \x2d \x54 \x79 \x70 \x65 Key: Content-Type
@@ -95,7 +95,7 @@ REQUEST:
     \x61 \x75 \x74 \x68 \x2e \x65 \x78 \x61 \x6d \x70 \x6c \x65 \x2e \x63 \x6f \x6d Host: auth.example.com
     \x12                        Path length: 18
     \x2f \x61 \x70 \x69 \x2f \x76 \x31 \x2f \x61 \x75 \x74 \x68 \x2f \x6c \x6f \x67 \x69 \x6e Path: /api/v1/auth/login
-    \x02                        Number of headers: 2
+    \x06                        Headers length: 6
     \x47                           Header ID (Content-Type)
     \x01                        Value length: 1
     \x32                        Value: 2
@@ -115,7 +115,7 @@ RESPONSE:
 
   QH Wire Format (annotated):
     \x00                           First byte (Version=0, Status=200)
-    \x01                        Number of headers: 1
+    \x10                        Headers length: 16
     \x00                           Custom header
     \x0c                        Key length: 12
     \x43 \x6f \x6e \x74 \x65 \x6e \x74 \x2d \x54 \x79 \x70 \x65 Key: Content-Type

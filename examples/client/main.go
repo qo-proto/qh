@@ -37,7 +37,10 @@ func main() {
 		{method: "GET", path: "/file"},
 		{method: "GET", path: "/image"},
 		{method: "GET", path: "/not-found"}, // This will trigger a 404
-		{method: "GET", path: "/redirect"},  // This should return a 301 and hostname from the new site
+		{
+			method: "GET",
+			path:   "/redirect",
+		}, // This should return a 301 and hostname from the new site
 	}
 
 	c := qh.NewClient()
@@ -128,7 +131,9 @@ func logResponse(method, path string, response *qh.Response) {
 	if contentTypeStr, ok := response.Headers["Content-Type"]; ok && contentTypeStr != "" {
 		contentTypeCode, err := strconv.Atoi(contentTypeStr)
 		if err == nil {
-			sb.WriteString(fmt.Sprintf("Content:    %s\n", qh.ContentType(contentTypeCode).String()))
+			sb.WriteString(
+				fmt.Sprintf("Content:    %s\n", qh.ContentType(contentTypeCode).String()),
+			)
 		}
 	}
 

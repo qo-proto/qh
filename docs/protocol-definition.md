@@ -300,7 +300,7 @@ Byte value \x28 (HEAD):   00 101 000 = Version 0, Method 5 (HEAD), Reserved 0
 ### 4.2 Request Format
 
 ```
-<1-byte-method><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen><body>
+<1-byte-method><varint:hostLen><host><varint:pathLen><path><varint:headersLen>[headers]<varint:bodyLen><body>
 ```
 
 **Fields:**
@@ -310,10 +310,12 @@ Byte value \x28 (HEAD):   00 101 000 = Version 0, Method 5 (HEAD), Reserved 0
 - **Host**: Target hostname (required, non-empty)
 - **Path length** (varint): Length of path field in bytes
 - **Path**: Resource path (defaults to `/` if empty)
-- **Number of headers** (varint): Count of header key-value pairs
+- **Headers length** (varint): Total length of all encoded headers in bytes
 - **Headers**: Sequence of header entries (see [6. Headers](#6-headers) for format details)
 - **Body length** (varint): Length of body in bytes (0 if no body)
 - **Body**: Optional request body
+
+**Rationale for header length:** Using total header length instead of header count enables parallel parsing of headers and body, and allows implementations to skip directly to the body if header parsing can be deferred. The body offset can be calculated as: `offset = 1 + hostLenSize + hostLen + pathLenSize + pathLen + headersLenSize + headersLen`
 
 ### 4.3 Request Examples
 
@@ -332,7 +334,7 @@ Host: example.com
 └──────┘  └──────┘  └─────────────┘  └──────┘  └────────┘  └──────┘  └──────┘
    │         │             │             │           │          │         │
    │         │             │             │           │          │         └─ Body length: 0
-   │         │             │             │           │          └─────────── Num headers: 0
+   │         │             │             │           │          └─────────── Headers length: 0
    │         │             │             │           └────────────────────── Path: "/hello"
    │         │             │             └────────────────────────────────── Path length: 6
    │         │             └──────────────────────────────────────────────── Host: "example.com"
@@ -353,7 +355,7 @@ Host: example.com
 - `example.com`: Host value (11 bytes)
 - `\x06`: Path length (6 bytes, varint)
 - `/hello`: Path value (6 bytes)
-- `\x00`: Number of headers (0, varint)
+- `\x00`: Headers length (0 bytes, varint)
 - `\x00`: Body length (0 bytes, varint)
 
 #### Example 2: POST Request with Body
@@ -380,7 +382,7 @@ Body: "Hello QH World!"
 ├─────────────────────────────────────────┤
 │ /echo                                   │  Path
 ├─────────────────────────────────────────┤
-│ 0x02                                    │  Number of headers: 2
+│ 0x08                                    │  Headers length: 8 bytes
 ├─────────────────────────────────────────┤
 │ 0x01                                    │  Header 1: Accept ID
 ├─────────────────────────────────────────┤
@@ -403,7 +405,7 @@ Body: "Hello QH World!"
 **Complete byte sequence:**
 
 ```
-\x08 \x0B example.com \x05 /echo \x02 \x01 \x03 2,1 \x04 \x01 1 \x0F Hello QH World!
+\x08 \x0B example.com \x05 /echo \x08 \x01 \x03 2,1 \x04 \x01 1 \x0F Hello QH World!
 ```
 
 **Breakdown:**
@@ -413,7 +415,7 @@ Body: "Hello QH World!"
 - `example.com`: Host value
 - `\x05`: Path length (5 bytes)
 - `/echo`: Path value
-- `\x02`: Number of headers (2)
+- `\x08`: Headers length (8 bytes total: 1+1+3+1+1+1)
 - **Header 1 (Accept):**
   - `\x01`: Header ID (Accept)
   - `\x03`: Value length (3 bytes, varint)
@@ -433,7 +435,7 @@ flowchart LR
     B --> C["Host"]
     C --> D["varint:<br/>pathLen"]
     D --> E["Path"]
-    E --> F["varint:<br/>numHeaders"]
+    E --> F["varint:<br/>headersLen"]
     F --> G["Headers<br/>(ID+len+val...)"]
     G --> H["varint:<br/>bodyLen"]
     H --> I["Body<br/>(optional)"]
@@ -554,16 +556,18 @@ Upon receiving a redirect, a client MUST make a new `GET` request to the new loc
 ### 5.2 Response Format
 
 ```
-<1-byte-status><varint:numHeaders>[headers]<varint:bodyLen><body>
+<1-byte-status><varint:headersLen>[headers]<varint:bodyLen><body>
 ```
 
 **Fields:**
 
 - **First byte**: Version + Status encoding (see [5.1](#51-status-codes))
-- **Number of headers** (varint): Count of header key-value pairs
+- **Headers length** (varint): Total length of all encoded headers in bytes
 - **Headers**: Sequence of header entries (see [6. Headers](#6-headers) for format details)
 - **Body length** (varint): Length of body in bytes (0 if no body)
 - **Body**: Optional response content
+
+**Rationale for header length:** Using total header length instead of header count enables parallel parsing of headers and body, and allows implementations to skip directly to the body if header parsing can be deferred. The body offset can be calculated as: `offset = 1 + headersLenSize + headersLen`
 
 ### 5.3 Response Examples
 
@@ -579,7 +583,7 @@ Body: "Hello from QH Protocol!"
 
 ```
 ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌───┐  ┌──────┐  ┌──────────────────────────┐
-│ 0x00 │──│ 0x01 │──│ 0x01 │──│ 0x01 │──│ 1 │──│ 0x17 │──│ Hello from QH Protocol!  │
+│ 0x00 │──│ 0x03 │──│ 0x01 │──│ 0x01 │──│ 1 │──│ 0x17 │──│ Hello from QH Protocol!  │
 └──────┘  └──────┘  └──────┘  └──────┘  └───┘  └──────┘  └──────────────────────────┘
    │         │         │         │        │        │                   │
    │         │         │         │        │        │                   └─── Body (23 bytes)
@@ -587,20 +591,20 @@ Body: "Hello from QH Protocol!"
    │         │         │         │        └──────────────────────────────── Content-Type value: "1"
    │         │         │         └───────────────────────────────────────── Content-Type value len: 1
    │         │         └─────────────────────────────────────────────────── Content-Type ID (0x01)
-   │         └───────────────────────────────────────────────────────────── Number of headers: 1
+   │         └───────────────────────────────────────────────────────────── Headers length: 3 bytes
    └─────────────────────────────────────────────────────────────────────── First byte (V=0, Status=0 → HTTP 200)
 ```
 
 **Complete byte sequence:**
 
 ```
-\x00 \x01 \x01 \x01 1 \x17 Hello from QH Protocol!
+\x00 \x03 \x01 \x01 1 \x17 Hello from QH Protocol!
 ```
 
 **Breakdown:**
 
 - `\x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
-- `\x01`: Number of headers (1)
+- `\x03`: Headers length (3 bytes total: 1+1+1)
 - **Header 1:**
   - `\x01`: Header ID (Content-Type)
   - `\x01`: Value length (1 byte)
@@ -620,7 +624,7 @@ Body: "Not Found"
 
 ```
 ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌───┐  ┌──────┐  ┌───────────┐
-│ 0x01 │──│ 0x01 │──│ 0x04 │──│ 0x01 │──│ 1 │──│ 0x09 │──│ Not Found │
+│ 0x01 │──│ 0x03 │──│ 0x04 │──│ 0x01 │──│ 1 │──│ 0x09 │──│ Not Found │
 └──────┘  └──────┘  └──────┘  └──────┘  └───┘  └──────┘  └───────────┘
    │         │         │         │        │        │            │
    │         │         │         │        │        │            └─ Body (9 bytes)
@@ -628,20 +632,20 @@ Body: "Not Found"
    │         │         │         │        └───────────────────────── Content-Type value: "1"
    │         │         │         └────────────────────────────────── Content-Type value len: 1
    │         │         └──────────────────────────────────────────── Content-Type ID (0x04)
-   │         └────────────────────────────────────────────────────── Number of headers: 1
+   │         └────────────────────────────────────────────────────── Headers length: 3 bytes
    └──────────────────────────────────────────────────────────────── First byte (V=0, Status=1 → HTTP 404)
 ```
 
 **Complete byte sequence:**
 
 ```
-\x01 \x01 \x04 \x01 1 \x09 Not Found
+\x01 \x03 \x04 \x01 1 \x09 Not Found
 ```
 
 **Breakdown:**
 
 - `\x01`: First byte (Version=0, Compact Status=1 → HTTP 404)
-- `\x01`: Number of headers (1)
+- `\x03`: Headers length (3 bytes total: 1+1+1)
 - **Header 1 (Content-Type):**
   - `\x04`: Header ID (Content-Type)
   - `\x01`: Value length (1 byte, varint)
@@ -665,7 +669,7 @@ Body: {"name":"John Doe","id":123,"active":true}
 ┌─────────────────────────────────────────┐
 │ 0x00                                    │  First byte (V=0, Status=0 → HTTP 200)
 ├─────────────────────────────────────────┤
-│ 0x03                                    │  Number of headers: 3
+│ 0x1D                                    │  Headers length: 29 bytes
 ├─────────────────────────────────────────┤
 │ 0x04                                    │  Header 1: Content-Type ID
 ├─────────────────────────────────────────┤
@@ -694,13 +698,13 @@ Body: {"name":"John Doe","id":123,"active":true}
 **Complete byte sequence:**
 
 ```
-\x00 \x03 \x04 \x01 2 \x05 \x0C max-age=3600 \x06 \x0A 1758784800 \x2A {"name":"John Doe","id":123,"active":true}
+\x00 \x1D \x04 \x01 2 \x05 \x0C max-age=3600 \x06 \x0A 1758784800 \x2A {"name":"John Doe","id":123,"active":true}
 ```
 
 **Breakdown:**
 
 - `\x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
-- `\x03`: Number of headers (3)
+- `\x1D`: Headers length (29 bytes total: 1+1+1+1+1+12+1+1+10)
 - **Header 1 (Content-Type):**
   - `\x04`: Header ID (Content-Type)
   - `\x01`: Value length (1 byte, varint)
@@ -720,7 +724,7 @@ Body: {"name":"John Doe","id":123,"active":true}
 
 ```mermaid
 flowchart LR
-    A["First Byte<br/>(V+S)"] --> B["varint:<br/>numHeaders"]
+    A["First Byte<br/>(V+S)"] --> B["varint:<br/>headersLen"]
     B --> C["Headers<br/>(ID+len+val...)"]
     C --> D["varint:<br/>bodyLen"]
     D --> E["Body<br/>(optional)"]
