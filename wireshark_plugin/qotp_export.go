@@ -1,51 +1,23 @@
 package main
 
+/*
+#include <stdlib.h>
+*/
 import "C"
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"unsafe"
 
+	"github.com/tbocek/qotp"
 	"golang.org/x/crypto/chacha20"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
 const Version = "1.0.0"
 
-// Copied from crypto.go - essential types and constants
-const (
-	CryptoVersion = 0
-	MacSize       = 16
-	SnSize        = 6
-	PubKeySize    = 32
-	HeaderSize    = 1
-	ConnIdSize    = 8
-	FooterDataSize = SnSize + MacSize
-	MinDataSizeHdr = HeaderSize + ConnIdSize
-)
-
-type CryptoMsgType int8
-
-const (
-	InitSnd CryptoMsgType = iota
-	InitRcv
-	InitCryptoSnd
-	InitCryptoRcv
-	Data
-)
-
-// Helper functions from types.go
-func PutUint48(b []byte, v uint64) {
-	b[0] = byte(v)
-	b[1] = byte(v >> 8)
-	b[2] = byte(v >> 16)
-	b[3] = byte(v >> 24)
-	b[4] = byte(v >> 32)
-	b[5] = byte(v >> 40)
-}
-
-func Uint48(b []byte) uint64 {
+// Helper to read uint48 from buffer (not exported in qotp package)
+func uint48(b []byte) uint64 {
 	return uint64(b[0]) |
 		uint64(b[1])<<8 |
 		uint64(b[2])<<16 |
@@ -54,7 +26,8 @@ func Uint48(b []byte) uint64 {
 		uint64(b[5])<<40
 }
 
-func PutUint64(b []byte, v uint64) {
+// Helper to write uint64 to buffer
+func putUint64(b []byte, v uint64) {
 	b[0] = byte(v)
 	b[1] = byte(v >> 8)
 	b[2] = byte(v >> 16)
@@ -63,6 +36,16 @@ func PutUint64(b []byte, v uint64) {
 	b[5] = byte(v >> 40)
 	b[6] = byte(v >> 48)
 	b[7] = byte(v >> 56)
+}
+
+// Helper to write uint48 to buffer
+func putUint48(b []byte, v uint64) {
+	b[0] = byte(v)
+	b[1] = byte(v >> 8)
+	b[2] = byte(v >> 16)
+	b[3] = byte(v >> 24)
+	b[4] = byte(v >> 32)
+	b[5] = byte(v >> 40)
 }
 
 // Global storage for shared secrets keyed by connection ID
@@ -113,7 +96,7 @@ func GetLoadedKeys(output *C.ulonglong, maxCount C.int) C.int {
 
 //export GetConnectionId
 func GetConnectionId(data *C.char, dataLen C.int) C.ulonglong {
-	if dataLen < HeaderSize+ConnIdSize {
+	if dataLen < qotp.HeaderSize+qotp.ConnIdSize {
 		return 0
 	}
 
@@ -184,9 +167,9 @@ func DecryptDataPacket(
 // decryptDataForPcap is adapted from DecryptDataForPcap in crypto.go
 func decryptDataForPcap(encryptedPortion []byte, isSenderOnInit bool, epoch uint64, sharedSecret []byte, connId uint64) ([]byte, error) {
 	// Reconstruct the AAD (header) as it was during encryption for a Data packet.
-	header := make([]byte, HeaderSize+ConnIdSize)
-	header[0] = (uint8(Data) << 5) | CryptoVersion
-	PutUint64(header[HeaderSize:], connId)
+	header := make([]byte, qotp.HeaderSize+qotp.ConnIdSize)
+	header[0] = (uint8(qotp.Data) << 5) | qotp.CryptoVersion
+	putUint64(header[qotp.HeaderSize:], connId)
 
 	// For offline decryption, we must call chainedDecrypt with the offline flag.
 	_, _, payload, err := chainedDecrypt(isSenderOnInit, epoch, sharedSecret, header, encryptedPortion, true)
@@ -199,20 +182,20 @@ func decryptDataForPcap(encryptedPortion []byte, isSenderOnInit bool, epoch uint
 // chainedDecrypt from crypto.go - adapted for pcap decryption
 func chainedDecrypt(isSender bool, epochCrypt uint64, sharedSecret []byte, header []byte, encData []byte, isOfflineDecrypt bool) (
 	snConn uint64, currentEpochCrypt uint64, packetData []byte, err error) {
-	
-	if len(encData) < SnSize {
-		return 0, 0, nil, errors.New("encrypted data too short")
+
+	if len(encData) < qotp.SnSize {
+		return 0, 0, nil, fmt.Errorf("encrypted data too short")
 	}
-	
-	snConnBytes := make([]byte, SnSize)
-	encryptedSN := encData[:SnSize]
-	ciphertextWithNonce := encData[SnSize:]
-	
+
+	snConnBytes := make([]byte, qotp.SnSize)
+	encryptedSN := encData[:qotp.SnSize]
+	ciphertextWithNonce := encData[qotp.SnSize:]
+
 	snConnBytes, err = openNoVerify(sharedSecret, ciphertextWithNonce, encryptedSN, snConnBytes)
 	if err != nil {
 		return 0, 0, nil, err
 	}
-	snConn = Uint48(snConnBytes)
+	snConn = uint48(snConnBytes)
 
 	nonceDet := make([]byte, chacha20poly1305.NonceSize)
 
@@ -227,11 +210,11 @@ func chainedDecrypt(isSender bool, epochCrypt uint64, sharedSecret []byte, heade
 	if err != nil {
 		return 0, 0, nil, err
 	}
-	PutUint48(nonceDet[6:], snConn)
+	putUint48(nonceDet[6:], snConn)
 
 	for _, epochTry := range epochs {
-		PutUint48(nonceDet, epochTry)
-		
+		putUint48(nonceDet, epochTry)
+
 		// The logic for the sender bit is inverted between live decryption and offline pcap decryption.
 		if isOfflineDecrypt {
 			if isSender {
@@ -259,7 +242,7 @@ func chainedDecrypt(isSender bool, epochCrypt uint64, sharedSecret []byte, heade
 func openNoVerify(sharedSecret []byte, nonce []byte, encoded []byte, snSer []byte) ([]byte, error) {
 	// The nonce for the SN is the first 24 bytes of the main ciphertext
 	snNonce := nonce[:chacha20poly1305.NonceSizeX]
-	
+
 	s, err := chacha20.NewUnauthenticatedCipher(sharedSecret, snNonce)
 	if err != nil {
 		return nil, err

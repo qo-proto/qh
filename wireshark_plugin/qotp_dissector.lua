@@ -30,6 +30,40 @@ qotp_decrypt.test()
 -- Create protocol first (before accessing any prefs)
 local qotp_proto = Proto("QOTP", "Quick UDP Transport Protocol")
 
+-- Define fields for QOTP protocol (must be defined before using them)
+local f_msg_type = ProtoField.string("qotp.msg_type", "Message Type")
+local f_version = ProtoField.uint8("qotp.version", "Version", base.DEC)
+local f_conn_id = ProtoField.uint64("qotp.conn_id", "Connection ID", base.HEX)
+local f_encrypted = ProtoField.bytes("qotp.encrypted", "Encrypted Data")
+local f_decrypted = ProtoField.bytes("qotp.decrypted", "Decrypted Data")
+local f_header = ProtoField.bytes("qotp.header", "Header")
+
+-- Define fields for QH protocol (inner protocol)
+local f_qh_version = ProtoField.uint8("qh.version", "QH Version", base.DEC)
+local f_qh_type = ProtoField.string("qh.type", "Type")
+local f_qh_method = ProtoField.string("qh.method", "Operation")
+local f_qh_status = ProtoField.uint16("qh.status", "Status Code", base.DEC)
+local f_qh_host = ProtoField.string("qh.host", "Host")
+local f_qh_path = ProtoField.string("qh.path", "Path")
+local f_qh_body = ProtoField.bytes("qh.body", "Body")
+
+-- Register all fields with the protocol
+qotp_proto.fields = {
+    f_msg_type,
+    f_version,
+    f_conn_id,
+    f_encrypted,
+    f_decrypted,
+    f_header,
+    f_qh_version,
+    f_qh_type,
+    f_qh_method,
+    f_qh_status,
+    f_qh_host,
+    f_qh_path,
+    f_qh_body
+}
+
 -- Add preferences for keylog file
 qotp_proto.prefs.keylog_file = Pref.string("Keylog file", "", "Path to QOTP keylog file")
 
@@ -230,24 +264,211 @@ local function check_and_reload_keylog(filepath)
     return false
 end
 
-
-
--- Define fields
-local f_msg_type = ProtoField.string("qotp.msg_type", "Message Type")
-local f_version = ProtoField.uint8("qotp.version", "Version", base.DEC)
-local f_conn_id = ProtoField.uint64("qotp.conn_id", "Connection ID", base.HEX)
-local f_encrypted = ProtoField.bytes("qotp.encrypted", "Encrypted Data")
-local f_decrypted = ProtoField.bytes("qotp.decrypted", "Decrypted Data")
-local f_header = ProtoField.bytes("qotp.header", "Header")
-
-qotp_proto.fields = {
-    f_msg_type,
-    f_version,
-    f_conn_id,
-    f_encrypted,
-    f_decrypted,
-    f_header
+-- QH Method names
+local qh_methods = {
+    [0] = "GET",
+    [1] = "POST",
+    [2] = "PUT",
+    [3] = "PATCH",
+    [4] = "DELETE",
+    [5] = "HEAD"
 }
+
+-- Compact to HTTP status code mapping (from status.go)
+local compact_to_status = {
+    [0] = 200,  -- OK
+    [1] = 404,  -- Not Found
+    [2] = 500,  -- Internal Server Error
+    [3] = 302,  -- Found (redirect)
+    [4] = 400,  -- Bad Request
+    [5] = 403,  -- Forbidden
+    [6] = 401,  -- Unauthorized
+    [7] = 301,  -- Moved Permanently
+    [8] = 304,  -- Not Modified
+    [9] = 503,  -- Service Unavailable
+    [10] = 201, -- Created
+    [11] = 202, -- Accepted
+    [12] = 204, -- No Content
+    [13] = 206, -- Partial Content
+    [14] = 307, -- Temporary Redirect
+    [15] = 308, -- Permanent Redirect
+    [16] = 409, -- Conflict
+    [17] = 410, -- Gone
+    [18] = 412, -- Precondition Failed
+    [19] = 413, -- Payload Too Large
+    [20] = 414, -- URI Too Long
+    [21] = 415, -- Unsupported Media Type
+    [22] = 422, -- Unprocessable Entity
+    [23] = 429, -- Too Many Requests
+    [24] = 502, -- Bad Gateway
+    [25] = 504, -- Gateway Timeout
+    [26] = 505, -- QH Version Not Supported
+    [27] = 100, -- Continue
+    [28] = 101, -- Switching Protocols
+    [29] = 102, -- Processing
+    [30] = 103, -- Early Hints
+    [31] = 205, -- Reset Content
+    [32] = 207, -- Multi-Status
+    [33] = 208, -- Already Reported
+    [34] = 226, -- IM Used
+    [35] = 300, -- Multiple Choices
+    [36] = 303, -- See Other
+    [37] = 305, -- Use Proxy
+    [38] = 402, -- Payment Required
+    [39] = 405, -- Method Not Allowed
+    [40] = 406, -- Not Acceptable
+    [41] = 407, -- Proxy Authentication Required
+    [42] = 408, -- Request Timeout
+    [43] = 411, -- Length Required
+    [44] = 416, -- Range Not Satisfiable
+    [45] = 417  -- Expectation Failed
+}
+
+-- Function to parse QH protocol from decrypted data string
+local function parse_qh_protocol(decrypted_data, tree, pinfo)
+    -- Skip very small packets - likely handshake/control data, not QH protocol
+    if #decrypted_data < 19 then
+        if pinfo.visited == false then
+            print(string.format("QH: Skipping QH parsing - data too small (%d bytes)", #decrypted_data))
+        end
+        return
+    end
+    
+    local qh_tree = tree:add(qotp_proto, "QH Protocol")
+    local offset = 1  -- Lua strings are 1-indexed
+    
+    -- Skip 1 byte general offset (reason unknown - observed in captures)
+    offset = offset + 1
+    
+    -- First byte format:
+    -- Request:  Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
+    -- Response: Version (2 bits, bits 7-6) | Compact Status (6 bits, bits 5-0)
+    local first_byte = decrypted_data:byte(offset)
+    local qh_version = bit.rshift(first_byte, 6)
+    
+    qh_tree:add(f_qh_version, qh_version):set_generated()
+    
+    -- Determine if it's a request or response based on port direction
+    -- Request: destination port 8090 (client -> server)
+    -- Response: source port 8090 (server -> client)
+    local is_request = (pinfo.dst_port == 8090)
+    
+    if pinfo.visited == false then
+        print(string.format("QH: Port detection - src_port=%d, dst_port=%d -> %s", 
+            pinfo.src_port, pinfo.dst_port, is_request and "REQUEST" or "RESPONSE"))
+    end
+    
+    local method_bits = bit.band(bit.rshift(first_byte, 3), 0x07)  -- bits 5-3
+    
+    offset = offset + 1
+    
+    if is_request then
+        -- Parse Request
+        qh_tree:add(f_qh_type, "Request"):set_generated()
+        local method_name = qh_methods[method_bits] or string.format("Unknown(%d)", method_bits)
+        qh_tree:add(f_qh_method, method_name):set_generated()
+        pinfo.cols.info:append(string.format(" [%s", method_name))
+        
+        -- Skip 8 bytes (unknown header data) before host
+        -- TODO: Parse these 8 bytes to understand what they contain
+        offset = offset + 7
+        
+        if pinfo.visited == false then
+            print(string.format("QH: Skipped 8 header bytes, now at offset %d", offset))
+        end
+        
+        -- Debug: Show all bytes from current offset
+        if pinfo.visited == false then
+            local debug_len = math.min(50, #decrypted_data - offset + 1)
+            local debug_bytes = ""
+            local debug_ascii = ""
+            for i = 0, debug_len - 1 do
+                local b = decrypted_data:byte(offset + i)
+                debug_bytes = debug_bytes .. string.format("%02x ", b)
+                if b >= 32 and b <= 126 then
+                    debug_ascii = debug_ascii .. string.char(b)
+                else
+                    debug_ascii = debug_ascii .. "."
+                end
+            end
+            print(string.format("QH: Next %d bytes from offset %d:", debug_len, offset))
+            print(string.format("  Hex:   %s", debug_bytes))
+            print(string.format("  ASCII: %s", debug_ascii))
+        end
+        
+        -- Parse host (null-terminated string)
+        if offset <= #decrypted_data then
+            local host_end = offset
+            while host_end <= #decrypted_data and decrypted_data:byte(host_end) ~= 0 do
+                host_end = host_end + 1
+            end
+            
+            if host_end > offset then
+                local host = decrypted_data:sub(offset, host_end - 1)
+                
+                -- Debug output
+                if pinfo.visited == false then
+                    print(string.format("QH: Host parsing - offset=%d, host_end=%d, length=%d", offset, host_end, host_end - offset))
+                    print(string.format("QH: Host string: '%s'", host))
+                end
+                
+                qh_tree:add(f_qh_host, host):set_generated()
+                offset = host_end + 1  -- Skip null terminator
+            else
+                if pinfo.visited == false then
+                    print(string.format("QH: No host found at offset %d (immediate null byte)", offset))
+                end
+            end
+        end
+        
+        -- Parse path (null-terminated string)
+        if offset <= #decrypted_data then
+            local path_end = offset
+            while path_end <= #decrypted_data and decrypted_data:byte(path_end) ~= 0 do
+                path_end = path_end + 1
+            end
+            
+            if path_end > offset then
+                local path = decrypted_data:sub(offset, path_end - 1)
+                qh_tree:add(f_qh_path, path):set_generated()
+                pinfo.cols.info:append(string.format(" %s]", path))
+                offset = path_end + 1  -- Skip null terminator
+            else
+                pinfo.cols.info:append("]")
+            end
+        end
+        
+    else
+        -- Parse Response
+        qh_tree:add(f_qh_type, "Response"):set_generated()
+        local compact_status = bit.band(first_byte, 0x3F)  -- Lower 6 bits
+        local http_status = compact_to_status[compact_status] or 500
+        
+        if pinfo.visited == false then
+            print(string.format("QH: Response - first_byte=0x%02x, compact_status=%d, http_status=%d", 
+                first_byte, compact_status, http_status))
+        end
+        
+        qh_tree:add(f_qh_status, http_status):set_generated()
+        pinfo.cols.info:append(string.format(" [Status: %d]", http_status))
+    end
+    
+    -- Find body (after ETX marker 0x03)
+    while offset <= #decrypted_data do
+        if decrypted_data:byte(offset) == 0x03 then
+            offset = offset + 1
+            break
+        end
+        offset = offset + 1
+    end
+    
+    if offset <= #decrypted_data then
+        local body = decrypted_data:sub(offset)
+        if #body > 0 then
+            qh_tree:add(f_qh_body, string.format("%d bytes", #body)):set_generated()
+        end
+    end
+end
 
 -- Dissector function
 function qotp_proto.dissector(buffer, pinfo, tree)
@@ -373,6 +594,18 @@ function qotp_proto.dissector(buffer, pinfo, tree)
                 local decrypted_tree = subtree:add(f_decrypted, decrypted_tvb():range())
                 decrypted_tree:append_text(string.format(" (Epoch: %d, Sender: %s, Length: %d)", 
                     used_epoch, tostring(used_sender), #decrypted))
+                
+                -- Debug: print first bytes of decrypted data
+                if pinfo.visited == false and #decrypted > 0 then
+                    local first_byte = decrypted:byte(1)
+                    print(string.format("QOTP: First byte of decrypted data: 0x%02x (binary: %s)", 
+                        first_byte, string.format("%08d", tonumber(string.format("%d", first_byte), 2))))
+                    print(string.format("  Version bits (7-6): %d", bit.rshift(first_byte, 6)))
+                    print(string.format("  Method bits (5-3): %d", bit.band(bit.rshift(first_byte, 3), 0x07)))
+                end
+                
+                -- Parse QH protocol from decrypted data string
+                parse_qh_protocol(decrypted, subtree, pinfo)
                 
                 -- Show decrypted data as hex and ASCII
                 local hex_str = ""
