@@ -384,13 +384,13 @@ Body: "Hello QH World!"
 ├─────────────────────────────────────────┤
 │ 0x08                                    │  Headers length: 8 bytes
 ├─────────────────────────────────────────┤
-│ 0x01                                    │  Header 1: Accept ID
+│ 0x46                                    │  Header 1: Accept ID
 ├─────────────────────────────────────────┤
 │ 0x03                                    │  Accept value length: 3
 ├─────────────────────────────────────────┤
 │ 2,1                                     │  Accept value
 ├─────────────────────────────────────────┤
-│ 0x04                                    │  Header 2: Content-Type ID
+│ 0x47                                    │  Header 2: Content-Type ID
 ├─────────────────────────────────────────┤
 │ 0x01                                    │  Content-Type value length: 1
 ├─────────────────────────────────────────┤
@@ -405,7 +405,7 @@ Body: "Hello QH World!"
 **Complete byte sequence:**
 
 ```
-\x08 \x0B example.com \x05 /echo \x08 \x01 \x03 2,1 \x04 \x01 1 \x0F Hello QH World!
+\x08 \x0B example.com \x05 /echo \x08 \x46 \x03 2,1 \x47 \x01 1 \x0F Hello QH World!
 ```
 
 **Breakdown:**
@@ -417,11 +417,11 @@ Body: "Hello QH World!"
 - `/echo`: Path value
 - `\x08`: Headers length (8 bytes total: 1+1+3+1+1+1)
 - **Header 1 (Accept):**
-  - `\x01`: Header ID (Accept)
+  - `\x46`: Header ID (Accept name-only, Format 2)
   - `\x03`: Value length (3 bytes, varint)
   - `2,1`: Value (JSON, text/plain codes)
 - **Header 2 (Content-Type):**
-  - `\x04`: Header ID (Content-Type)
+  - `\x47`: Header ID (Content-Type name-only, Format 2)
   - `\x01`: Value length (1 byte, varint)
   - `1`: Value (text/plain code)
 - `\x0F`: Body length (15 bytes)
@@ -583,14 +583,14 @@ Body: "Hello from QH Protocol!"
 
 ```
 ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌───┐  ┌──────┐  ┌──────────────────────────┐
-│ 0x00 │──│ 0x03 │──│ 0x01 │──│ 0x01 │──│ 1 │──│ 0x17 │──│ Hello from QH Protocol!  │
+│ 0x00 │──│ 0x03 │──│ 0x90 │──│ 0x01 │──│ 1 │──│ 0x17 │──│ Hello from QH Protocol!  │
 └──────┘  └──────┘  └──────┘  └──────┘  └───┘  └──────┘  └──────────────────────────┘
    │         │         │         │        │        │                   │
    │         │         │         │        │        │                   └─── Body (23 bytes)
    │         │         │         │        │        └─────────────────────── Body length: 23
    │         │         │         │        └──────────────────────────────── Content-Type value: "1"
    │         │         │         └───────────────────────────────────────── Content-Type value len: 1
-   │         │         └─────────────────────────────────────────────────── Content-Type ID (0x01)
+   │         │         └─────────────────────────────────────────────────── Content-Type ID (0x90)
    │         └───────────────────────────────────────────────────────────── Headers length: 3 bytes
    └─────────────────────────────────────────────────────────────────────── First byte (V=0, Status=0 → HTTP 200)
 ```
@@ -598,7 +598,7 @@ Body: "Hello from QH Protocol!"
 **Complete byte sequence:**
 
 ```
-\x00 \x03 \x01 \x01 1 \x17 Hello from QH Protocol!
+\x00 \x03 \x90 \x01 1 \x17 Hello from QH Protocol!
 ```
 
 **Breakdown:**
@@ -606,7 +606,7 @@ Body: "Hello from QH Protocol!"
 - `\x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
 - `\x03`: Headers length (3 bytes total: 1+1+1)
 - **Header 1:**
-  - `\x01`: Header ID (Content-Type)
+  - `\x90`: Header ID (content-type name-only, Format 2)
   - `\x01`: Value length (1 byte)
   - `1`: Value (text/plain code)
 - `\x17`: Body length (23 bytes)
@@ -624,14 +624,14 @@ Body: "Not Found"
 
 ```
 ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌───┐  ┌──────┐  ┌───────────┐
-│ 0x01 │──│ 0x03 │──│ 0x04 │──│ 0x01 │──│ 1 │──│ 0x09 │──│ Not Found │
+│ 0x01 │──│ 0x03 │──│ 0x90 │──│ 0x01 │──│ 1 │──│ 0x09 │──│ Not Found │
 └──────┘  └──────┘  └──────┘  └──────┘  └───┘  └──────┘  └───────────┘
    │         │         │         │        │        │            │
    │         │         │         │        │        │            └─ Body (9 bytes)
    │         │         │         │        │        └──────────────── Body length: 9
    │         │         │         │        └───────────────────────── Content-Type value: "1"
    │         │         │         └────────────────────────────────── Content-Type value len: 1
-   │         │         └──────────────────────────────────────────── Content-Type ID (0x04)
+   │         │         └──────────────────────────────────────────── Content-Type ID (0x90)
    │         └────────────────────────────────────────────────────── Headers length: 3 bytes
    └──────────────────────────────────────────────────────────────── First byte (V=0, Status=1 → HTTP 404)
 ```
@@ -639,7 +639,7 @@ Body: "Not Found"
 **Complete byte sequence:**
 
 ```
-\x01 \x03 \x04 \x01 1 \x09 Not Found
+\x01 \x03 \x90 \x01 1 \x09 Not Found
 ```
 
 **Breakdown:**
@@ -647,7 +647,7 @@ Body: "Not Found"
 - `\x01`: First byte (Version=0, Compact Status=1 → HTTP 404)
 - `\x03`: Headers length (3 bytes total: 1+1+1)
 - **Header 1 (Content-Type):**
-  - `\x04`: Header ID (Content-Type)
+  - `\x90`: Header ID (content-type name-only, Format 2)
   - `\x01`: Value length (1 byte, varint)
   - `1`: Value (text/plain code)
 - `\x09`: Body length (9 bytes)
@@ -671,19 +671,19 @@ Body: {"name":"John Doe","id":123,"active":true}
 ├─────────────────────────────────────────┤
 │ 0x1D                                    │  Headers length: 29 bytes
 ├─────────────────────────────────────────┤
-│ 0x04                                    │  Header 1: Content-Type ID
+│ 0x90                                    │  Header 1: Content-Type ID
 ├─────────────────────────────────────────┤
 │ 0x01                                    │  Content-Type value length: 1
 ├─────────────────────────────────────────┤
 │ 2                                       │  Content-Type value (JSON code)
 ├─────────────────────────────────────────┤
-│ 0x05                                    │  Header 2: Cache-Control ID
+│ 0x91                                    │  Header 2: Cache-Control ID
 ├─────────────────────────────────────────┤
 │ 0x0C                                    │  Cache-Control value length: 12
 ├─────────────────────────────────────────┤
 │ max-age=3600                            │  Cache-Control value
 ├─────────────────────────────────────────┤
-│ 0x06                                    │  Header 3: Date ID
+│ 0x8F                                    │  Header 3: Date ID
 ├─────────────────────────────────────────┤
 │ 0x0A                                    │  Date value length: 10
 ├─────────────────────────────────────────┤
@@ -698,7 +698,7 @@ Body: {"name":"John Doe","id":123,"active":true}
 **Complete byte sequence:**
 
 ```
-\x00 \x1D \x04 \x01 2 \x05 \x0C max-age=3600 \x06 \x0A 1758784800 \x2A {"name":"John Doe","id":123,"active":true}
+\x00 \x1D \x90 \x01 2 \x91 \x0C max-age=3600 \x8F \x0A 1758784800 \x2A {"name":"John Doe","id":123,"active":true}
 ```
 
 **Breakdown:**
@@ -706,15 +706,15 @@ Body: {"name":"John Doe","id":123,"active":true}
 - `\x00`: First byte (Version=0, Compact Status=0 → HTTP 200)
 - `\x1D`: Headers length (29 bytes total: 1+1+1+1+1+12+1+1+10)
 - **Header 1 (Content-Type):**
-  - `\x04`: Header ID (Content-Type)
+  - `\x90`: Header ID (content-type name-only, Format 2)
   - `\x01`: Value length (1 byte, varint)
   - `2`: Value (JSON code)
 - **Header 2 (Cache-Control):**
-  - `\x05`: Header ID (Cache-Control)
+  - `\x91`: Header ID (cache-control name-only, Format 2)
   - `\x0C`: Value length (12 bytes, varint)
   - `max-age=3600`: Value
 - **Header 3 (Date):**
-  - `\x06`: Header ID (Date)
+  - `\x8F`: Header ID (date name-only, Format 2)
   - `\x0A`: Value length (10 bytes, varint)
   - `1758784800`: Value (Unix timestamp)
 - `\x2A`: Body length (42 bytes)
