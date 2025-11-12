@@ -21,11 +21,11 @@ report:
 	GIT_COMMIT=$$(git rev-parse --short HEAD 2>/dev/null || echo "unknown"); \
 	mkdir -p ../docs/benchmarks; \
 	go run cmd/qhbench/main.go -detailed -examples=2 -o /tmp/benchmark_report.txt; \
-	echo "# QH Protocol Benchmark Report" > ../docs/benchmarks/report-$$DATE.txt; \
+	echo "QH Protocol Benchmark Report" > ../docs/benchmarks/report-$$DATE.txt; \
 	echo "" >> ../docs/benchmarks/report-$$DATE.txt; \
-	echo "**Date:** $$DATE_HUMAN  " >> ../docs/benchmarks/report-$$DATE.txt; \
-	echo "**Commit:** \`$$GIT_COMMIT\`  " >> ../docs/benchmarks/report-$$DATE.txt; \
-	echo "**Go Version:** $$GO_VERSION  " >> ../docs/benchmarks/report-$$DATE.txt; \
+	echo "Date: $$DATE_HUMAN  " >> ../docs/benchmarks/report-$$DATE.txt; \
+	echo "Commit: \`$$GIT_COMMIT\`  " >> ../docs/benchmarks/report-$$DATE.txt; \
+	echo "Go Version: $$GO_VERSION  " >> ../docs/benchmarks/report-$$DATE.txt; \
 	echo "" >> ../docs/benchmarks/report-$$DATE.txt; \
 	tail -n +3 /tmp/benchmark_report.txt >> ../docs/benchmarks/report-$$DATE.txt; \
 	rm /tmp/benchmark_report.txt; \
