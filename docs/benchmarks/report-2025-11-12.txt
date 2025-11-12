@@ -1,10 +1,10 @@
-# QH Protocol Benchmark Results
+# QH Protocol Benchmark Report
 
-**Date:** November 11, 2025  
-**Commit:** `6198f64`  
+**Date:** November 12, 2025  
+**Commit:** `d8a4d90`  
 **Go Version:** go1.25.1  
 
-Timestamp: 2025-11-11 23:02:33
+Timestamp: 2025-11-12 13:58:42
 
 ═══════════════════════════════════════════════════════════════════════
   QH Protocol Benchmark Results
@@ -96,10 +96,10 @@ REQUEST:
     \x12                        Path length: 18
     \x2f \x61 \x70 \x69 \x2f \x76 \x31 \x2f \x61 \x75 \x74 \x68 \x2f \x6c \x6f \x67 \x69 \x6e Path: /api/v1/auth/login
     \x02                        Number of headers: 2
-    \x46                           Header ID (Accept)
+    \x47                           Header ID (Content-Type)
     \x01                        Value length: 1
     \x32                        Value: 2
-    \x47                           Header ID (Content-Type)
+    \x46                           Header ID (Accept)
     \x01                        Value length: 1
     \x32                        Value: 2
     \x31                        Body length: 49
