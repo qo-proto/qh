@@ -41,6 +41,7 @@ Status: Draft
       - [Response Wire Format Legend](#response-wire-format-legend)
   - [6. Headers](#6-headers)
     - [6.1 Header Format](#61-header-format)
+      - [6.1.1 Header Name Normalization](#611-header-name-normalization)
     - [6.2 Header Compression](#62-header-compression)
   - [7. Transport](#7-transport)
     - [7.1 Connection Establishment](#71-connection-establishment)
