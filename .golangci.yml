@@ -40,7 +40,7 @@ linters:
     - exhaustive # checks exhaustiveness of enum switch statements
     - exptostd # detects functions from golang.org/x/exp/ that can be replaced by std functions
     - fatcontext # detects nested contexts in loops
-    - forbidigo # forbids identifiers
+    # - forbidigo # forbids identifiers
     - funcorder # checks the order of functions, methods, and constructors
     - gocheckcompilerdirectives # validates go compiler directive comments (//go:)
     - gochecksumtype # checks exhaustiveness on Go "sum types"

@@ -134,7 +134,7 @@ func main() {
 		return qh.JSONResponse(200, `{"message": "User partially updated", "id": 123}`)
 	})
 
-	srv.HandleFunc("/api/user", qh.DELETE, func(req *qh.Request) *qh.Response {
+	srv.HandleFunc("/api/user", qh.DELETE, func(_ *qh.Request) *qh.Response {
 		slog.Info("Handling request", "method", "DELETE", "path", "/api/user")
 		// A 204 No Content response is appropriate for a successful DELETE with no body.
 		return qh.NewResponse(204, nil, nil)

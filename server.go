@@ -143,12 +143,6 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 
 	s.applyCompression(req, resp)
 
-	if err := resp.Validate(); err != nil {
-		slog.Error("Response validation failed", "error", err)
-		s.sendErrorResponse(stream, 500, "Internal Server Error")
-		return
-	}
-
 	// send response
 	respData := resp.Format()
 	slog.Debug("Sending response", "bytes", len(respData))
