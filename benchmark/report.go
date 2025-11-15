@@ -15,13 +15,23 @@ func GenerateReport(results []BenchmarkResult) string {
 	sb.WriteString("  Comparing QH vs HTTP/1.1, HTTP/2, and HTTP/3\n")
 	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n\n")
 
+	sb.WriteString("DETAILED RESULTS BY TEST CASE\n\n")
+	sb.WriteString(formatDetailedTable(results))
+	sb.WriteString("\n\n")
+
 	summary := CalculateSummary(results)
 	sb.WriteString("OVERALL SUMMARY\n\n")
 	sb.WriteString(formatOverall(summary))
 	sb.WriteString("\n\n")
 
-	sb.WriteString("DETAILED RESULTS BY TEST CASE\n\n")
-	sb.WriteString(formatDetailedTable(results))
+	sizeCategories := CalculateSizeCategories(results)
+	sb.WriteString("BREAKDOWN BY RESPONSE SIZE\n\n")
+	sb.WriteString(formatSizeCategories(sizeCategories))
+	sb.WriteString("\n\n")
+
+	headerAnalysis := CalculateHeaderAnalysis(results)
+	sb.WriteString("REQUEST ENCODING ANALYSIS\n\n")
+	sb.WriteString(formatHeaderAnalysis(headerAnalysis))
 	sb.WriteString("\n")
 
 	return sb.String()
@@ -32,12 +42,13 @@ func formatOverall(s Summary) string {
 
 	sb.WriteString(fmt.Sprintf("  Tests run:        %d\n", s.TotalTests))
 	sb.WriteString(fmt.Sprintf("  Total QH bytes:   %d B\n", s.QHTotalBytes))
-	sb.WriteString(fmt.Sprintf("  vs HTTP/1.1:      %.1f%% (%.1f%% reduction)\n",
-		s.QHVsHTTP1Ratio, 100-s.QHVsHTTP1Ratio))
-	sb.WriteString(fmt.Sprintf("  vs HTTP/2:        %.1f%% (%.1f%% reduction)\n",
-		s.QHVsHTTP2Ratio, 100-s.QHVsHTTP2Ratio))
-	sb.WriteString(fmt.Sprintf("  vs HTTP/3:        %.1f%% (%.1f%% reduction)\n\n",
-		s.QHVsHTTP3Ratio, 100-s.QHVsHTTP3Ratio))
+
+	sb.WriteString(fmt.Sprintf("  vs HTTP/1.1:      %.1f%% (%s)\n",
+		s.QHVsHTTP1Ratio, formatDifference(s.QHVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("  vs HTTP/2:        %.1f%% (%s)\n",
+		s.QHVsHTTP2Ratio, formatDifference(s.QHVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("  vs HTTP/3:        %.1f%% (%s)\n\n",
+		s.QHVsHTTP3Ratio, formatDifference(s.QHVsHTTP3Ratio)))
 
 	http1Savings := s.HTTP1TotalBytes - s.QHTotalBytes
 	http2Savings := s.HTTP2TotalBytes - s.QHTotalBytes
@@ -48,6 +59,72 @@ func formatOverall(s Summary) string {
 	sb.WriteString(fmt.Sprintf("  Bandwidth saved vs HTTP/3:   %d B", http3Savings))
 
 	return sb.String()
+}
+
+func formatDifference(ratio float64) string {
+	diff := 100 - ratio
+	if diff > 0 {
+		return fmt.Sprintf("%.1f%% smaller", diff)
+	} else if diff < 0 {
+		return fmt.Sprintf("%.1f%% larger", -diff)
+	}
+	return "same size"
+}
+
+func formatSizeCategories(categories []SizeCategory) string {
+	var sb strings.Builder
+
+	sb.WriteString("Category          Count   QH Avg      H1 Avg      H2 Avg      H3 Avg      QH/H1   QH/H2   QH/H3\n")
+	sb.WriteString("────────────────────────────────────────────────────────────────────────────────────────────────────\n")
+
+	for _, c := range categories {
+		sb.WriteString(fmt.Sprintf("%-16s %6d %10s %10s %10s %10s %6.1f%% %6.1f%% %6.1f%%\n",
+			c.Name,
+			c.Count,
+			formatBytes(c.QHAvg),
+			formatBytes(c.HTTP1Avg),
+			formatBytes(c.HTTP2Avg),
+			formatBytes(c.HTTP3Avg),
+			c.QHVsHTTP1Ratio,
+			c.QHVsHTTP2Ratio,
+			c.QHVsHTTP3Ratio,
+		))
+	}
+
+	return sb.String()
+}
+
+func formatHeaderAnalysis(h HeaderAnalysis) string {
+	var sb strings.Builder
+
+	sb.WriteString("Average request sizes (headers + request body):\n")
+	sb.WriteString(fmt.Sprintf("  QH requests:       %6.0f B  (baseline)\n", h.QHAvgHeaders))
+	sb.WriteString(fmt.Sprintf("  HTTP/1 requests:   %6.0f B  (%.1f%% of HTTP/1)\n", h.HTTP1AvgHeaders, h.QHVsHTTP1Ratio))
+	sb.WriteString(fmt.Sprintf("  HTTP/2 requests:   %6.0f B  (%.1f%% of HTTP/2)\n", h.HTTP2AvgHeaders, h.QHVsHTTP2Ratio))
+	sb.WriteString(fmt.Sprintf("  HTTP/3 requests:   %6.0f B  (%.1f%% of HTTP/3)\n\n", h.HTTP3AvgHeaders, h.QHVsHTTP3Ratio))
+
+	http1Savings := h.HTTP1TotalHeaders - h.QHTotalHeaders
+	http2Savings := h.HTTP2TotalHeaders - h.QHTotalHeaders
+	http3Savings := h.HTTP3TotalHeaders - h.QHTotalHeaders
+
+	sb.WriteString("Total bytes saved on requests:\n")
+	sb.WriteString(fmt.Sprintf("  vs HTTP/1.1: %7d B  (%s)\n",
+		http1Savings, formatDifference(h.QHVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("  vs HTTP/2:   %7d B  (%s)\n",
+		http2Savings, formatDifference(h.QHVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("  vs HTTP/3:   %7d B  (%s)",
+		http3Savings, formatDifference(h.QHVsHTTP3Ratio)))
+
+	return sb.String()
+}
+
+func formatBytes(bytes float64) string {
+	if bytes < 1024 {
+		return fmt.Sprintf("%.0f B", bytes)
+	} else if bytes < 1024*1024 {
+		return fmt.Sprintf("%.1f KB", bytes/1024)
+	}
+	return fmt.Sprintf("%.1f MB", bytes/(1024*1024))
 }
 
 func formatDetailedTable(results []BenchmarkResult) string {

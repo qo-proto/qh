@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Edge Case 1: Minimal GET request",
+    "description": "Smallest possible valid request/response (best case compression)",
+    "request": {
+      "method": "GET",
+      "host": "example.com",
+      "path": "/",
+      "headers": {}
+    },
+    "response": {
+      "statusCode": 200,
+      "headers": {},
+      "body": [79, 75]
+    }
+  }
+]

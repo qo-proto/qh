@@ -70,3 +70,29 @@ type DetailedResult struct {
 	QHVsHTTP2Ratio  float64
 	QHVsHTTP3Ratio  float64
 }
+
+type SizeCategory struct {
+	Name            string
+	Count           int
+	QHAvg           float64
+	HTTP1Avg        float64
+	HTTP2Avg        float64
+	HTTP3Avg        float64
+	QHVsHTTP1Ratio  float64
+	QHVsHTTP2Ratio  float64
+	QHVsHTTP3Ratio  float64
+}
+
+type HeaderAnalysis struct {
+	QHAvgHeaders      float64
+	HTTP1AvgHeaders   float64
+	HTTP2AvgHeaders   float64
+	HTTP3AvgHeaders   float64
+	QHTotalHeaders    int
+	HTTP1TotalHeaders int
+	HTTP2TotalHeaders int
+	HTTP3TotalHeaders int
+	QHVsHTTP1Ratio    float64
+	QHVsHTTP2Ratio    float64
+	QHVsHTTP3Ratio    float64
+}
