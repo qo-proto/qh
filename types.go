@@ -113,6 +113,7 @@ type Response struct {
 // Format 1 (complete key-value pairs): <headerID>
 // Format 2 (known header name with value): <headerID><varint:valueLen><value>
 // Format 3 (custom header): <0x00><varint:keyLen><key><varint:valueLen><value>
+// NOTE: All header names MUST be normalized (converted to lowercase)
 func encodeHeaders(
 	headers map[string]string,
 	completePairs map[string]byte,
@@ -121,6 +122,8 @@ func encodeHeaders(
 	var result []byte
 
 	for key, value := range headers {
+		key = strings.ToLower(key)
+
 		// Try Format 1: exact match for complete key-value pair, just send header ID
 		lookupKey := key + ":" + value
 		if headerID, exists := completePairs[lookupKey]; exists {
@@ -473,6 +476,7 @@ func parseHeaders(
 		}
 		offset = newOffset
 
+		key = strings.ToLower(key)
 		headers[key] = value
 	}
 
@@ -606,10 +610,10 @@ func ParseResponse(data []byte) (*Response, error) {
 		Body:       body,
 	}
 
-	if contentLengthStr, ok := headers["Content-Length"]; ok {
+	if contentLengthStr, ok := headers["content-length"]; ok {
 		expectedLen, err := strconv.Atoi(contentLengthStr)
 		if err == nil && len(body) != expectedLen {
-			return nil, errors.New("invalid response: body length does not match Content-Length")
+			return nil, errors.New("invalid response: body length does not match content-length")
 		}
 	}
 
@@ -705,10 +709,10 @@ func ParseRequest(data []byte) (*Request, error) {
 		Body:    body,
 	}
 
-	if contentLengthStr, ok := headers["Content-Length"]; ok {
+	if contentLengthStr, ok := headers["content-length"]; ok {
 		expectedLen, err := strconv.Atoi(contentLengthStr)
 		if err == nil && len(body) != expectedLen {
-			return nil, errors.New("invalid request: body length does not match Content-Length")
+			return nil, errors.New("invalid request: body length does not match content-length")
 		}
 	}
 

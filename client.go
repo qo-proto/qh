@@ -177,8 +177,8 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 		return nil, errors.New("client not connected")
 	}
 
-	if _, ok := req.Headers["Accept-Encoding"]; !ok {
-		req.Headers["Accept-Encoding"] = "zstd, br, gzip"
+	if _, ok := req.Headers["accept-encoding"]; !ok {
+		req.Headers["accept-encoding"] = "zstd, br, gzip"
 	}
 
 	// use next available stream ID
@@ -288,12 +288,12 @@ func (c *Client) do(method Method, host, path string, headers map[string]string,
 
 	// Normalize body and Content-Length based on method
 	if method == POST || method == PUT || method == PATCH {
-		if _, ok := headers["Content-Length"]; !ok {
-			headers["Content-Length"] = strconv.Itoa(len(body))
+		if _, ok := headers["content-length"]; !ok {
+			headers["content-length"] = strconv.Itoa(len(body))
 		}
 	} else {
 		body = nil // ensure no body for non-body methods
-		delete(headers, "Content-Length")
+		delete(headers, "content-length")
 	}
 
 	req := &Request{
@@ -308,7 +308,7 @@ func (c *Client) do(method Method, host, path string, headers map[string]string,
 }
 
 func (c *Client) decompressResponse(resp *Response) error {
-	contentEncoding, ok := resp.Headers["Content-Encoding"]
+	contentEncoding, ok := resp.Headers["content-encoding"]
 	if !ok || contentEncoding == "" {
 		return nil // No compression
 	}
@@ -322,8 +322,8 @@ func (c *Client) decompressResponse(resp *Response) error {
 	}
 
 	resp.Body = decompressed
-	delete(resp.Headers, "Content-Encoding") // Remove encoding header after decompression
-	resp.Headers["Content-Length"] = strconv.Itoa(len(decompressed))
+	delete(resp.Headers, "content-encoding") // Remove encoding header after decompression
+	resp.Headers["content-length"] = strconv.Itoa(len(decompressed))
 
 	slog.Info("Response decompressed", "encoding", contentEncoding,
 		"compressed_bytes", originalSize, "decompressed_bytes", len(decompressed))
@@ -358,17 +358,17 @@ func (c *Client) handleRedirect(req *Request, resp *Response, redirectCount int)
 			newHostname = host
 			newPath = path
 		}
-	} else if location, ok := resp.Headers["Location"]; ok {
-		// Fallback to standard Location header.
-		slog.Info("Redirecting (Location header)", "status", resp.StatusCode, "location", location)
+	} else if location, ok := resp.Headers["location"]; ok {
+		// Fallback to standard location header.
+		slog.Info("Redirecting (location header)", "status", resp.StatusCode, "location", location)
 		newURL, err := url.Parse(location)
 		if err != nil {
-			return nil, fmt.Errorf("invalid Location header: %w", err)
+			return nil, fmt.Errorf("invalid location header: %w", err)
 		}
 		newHostname = newURL.Hostname()
 		newPath = newURL.Path
 	} else {
-		return nil, errors.New("redirect response missing Location or host/path headers")
+		return nil, errors.New("redirect response missing location or host/path headers")
 	}
 
 	if newPath == "" {
@@ -388,7 +388,7 @@ func (c *Client) handleRedirect(req *Request, resp *Response, redirectCount int)
 		// copy headers to avoid mutating the original map
 		copied := make(map[string]string, len(headers))
 		maps.Copy(copied, headers)
-		delete(copied, "Content-Length")
+		delete(copied, "content-length")
 		headers = copied
 	}
 	newReq := &Request{

@@ -154,17 +154,17 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 }
 
 func (s *Server) validateContentType(req *Request, stream *qotp.Stream) error {
-	contentTypeStr, hasContentType := req.Headers["Content-Type"]
+	contentTypeStr, hasContentType := req.Headers["content-type"]
 
 	if !hasContentType || contentTypeStr == "" {
-		slog.Debug("Content-Type missing for POST, defaulting to octet-stream")
-		req.Headers["Content-Type"] = strconv.Itoa(int(OctetStream))
+		slog.Debug("content-type missing for POST, defaulting to octet-stream")
+		req.Headers["content-type"] = strconv.Itoa(int(OctetStream))
 		return nil
 	}
 
 	contentType, parseErr := strconv.Atoi(contentTypeStr)
 	if parseErr != nil || !IsValidContentType(contentType) {
-		slog.Error("Invalid Content-Type", "value", contentTypeStr)
+		slog.Error("Invalid content-type", "value", contentTypeStr)
 		s.sendErrorResponse(stream, 415, "Unsupported Media Type")
 		return fmt.Errorf("invalid content-type: %s", contentTypeStr)
 	}
@@ -206,14 +206,14 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 		return
 	}
 
-	contentTypeStr, ok := resp.Headers["Content-Type"]
+	contentTypeStr, ok := resp.Headers["content-type"]
 	contentType, err := strconv.Atoi(contentTypeStr)
 	if ok && err == nil && contentType == int(OctetStream) {
 		slog.Debug("Skipping compression for binary media", "content_type", "octet-stream")
 		return
 	}
 
-	acceptEncodingStr, ok := req.Headers["Accept-Encoding"]
+	acceptEncodingStr, ok := req.Headers["accept-encoding"]
 	if !ok || acceptEncodingStr == "" {
 		return
 	}
@@ -240,8 +240,8 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 	}
 
 	resp.Body = compressed
-	resp.Headers["Content-Encoding"] = string(selectedEncoding)
-	resp.Headers["Content-Length"] = strconv.Itoa(len(compressed))
+	resp.Headers["content-encoding"] = string(selectedEncoding)
+	resp.Headers["content-length"] = strconv.Itoa(len(compressed))
 
 	savings := float64(originalSize-len(compressed)) / float64(originalSize) * 100
 	slog.Info("Compressed", "encoding", selectedEncoding,
@@ -251,7 +251,7 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 
 func NewResponse(statusCode int, body []byte, headers map[string]string) *Response {
 	headerMap := make(map[string]string)
-	headerMap["Content-Length"] = strconv.Itoa(len(body))
+	headerMap["content-length"] = strconv.Itoa(len(body))
 
 	for key, value := range headers {
 		headerMap[key] = value
@@ -268,14 +268,14 @@ func NewResponse(statusCode int, body []byte, headers map[string]string) *Respon
 // Convenience methods for common response types
 func TextResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
-		"Content-Type": strconv.Itoa(int(TextPlain)),
+		"content-type": strconv.Itoa(int(TextPlain)),
 	}
 	return NewResponse(statusCode, []byte(body), headers)
 }
 
 func JSONResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
-		"Content-Type": strconv.Itoa(int(JSON)),
+		"content-type": strconv.Itoa(int(JSON)),
 	}
 	return NewResponse(statusCode, []byte(body), headers)
 }
