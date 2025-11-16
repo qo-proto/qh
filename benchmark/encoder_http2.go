@@ -9,6 +9,17 @@ import (
 	"golang.org/x/net/http2/hpack"
 )
 
+// If there's a body, it's in a DATA frame (9-byte header + body)
+// Header size = total - DATA frame if present
+func calculateHTTP2HeaderSize(data []byte, bodySize int) int {
+	if bodySize == 0 {
+		return len(data)
+	}
+	// DATA frame overhead: 9 bytes (frame header) + body size
+	dataFrameSize := 9 + bodySize
+	return len(data) - dataFrameSize
+}
+
 func EncodeHTTP2(tc TestCase) EncodedResult {
 	// Encode request
 	reqBuf := &bytes.Buffer{}
@@ -91,11 +102,21 @@ func EncodeHTTP2(tc TestCase) EncodedResult {
 	reqBytes := reqBuf.Bytes()
 	respBytes := respBuf.Bytes()
 
+	reqBodySize := len(tc.Request.Body)
+	reqHeaderSize := calculateHTTP2HeaderSize(reqBytes, reqBodySize)
+
+	respBodySize := len(tc.Response.Body)
+	respHeaderSize := calculateHTTP2HeaderSize(respBytes, respBodySize)
+
 	return EncodedResult{
-		RequestBytes:  reqBytes,
-		ResponseBytes: respBytes,
-		RequestSize:   len(reqBytes),
-		ResponseSize:  len(respBytes),
-		TotalSize:     len(reqBytes) + len(respBytes),
+		RequestBytes:       reqBytes,
+		ResponseBytes:      respBytes,
+		RequestSize:        len(reqBytes),
+		ResponseSize:       len(respBytes),
+		TotalSize:          len(reqBytes) + len(respBytes),
+		RequestHeaderSize:  reqHeaderSize,
+		RequestBodySize:    reqBodySize,
+		ResponseHeaderSize: respHeaderSize,
+		ResponseBodySize:   respBodySize,
 	}
 }

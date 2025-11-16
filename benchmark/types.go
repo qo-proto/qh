@@ -30,11 +30,15 @@ type BenchmarkResult struct {
 }
 
 type EncodedResult struct {
-	RequestBytes  []byte
-	ResponseBytes []byte
-	RequestSize   int
-	ResponseSize  int
-	TotalSize     int
+	RequestBytes       []byte
+	ResponseBytes      []byte
+	RequestSize        int
+	ResponseSize       int
+	TotalSize          int
+	RequestHeaderSize  int
+	RequestBodySize    int
+	ResponseHeaderSize int
+	ResponseBodySize   int
 }
 
 type Summary struct {
@@ -72,15 +76,15 @@ type DetailedResult struct {
 }
 
 type SizeCategory struct {
-	Name            string
-	Count           int
-	QHAvg           float64
-	HTTP1Avg        float64
-	HTTP2Avg        float64
-	HTTP3Avg        float64
-	QHVsHTTP1Ratio  float64
-	QHVsHTTP2Ratio  float64
-	QHVsHTTP3Ratio  float64
+	Name           string
+	Count          int
+	QHAvg          float64
+	HTTP1Avg       float64
+	HTTP2Avg       float64
+	HTTP3Avg       float64
+	QHVsHTTP1Ratio float64
+	QHVsHTTP2Ratio float64
+	QHVsHTTP3Ratio float64
 }
 
 type HeaderAnalysis struct {
@@ -95,4 +99,21 @@ type HeaderAnalysis struct {
 	QHVsHTTP1Ratio    float64
 	QHVsHTTP2Ratio    float64
 	QHVsHTTP3Ratio    float64
+}
+
+type HeaderOnlyAnalysis struct {
+	QHReqHeaderAvg     float64
+	HTTP1ReqHeaderAvg  float64
+	HTTP2ReqHeaderAvg  float64
+	HTTP3ReqHeaderAvg  float64
+	QHRespHeaderAvg    float64
+	HTTP1RespHeaderAvg float64
+	HTTP2RespHeaderAvg float64
+	HTTP3RespHeaderAvg float64
+	QHReqVsHTTP1Ratio  float64
+	QHReqVsHTTP2Ratio  float64
+	QHReqVsHTTP3Ratio  float64
+	QHRespVsHTTP1Ratio float64
+	QHRespVsHTTP2Ratio float64
+	QHRespVsHTTP3Ratio float64
 }

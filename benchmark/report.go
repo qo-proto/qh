@@ -32,6 +32,11 @@ func GenerateReport(results []BenchmarkResult) string {
 	headerAnalysis := CalculateHeaderAnalysis(results)
 	sb.WriteString("REQUEST ENCODING ANALYSIS\n\n")
 	sb.WriteString(formatHeaderAnalysis(headerAnalysis))
+	sb.WriteString("\n\n")
+
+	headerOnlyAnalysis := CalculateHeaderOnlyAnalysis(results)
+	sb.WriteString("HEADER-ONLY ANALYSIS (bodies excluded)\n\n")
+	sb.WriteString(formatHeaderOnlyAnalysis(headerOnlyAnalysis))
 	sb.WriteString("\n")
 
 	return sb.String()
@@ -114,6 +119,30 @@ func formatHeaderAnalysis(h HeaderAnalysis) string {
 		http2Savings, formatDifference(h.QHVsHTTP2Ratio)))
 	sb.WriteString(fmt.Sprintf("  vs HTTP/3:   %7d B  (%s)",
 		http3Savings, formatDifference(h.QHVsHTTP3Ratio)))
+
+	return sb.String()
+}
+
+func formatHeaderOnlyAnalysis(h HeaderOnlyAnalysis) string {
+	var sb strings.Builder
+
+	sb.WriteString("REQUEST HEADERS:\n")
+	sb.WriteString(fmt.Sprintf("  QH avg:       %6.0f B  (baseline)\n", h.QHReqHeaderAvg))
+	sb.WriteString(fmt.Sprintf("  HTTP/1 avg:   %6.0f B  (%s)\n",
+		h.HTTP1ReqHeaderAvg, formatDifference(h.QHReqVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("  HTTP/2 avg:   %6.0f B  (%s)\n",
+		h.HTTP2ReqHeaderAvg, formatDifference(h.QHReqVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("  HTTP/3 avg:   %6.0f B  (%s)\n\n",
+		h.HTTP3ReqHeaderAvg, formatDifference(h.QHReqVsHTTP3Ratio)))
+
+	sb.WriteString("RESPONSE HEADERS:\n")
+	sb.WriteString(fmt.Sprintf("  QH avg:       %6.0f B  (baseline)\n", h.QHRespHeaderAvg))
+	sb.WriteString(fmt.Sprintf("  HTTP/1 avg:   %6.0f B  (%s)\n",
+		h.HTTP1RespHeaderAvg, formatDifference(h.QHRespVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("  HTTP/2 avg:   %6.0f B  (%s)\n",
+		h.HTTP2RespHeaderAvg, formatDifference(h.QHRespVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("  HTTP/3 avg:   %6.0f B  (%s)",
+		h.HTTP3RespHeaderAvg, formatDifference(h.QHRespVsHTTP3Ratio)))
 
 	return sb.String()
 }

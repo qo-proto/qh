@@ -7,6 +7,15 @@ import (
 	"net/url"
 )
 
+func calculateHTTP1HeaderSize(data []byte) int {
+	separator := []byte("\r\n\r\n")
+	idx := bytes.Index(data, separator)
+	if idx == -1 {
+		return len(data) // No body separator found, entire message is headers
+	}
+	return idx + len(separator) // Return position after \r\n\r\n
+}
+
 func EncodeHTTP1(tc TestCase) EncodedResult {
 	reqBuf := &bytes.Buffer{}
 	req := &http.Request{
@@ -62,11 +71,23 @@ func EncodeHTTP1(tc TestCase) EncodedResult {
 	reqBytes := reqBuf.Bytes()
 	respBytes := respBuf.Bytes()
 
+	// Calculate request header size (everything before \r\n\r\n)
+	reqBodySize := len(tc.Request.Body)
+	reqHeaderSize := calculateHTTP1HeaderSize(reqBytes)
+
+	// Calculate response header size (everything before \r\n\r\n)
+	respBodySize := len(tc.Response.Body)
+	respHeaderSize := calculateHTTP1HeaderSize(respBytes)
+
 	return EncodedResult{
-		RequestBytes:  reqBytes,
-		ResponseBytes: respBytes,
-		RequestSize:   len(reqBytes),
-		ResponseSize:  len(respBytes),
-		TotalSize:     len(reqBytes) + len(respBytes),
+		RequestBytes:       reqBytes,
+		ResponseBytes:      respBytes,
+		RequestSize:        len(reqBytes),
+		ResponseSize:       len(respBytes),
+		TotalSize:          len(reqBytes) + len(respBytes),
+		RequestHeaderSize:  reqHeaderSize,
+		RequestBodySize:    reqBodySize,
+		ResponseHeaderSize: respHeaderSize,
+		ResponseBodySize:   respBodySize,
 	}
 }

@@ -78,14 +78,14 @@ func GetDetailedResults(results []BenchmarkResult) []DetailedResult {
 
 func CalculateSizeCategories(results []BenchmarkResult) []SizeCategory {
 	categories := []struct {
-		name      string
-		minSize   int
-		maxSize   int
-		qhTotal   int
+		name       string
+		minSize    int
+		maxSize    int
+		qhTotal    int
 		http1Total int
 		http2Total int
 		http3Total int
-		count     int
+		count      int
 	}{
 		{name: "Tiny (<1KB)", minSize: 0, maxSize: 1024},
 		{name: "Small (1-10KB)", minSize: 1024, maxSize: 10240},
@@ -161,5 +161,51 @@ func CalculateHeaderAnalysis(results []BenchmarkResult) HeaderAnalysis {
 		QHVsHTTP1Ratio:    (qhAvg / http1Avg) * 100,
 		QHVsHTTP2Ratio:    (qhAvg / http2Avg) * 100,
 		QHVsHTTP3Ratio:    (qhAvg / http3Avg) * 100,
+	}
+}
+
+func CalculateHeaderOnlyAnalysis(results []BenchmarkResult) HeaderOnlyAnalysis {
+	var qhReqHeaders, http1ReqHeaders, http2ReqHeaders, http3ReqHeaders int
+	var qhRespHeaders, http1RespHeaders, http2RespHeaders, http3RespHeaders int
+
+	for _, r := range results {
+		qhReqHeaders += r.QH.RequestHeaderSize
+		http1ReqHeaders += r.HTTP1.RequestHeaderSize
+		http2ReqHeaders += r.HTTP2.RequestHeaderSize
+		http3ReqHeaders += r.HTTP3.RequestHeaderSize
+
+		qhRespHeaders += r.QH.ResponseHeaderSize
+		http1RespHeaders += r.HTTP1.ResponseHeaderSize
+		http2RespHeaders += r.HTTP2.ResponseHeaderSize
+		http3RespHeaders += r.HTTP3.ResponseHeaderSize
+	}
+
+	count := len(results)
+
+	qhReqAvg := float64(qhReqHeaders) / float64(count)
+	http1ReqAvg := float64(http1ReqHeaders) / float64(count)
+	http2ReqAvg := float64(http2ReqHeaders) / float64(count)
+	http3ReqAvg := float64(http3ReqHeaders) / float64(count)
+
+	qhRespAvg := float64(qhRespHeaders) / float64(count)
+	http1RespAvg := float64(http1RespHeaders) / float64(count)
+	http2RespAvg := float64(http2RespHeaders) / float64(count)
+	http3RespAvg := float64(http3RespHeaders) / float64(count)
+
+	return HeaderOnlyAnalysis{
+		QHReqHeaderAvg:     qhReqAvg,
+		HTTP1ReqHeaderAvg:  http1ReqAvg,
+		HTTP2ReqHeaderAvg:  http2ReqAvg,
+		HTTP3ReqHeaderAvg:  http3ReqAvg,
+		QHRespHeaderAvg:    qhRespAvg,
+		HTTP1RespHeaderAvg: http1RespAvg,
+		HTTP2RespHeaderAvg: http2RespAvg,
+		HTTP3RespHeaderAvg: http3RespAvg,
+		QHReqVsHTTP1Ratio:  (qhReqAvg / http1ReqAvg) * 100,
+		QHReqVsHTTP2Ratio:  (qhReqAvg / http2ReqAvg) * 100,
+		QHReqVsHTTP3Ratio:  (qhReqAvg / http3ReqAvg) * 100,
+		QHRespVsHTTP1Ratio: (qhRespAvg / http1RespAvg) * 100,
+		QHRespVsHTTP2Ratio: (qhRespAvg / http2RespAvg) * 100,
+		QHRespVsHTTP3Ratio: (qhRespAvg / http3RespAvg) * 100,
 	}
 }
