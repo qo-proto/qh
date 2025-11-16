@@ -1,6 +1,8 @@
 package benchmark
 
 import (
+	"log/slog"
+
 	"github.com/qh-project/qh"
 )
 
@@ -12,7 +14,7 @@ func EncodeQH(tc TestCase) EncodedResult {
 		Path:    tc.Request.Path,
 		Version: qh.Version,
 		Headers: tc.Request.Headers,
-		Body:    tc.Request.Body,
+		Body:    []byte(tc.Request.Body),
 	}
 	reqBytes := req.Format()
 
@@ -20,7 +22,7 @@ func EncodeQH(tc TestCase) EncodedResult {
 		Version:    qh.Version,
 		StatusCode: tc.Response.StatusCode,
 		Headers:    tc.Response.Headers,
-		Body:       tc.Response.Body,
+		Body:       []byte(tc.Response.Body),
 	}
 	respBytes := resp.Format()
 
@@ -47,7 +49,10 @@ func parseMethod(method string) qh.Method {
 		return qh.DELETE
 	case "HEAD":
 		return qh.HEAD
+	case "OPTIONS":
+		return qh.OPTIONS
 	default:
+		slog.Warn("unsupported HTTP method, defaulting to GET", "method", method)
 		return qh.GET
 	}
 }

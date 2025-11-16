@@ -19,6 +19,7 @@ const (
 	PATCH
 	DELETE
 	HEAD
+	OPTIONS
 )
 
 func (m Method) String() string {
@@ -35,6 +36,8 @@ func (m Method) String() string {
 		return "DELETE"
 	case HEAD:
 		return "HEAD"
+	case OPTIONS:
+		return "OPTIONS"
 	default:
 		return "UNKNOWN"
 	}
@@ -353,13 +356,16 @@ func annotateHeaders(
 			annotateString(sb, data, offset, int(valueLen), "Value")
 		} else {
 			var headerName string
+			var hasValue bool
 			if isRequest {
 				if entry, ok := requestHeaderStaticTable[headerID]; ok {
 					headerName = entry.name
+					hasValue = entry.value == ""
 				}
 			} else {
 				if entry, ok := responseHeaderStaticTable[headerID]; ok {
 					headerName = entry.name
+					hasValue = entry.value == ""
 				}
 			}
 
@@ -370,7 +376,8 @@ func annotateHeaders(
 			}
 			*offset++
 
-			if *offset < len(data) {
+			// Only read value if it's Format 2 (name-only header)
+			if hasValue && *offset < len(data) {
 				valueLen := annotateVarint(sb, data, offset, "Value length")
 				annotateString(sb, data, offset, int(valueLen), "Value")
 			}
@@ -638,7 +645,7 @@ func ParseRequest(data []byte) (*Request, error) {
 		return nil, fmt.Errorf("invalid version: %d", version)
 	}
 
-	if method < GET || method > HEAD { // valid methods are 0-5
+	if method < GET || method > OPTIONS { // valid methods are 0-6
 		return nil, fmt.Errorf("invalid method value: %d", method)
 	}
 

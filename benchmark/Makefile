@@ -1,4 +1,6 @@
-.PHONY: all build run clean test report
+.PHONY: all build run clean test detailed report
+
+N ?= 10
 
 all: run # default with no args
 
@@ -10,8 +12,8 @@ run:
 	@go run cmd/qhbench/main.go
 
 detailed:
-	@echo "Running detailed benchmarks..."
-	@go run cmd/qhbench/main.go -detailed -examples 10
+	@echo "Running detailed benchmarks with $(N) examples..."
+	@go run cmd/qhbench/main.go -detailed -examples $(N)
 
 report:
 	@echo "Generating dated report ..."
@@ -38,11 +40,11 @@ help:
 	@echo "QH Protocol Benchmark Makefile"
 	@echo ""
 	@echo "Targets:"
-	@echo "  make         - Run benchmarks (default)"
-	@echo "  make build   - Build qhbench binary"
-	@echo "  make run     - Run benchmarks to stdout"
-	@echo "  make detailed- Run with detailed output"
-	@echo "  make report - Generate dated report file in docs/benchmarks/"
-	@echo "  make clean   - Clean build artifacts"
-	@echo "  make test    - Run tests"
-	@echo "  make help    - Show this help"
+	@echo "  make              - Run benchmarks (default)"
+	@echo "  make build        - Build qhbench binary"
+	@echo "  make run          - Run benchmarks to stdout"
+	@echo "  make detailed N=n - Run with detailed output, printing N wire format examples (default N=10)"
+	@echo "  make report       - Generate dated report file in docs/benchmarks/"
+	@echo "  make clean        - Clean build artifacts"
+	@echo "  make test         - Run tests"
+	@echo "  make help         - Show this help"

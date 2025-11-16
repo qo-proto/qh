@@ -47,7 +47,7 @@ func EncodeHTTP2(tc TestCase) EncodedResult {
 	}
 
 	if len(tc.Request.Body) > 0 {
-		if err := reqFramer.WriteData(1, true, tc.Request.Body); err != nil {
+		if err := reqFramer.WriteData(1, true, []byte(tc.Request.Body)); err != nil {
 			panic("failed to write DATA frame: " + err.Error())
 		}
 	}
@@ -83,7 +83,7 @@ func EncodeHTTP2(tc TestCase) EncodedResult {
 	}
 
 	if len(tc.Response.Body) > 0 {
-		if err := respFramer.WriteData(1, true, tc.Response.Body); err != nil {
+		if err := respFramer.WriteData(1, true, []byte(tc.Response.Body)); err != nil {
 			panic("failed to write response DATA frame: " + err.Error())
 		}
 	}

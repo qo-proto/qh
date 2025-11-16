@@ -20,7 +20,7 @@ func EncodeHTTP1(tc TestCase) EncodedResult {
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 		Header:     make(http.Header),
-		Body:       io.NopCloser(bytes.NewReader(tc.Request.Body)),
+		Body:       io.NopCloser(bytes.NewReader([]byte(tc.Request.Body))),
 		Host:       tc.Request.Host,
 	}
 
@@ -44,7 +44,7 @@ func EncodeHTTP1(tc TestCase) EncodedResult {
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 		Header:     make(http.Header),
-		Body:       io.NopCloser(bytes.NewReader(tc.Response.Body)),
+		Body:       io.NopCloser(bytes.NewReader([]byte(tc.Response.Body))),
 	}
 
 	for k, v := range tc.Response.Headers {

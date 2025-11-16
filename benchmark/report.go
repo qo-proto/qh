@@ -188,7 +188,7 @@ func GenerateWireFormatExamples(results []BenchmarkResult, count int) string {
 			Path:    r.TestCase.Request.Path,
 			Version: qh.Version,
 			Headers: r.TestCase.Request.Headers,
-			Body:    r.TestCase.Request.Body,
+			Body:    []byte(r.TestCase.Request.Body),
 		}
 		sb.WriteString(req.AnnotateWireFormat(r.QH.RequestBytes))
 		sb.WriteString("\n\n")
@@ -204,7 +204,7 @@ func GenerateWireFormatExamples(results []BenchmarkResult, count int) string {
 			Version:    qh.Version,
 			StatusCode: r.TestCase.Response.StatusCode,
 			Headers:    r.TestCase.Response.Headers,
-			Body:       r.TestCase.Response.Body,
+			Body:       []byte(r.TestCase.Response.Body),
 		}
 		sb.WriteString(resp.AnnotateWireFormat(r.QH.ResponseBytes))
 		sb.WriteString("\n\n")

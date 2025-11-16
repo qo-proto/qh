@@ -12,13 +12,13 @@ type RequestData struct {
 	Host    string
 	Path    string
 	Headers map[string]string
-	Body    []byte
+	Body    string `json:"body,omitempty"`
 }
 
 type ResponseData struct {
 	StatusCode int
 	Headers    map[string]string
-	Body       []byte
+	Body       string `json:"body,omitempty"`
 }
 
 type BenchmarkResult struct {

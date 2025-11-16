@@ -46,9 +46,10 @@ func EncodeHTTP3(tc TestCase) EncodedResult {
 
 	// Add request DATA frame if there's a body
 	if len(tc.Request.Body) > 0 {
-		reqResult.Write(quicvarint.Append(nil, 0x00))                         // Frame type: DATA
-		reqResult.Write(quicvarint.Append(nil, uint64(len(tc.Request.Body)))) // Length
-		reqResult.Write(tc.Request.Body)                                      // Payload
+		bodyBytes := []byte(tc.Request.Body)
+		reqResult.Write(quicvarint.Append(nil, 0x00))                    // Frame type: DATA
+		reqResult.Write(quicvarint.Append(nil, uint64(len(bodyBytes)))) // Length
+		reqResult.Write(bodyBytes)                                       // Payload
 	}
 
 	// Encode response
@@ -82,9 +83,10 @@ func EncodeHTTP3(tc TestCase) EncodedResult {
 
 	// Add response DATA frame if there's a body
 	if len(tc.Response.Body) > 0 {
-		respResult.Write(quicvarint.Append(nil, 0x00))                          // Frame type: DATA
-		respResult.Write(quicvarint.Append(nil, uint64(len(tc.Response.Body)))) // Length
-		respResult.Write(tc.Response.Body)                                      // Payload
+		bodyBytes := []byte(tc.Response.Body)
+		respResult.Write(quicvarint.Append(nil, 0x00))                    // Frame type: DATA
+		respResult.Write(quicvarint.Append(nil, uint64(len(bodyBytes)))) // Length
+		respResult.Write(bodyBytes)                                       // Payload
 	}
 
 	reqBytes := reqResult.Bytes()
