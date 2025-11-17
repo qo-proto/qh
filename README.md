@@ -37,10 +37,8 @@ make          - Run benchmarks (default)
 make build    - Build qhbench binary
 make run      - Run benchmarks to stdout
 make detailed - Run with detailed output
-make results  - Generate dated results file in docs/benchmarks/
-make report   - Generate report file
+make report   - Generate dated results file in docs/benchmarks/
 make clean    - Clean build artifacts
-make test     - Run tests
 make help     - Show this help
 ```
 

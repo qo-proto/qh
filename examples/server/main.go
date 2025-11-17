@@ -48,12 +48,24 @@ func main() {
 
 	srv.HandleFunc("/data", qh.POST, func(req *qh.Request) *qh.Response {
 		slog.Info("Handling request", "method", "POST", "path", "/data", "body", string(req.Body))
-		response := fmt.Sprintf("Updated data: %s ; %s; Hallo Welt;", string(req.Body), strings.Repeat("a", 1900))
+		response := fmt.Sprintf(
+			"Updated data: %s ; %s; Hallo Welt;",
+			string(req.Body),
+			strings.Repeat("a", 1900),
+		)
 		return qh.TextResponse(200, response)
 	})
 
 	srv.HandleFunc("/large-post", qh.POST, func(req *qh.Request) *qh.Response {
-		slog.Info("Handling large POST request", "method", "POST", "path", "/large-post", "body_size", len(req.Body))
+		slog.Info(
+			"Handling large POST request",
+			"method",
+			"POST",
+			"path",
+			"/large-post",
+			"body_size",
+			len(req.Body),
+		)
 		response := fmt.Sprintf("Received %d bytes successfully", len(req.Body))
 		return qh.TextResponse(200, response)
 	})
@@ -125,12 +137,28 @@ func main() {
 	})
 
 	srv.HandleFunc("/api/user", qh.PUT, func(req *qh.Request) *qh.Response {
-		slog.Info("Handling request", "method", "PUT", "path", "/api/user", "body", string(req.Body))
+		slog.Info(
+			"Handling request",
+			"method",
+			"PUT",
+			"path",
+			"/api/user",
+			"body",
+			string(req.Body),
+		)
 		return qh.JSONResponse(200, `{"message": "User updated", "id": 123}`)
 	})
 
 	srv.HandleFunc("/api/user", qh.PATCH, func(req *qh.Request) *qh.Response {
-		slog.Info("Handling request", "method", "PATCH", "path", "/api/user", "body", string(req.Body))
+		slog.Info(
+			"Handling request",
+			"method",
+			"PATCH",
+			"path",
+			"/api/user",
+			"body",
+			string(req.Body),
+		)
 		return qh.JSONResponse(200, `{"message": "User partially updated", "id": 123}`)
 	})
 

@@ -1,0 +1,11 @@
+[files]
+extend-exclude = [
+  # external code
+  "qotp/*",
+  # Do not self-check
+  "typos.toml",
+]
+
+[default.extend-words]
+qotp = "qotp"
+qh = "qh"

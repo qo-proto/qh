@@ -113,6 +113,7 @@ type Response struct {
 // Format 1 (complete key-value pairs): <headerID>
 // Format 2 (known header name with value): <headerID><varint:valueLen><value>
 // Format 3 (custom header): <0x00><varint:keyLen><key><varint:valueLen><value>
+// NOTE: All header names MUST be normalized (converted to lowercase)
 func encodeHeaders(
 	headers map[string]string,
 	completePairs map[string]byte,
@@ -121,6 +122,8 @@ func encodeHeaders(
 	var result []byte
 
 	for key, value := range headers {
+		key = strings.ToLower(key)
+
 		// Try Format 1: exact match for complete key-value pair, just send header ID
 		lookupKey := key + ":" + value
 		if headerID, exists := completePairs[lookupKey]; exists {
@@ -148,7 +151,7 @@ func encodeHeaders(
 }
 
 // Format encodes a QH request into the wire format using varint length prefixes.
-// Wire format: <1-byte-method><varint:hostLen><host><varint:pathLen><path><varint:numHeaders>[headers]<varint:bodyLen><body>
+// Wire format: <1-byte-method><varint:hostLen><host><varint:pathLen><path><varint:headersLen>[headers]<varint:bodyLen><body>
 func (r *Request) Format() []byte {
 	// The first byte contains: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
 	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
@@ -158,11 +161,11 @@ func (r *Request) Format() []byte {
 	result = append(result, []byte(r.Host)...)
 	result = AppendUvarint(result, uint64(len(r.Path)))
 	result = append(result, []byte(r.Path)...)
-	result = AppendUvarint(result, uint64(len(r.Headers)))
 
-	result = append(
-		result,
-		encodeHeaders(r.Headers, requestHeaderCompletePairs, requestHeaderNameOnly)...)
+	// Encode headers first to get total length
+	encodedHeaders := encodeHeaders(r.Headers, requestHeaderCompletePairs, requestHeaderNameOnly)
+	result = AppendUvarint(result, uint64(len(encodedHeaders)))
+	result = append(result, encodedHeaders...)
 
 	result = AppendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
@@ -171,17 +174,17 @@ func (r *Request) Format() []byte {
 }
 
 // Format encodes a QH response into the wire format using varint length prefixes.
-// Wire format: <1-byte-status><varint:numHeaders>[headers]<varint:bodyLen><body>
+// Wire format: <1-byte-status><varint:headersLen>[headers]<varint:bodyLen><body>
 func (r *Response) Format() []byte {
 	compactStatus := EncodeStatusCode(r.StatusCode)
 	// First byte: Version (upper 2 bits) + Status Code (lower 6 bits)
 	firstByte := (r.Version << 6) | compactStatus
 	result := []byte{firstByte}
-	result = AppendUvarint(result, uint64(len(r.Headers)))
 
-	result = append(
-		result,
-		encodeHeaders(r.Headers, responseHeaderCompletePairs, responseHeaderNameOnly)...)
+	// Encode headers first to get total length
+	encodedHeaders := encodeHeaders(r.Headers, responseHeaderCompletePairs, responseHeaderNameOnly)
+	result = AppendUvarint(result, uint64(len(encodedHeaders)))
+	result = append(result, encodedHeaders...)
 
 	result = AppendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
@@ -219,8 +222,10 @@ func (r *Request) AnnotateWireFormat(data []byte) string {
 	pathLen := annotateVarint(&sb, data, &offset, "Path length")
 	annotateString(&sb, data, &offset, int(pathLen), "Path")
 
-	numHeaders := annotateVarint(&sb, data, &offset, "Number of headers")
-	annotateHeaders(&sb, data, &offset, numHeaders, true)
+	headersLen := annotateVarint(&sb, data, &offset, "Headers length")
+	headersEndOffset := offset + int(headersLen)
+	annotateHeaders(&sb, data, &offset, headersEndOffset, true)
+	offset = headersEndOffset
 
 	bodyLen := annotateVarint(&sb, data, &offset, "Body length")
 	if bodyLen > 0 && offset+int(bodyLen) <= len(data) {
@@ -262,8 +267,10 @@ func (r *Response) AnnotateWireFormat(data []byte) string {
 		offset++
 	}
 
-	numHeaders := annotateVarint(&sb, data, &offset, "Number of headers")
-	annotateHeaders(&sb, data, &offset, numHeaders, false)
+	headersLen := annotateVarint(&sb, data, &offset, "Headers length")
+	headersEndOffset := offset + int(headersLen)
+	annotateHeaders(&sb, data, &offset, headersEndOffset, false)
+	offset = headersEndOffset
 
 	bodyLen := annotateVarint(&sb, data, &offset, "Body length")
 	if bodyLen > 0 && offset+int(bodyLen) <= len(data) {
@@ -327,10 +334,10 @@ func annotateHeaders(
 	sb *strings.Builder,
 	data []byte,
 	offset *int,
-	numHeaders uint64,
+	endOffset int,
 	isRequest bool,
 ) {
-	for h := 0; h < int(numHeaders) && *offset < len(data); h++ {
+	for *offset < endOffset && *offset < len(data) {
 		headerID := data[*offset]
 
 		if headerID == 0x00 {
@@ -449,12 +456,13 @@ func parseHeaderEntry(
 func parseHeaders(
 	data []byte,
 	offset int,
-	numHeaders uint64,
+	headersLen uint64,
 	staticTable map[byte]headerEntry,
 ) (map[string]string, int, error) {
 	headers := make(map[string]string)
+	endOffset := offset + int(headersLen)
 
-	for range numHeaders {
+	for offset < endOffset {
 		if offset >= len(data) {
 			return nil, offset, errors.New("unexpected end while reading headers")
 		}
@@ -468,6 +476,7 @@ func parseHeaders(
 		}
 		offset = newOffset
 
+		key = strings.ToLower(key)
 		headers[key] = value
 	}
 
@@ -519,34 +528,9 @@ func IsRequestComplete(data []byte) (bool, error) {
 		return false, err
 	}
 
-	numHeaders, n, err := ReadUvarint(data, offset)
-	if errors.Is(err, ErrVarintIncomplete) {
-		return false, nil
-	}
-	if err != nil {
-		return false, fmt.Errorf("reading header count: %w", err)
-	}
-	offset += n
-
-	// Process headers
-	for range numHeaders {
-		if offset >= len(data) {
-			return false, nil
-		}
-
-		headerID := data[offset]
-		offset++
-
-		// Custom header has key + value, others just value
-		if headerID == CustomHeader {
-			if complete, err := checkField(data, &offset, "header key"); !complete {
-				return false, err
-			}
-		}
-
-		if complete, err := checkField(data, &offset, "header value"); !complete {
-			return false, err
-		}
+	// Check headers length field and skip headers section
+	if complete, err := checkField(data, &offset, "headers"); !complete {
+		return false, err
 	}
 
 	if complete, err := checkField(data, &offset, "body"); !complete {
@@ -563,34 +547,9 @@ func IsResponseComplete(data []byte) (bool, error) {
 
 	offset := 1 // Skip first byte (version + status)
 
-	numHeaders, n, err := ReadUvarint(data, offset)
-	if errors.Is(err, ErrVarintIncomplete) {
-		return false, nil
-	}
-	if err != nil {
-		return false, fmt.Errorf("reading header count: %w", err)
-	}
-	offset += n
-
-	// Process headers
-	for range numHeaders {
-		if offset >= len(data) {
-			return false, nil
-		}
-
-		headerID := data[offset]
-		offset++
-
-		// Custom header has key + value, others just value
-		if headerID == CustomHeader {
-			if complete, err := checkField(data, &offset, "header key"); !complete {
-				return false, err
-			}
-		}
-
-		if complete, err := checkField(data, &offset, "header value"); !complete {
-			return false, err
-		}
+	// Check headers length field and skip headers section
+	if complete, err := checkField(data, &offset, "headers"); !complete {
+		return false, err
 	}
 
 	if complete, err := checkField(data, &offset, "body"); !complete {
@@ -620,13 +579,13 @@ func ParseResponse(data []byte) (*Response, error) {
 
 	httpStatusCode := DecodeStatusCode(compactStatus)
 
-	numHeaders, n, err := ReadUvarint(data, offset)
+	headersLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
-		return nil, fmt.Errorf("invalid response: failed to read header count: %w", err)
+		return nil, fmt.Errorf("invalid response: failed to read headers length: %w", err)
 	}
 	offset += n
 
-	headers, newOffset, err := parseHeaders(data, offset, numHeaders, responseHeaderStaticTable)
+	headers, newOffset, err := parseHeaders(data, offset, headersLen, responseHeaderStaticTable)
 	if err != nil {
 		return nil, fmt.Errorf("invalid response: %w", err)
 	}
@@ -651,10 +610,10 @@ func ParseResponse(data []byte) (*Response, error) {
 		Body:       body,
 	}
 
-	if contentLengthStr, ok := headers["Content-Length"]; ok {
+	if contentLengthStr, ok := headers["content-length"]; ok {
 		expectedLen, err := strconv.Atoi(contentLengthStr)
 		if err == nil && len(body) != expectedLen {
-			return nil, errors.New("invalid response: body length does not match Content-Length")
+			return nil, errors.New("invalid response: body length does not match content-length")
 		}
 	}
 
@@ -717,13 +676,13 @@ func ParseRequest(data []byte) (*Request, error) {
 		path = "/"
 	}
 
-	numHeaders, n, err := ReadUvarint(data, offset)
+	headersLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
-		return nil, fmt.Errorf("invalid request: failed to read header count: %w", err)
+		return nil, fmt.Errorf("invalid request: failed to read headers length: %w", err)
 	}
 	offset += n
 
-	headers, newOffset, err := parseHeaders(data, offset, numHeaders, requestHeaderStaticTable)
+	headers, newOffset, err := parseHeaders(data, offset, headersLen, requestHeaderStaticTable)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}
@@ -750,10 +709,10 @@ func ParseRequest(data []byte) (*Request, error) {
 		Body:    body,
 	}
 
-	if contentLengthStr, ok := headers["Content-Length"]; ok {
+	if contentLengthStr, ok := headers["content-length"]; ok {
 		expectedLen, err := strconv.Atoi(contentLengthStr)
 		if err == nil && len(body) != expectedLen {
-			return nil, errors.New("invalid request: body length does not match Content-Length")
+			return nil, errors.New("invalid request: body length does not match content-length")
 		}
 	}
 

@@ -8,6 +8,16 @@ on:
     branches: [main]
 
 jobs:
+  typos:
+    name: "Check Typos"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Check typos
+        uses: crate-ci/typos@master
+
   lint-build-test:
     name: "Lint, Build & Test"
     runs-on: ubuntu-latest
