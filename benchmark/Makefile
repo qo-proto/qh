@@ -1,6 +1,6 @@
-.PHONY: all build run clean test detailed report
+.PHONY: all build run clean test report
 
-N ?= 10
+N ?=
 
 all: run # default with no args
 
@@ -9,11 +9,7 @@ build:
 	@cd cmd/qhbench && go build -o ../../qhbench
 
 run:
-	@go run cmd/qhbench/main.go
-
-detailed:
-	@echo "Running detailed benchmarks with $(N) examples..."
-	@go run cmd/qhbench/main.go -detailed -examples $(N)
+	@go run cmd/qhbench/main.go -examples=$(if $(N),$(N),0)
 
 report:
 	@echo "Generating dated report ..."
@@ -22,29 +18,31 @@ report:
 	GO_VERSION=$$(go version | awk '{print $$3}'); \
 	GIT_COMMIT=$$(git rev-parse --short HEAD 2>/dev/null || echo "unknown"); \
 	mkdir -p ../docs/benchmarks; \
-	go run cmd/qhbench/main.go -detailed -examples=2 -o /tmp/benchmark_report.txt; \
-	echo "QH Protocol Benchmark Report" > ../docs/benchmarks/report-$$DATE.txt; \
-	echo "" >> ../docs/benchmarks/report-$$DATE.txt; \
-	echo "Date: $$DATE_HUMAN  " >> ../docs/benchmarks/report-$$DATE.txt; \
-	echo "Commit: \`$$GIT_COMMIT\`  " >> ../docs/benchmarks/report-$$DATE.txt; \
-	echo "Go Version: $$GO_VERSION  " >> ../docs/benchmarks/report-$$DATE.txt; \
-	echo "" >> ../docs/benchmarks/report-$$DATE.txt; \
-	tail -n +3 /tmp/benchmark_report.txt >> ../docs/benchmarks/report-$$DATE.txt; \
-	rm /tmp/benchmark_report.txt; \
-	echo "report saved to docs/benchmarks/report-$$DATE.txt"
+	go run cmd/qhbench/main.go -examples=$(if $(N),$(N),3) -o .benchmark_report_tmp.md; \
+	echo "# QH Protocol Benchmark Report" > ../docs/benchmarks/report-$$DATE.md; \
+	echo "" >> ../docs/benchmarks/report-$$DATE.md; \
+	echo "**Date:** $$DATE_HUMAN  " >> ../docs/benchmarks/report-$$DATE.md; \
+	echo "**Commit:** \`$$GIT_COMMIT\`  " >> ../docs/benchmarks/report-$$DATE.md; \
+	echo "**Go Version:** $$GO_VERSION  " >> ../docs/benchmarks/report-$$DATE.md; \
+	echo "" >> ../docs/benchmarks/report-$$DATE.md; \
+	tail -n +2 .benchmark_report_tmp.md >> ../docs/benchmarks/report-$$DATE.md; \
+	rm .benchmark_report_tmp.md; \
+	echo "report saved to docs/benchmarks/report-$$DATE.md"
 
 clean:
-	@rm -f qhbench benchmark_report.txt
+	@rm -f qhbench benchmark_report.txt .benchmark_report_tmp.md
 
 help:
 	@echo "QH Protocol Benchmark Makefile"
 	@echo ""
 	@echo "Targets:"
-	@echo "  make              - Run benchmarks (default)"
+	@echo "  make              - Run benchmarks to stdout (default)"
 	@echo "  make build        - Build qhbench binary"
 	@echo "  make run          - Run benchmarks to stdout"
-	@echo "  make detailed N=n - Run with detailed output, printing N wire format examples (default N=10)"
-	@echo "  make report       - Generate dated report file in docs/benchmarks/"
+	@echo "  make report       - Generate dated markdown report in docs/benchmarks/ (3 wire examples)"
 	@echo "  make clean        - Clean build artifacts"
 	@echo "  make test         - Run tests"
 	@echo "  make help         - Show this help"
+	@echo ""
+	@echo "Options:"
+	@echo "  N=<number>        - Number of wire format examples (default: 0 for run, 3 for report)"

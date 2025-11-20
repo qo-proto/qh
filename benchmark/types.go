@@ -12,13 +12,11 @@ type RequestData struct {
 	Host    string
 	Path    string
 	Headers map[string]string
-	Body    string `json:"body,omitempty"`
 }
 
 type ResponseData struct {
 	StatusCode int
 	Headers    map[string]string
-	Body       string `json:"body,omitempty"`
 }
 
 type BenchmarkResult struct {
@@ -36,9 +34,7 @@ type EncodedResult struct {
 	ResponseSize       int
 	TotalSize          int
 	RequestHeaderSize  int
-	RequestBodySize    int
 	ResponseHeaderSize int
-	ResponseBodySize   int
 }
 
 type Summary struct {
@@ -87,20 +83,6 @@ type SizeCategory struct {
 	QHVsHTTP3Ratio float64
 }
 
-type HeaderAnalysis struct {
-	QHAvgHeaders      float64
-	HTTP1AvgHeaders   float64
-	HTTP2AvgHeaders   float64
-	HTTP3AvgHeaders   float64
-	QHTotalHeaders    int
-	HTTP1TotalHeaders int
-	HTTP2TotalHeaders int
-	HTTP3TotalHeaders int
-	QHVsHTTP1Ratio    float64
-	QHVsHTTP2Ratio    float64
-	QHVsHTTP3Ratio    float64
-}
-
 type HeaderOnlyAnalysis struct {
 	QHReqHeaderAvg     float64
 	HTTP1ReqHeaderAvg  float64
@@ -116,4 +98,22 @@ type HeaderOnlyAnalysis struct {
 	QHRespVsHTTP1Ratio float64
 	QHRespVsHTTP2Ratio float64
 	QHRespVsHTTP3Ratio float64
+}
+
+type ProtocolBounds struct {
+	BestCase  BenchmarkResult
+	WorstCase BenchmarkResult
+}
+
+type PerformanceBounds struct {
+	VsHTTP1 ProtocolBounds
+	VsHTTP2 ProtocolBounds
+	VsHTTP3 ProtocolBounds
+	HasData bool
+}
+
+type CategorizedResults struct {
+	EdgeCases []BenchmarkResult
+	Traffic   []BenchmarkResult
+	All       []BenchmarkResult
 }

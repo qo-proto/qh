@@ -30,17 +30,5 @@ go run ./examples/client/main.go
 
 QH protocol wire format efficiency compared against HTTP/1.1, HTTP/2, and HTTP/3.
 
-- [Benchmark reports](./docs/benchmarks/)
-- [Methodology](./docs/benchmarks/methodology.md)
-
-### Running Benchmarks
-
-```
-make          - Run benchmarks (default)
-make build    - Build qhbench binary
-make run      - Run benchmarks to stdout
-make detailed - Run with detailed output
-make report   - Generate dated results file in docs/benchmarks/
-make clean    - Clean build artifacts
-make help     - Show this help
-```
+- [Benchmark Documentation](./docs/benchmarks/README.md) - Methodology and documentation
+- [Benchmark Reports](./docs/benchmarks/) - Generated reports

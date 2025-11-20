@@ -1,11 +1,10 @@
 package benchmark
 
-func RunBenchmarks() []BenchmarkResult {
-	testCases := GetTestCases()
-	results := make([]BenchmarkResult, len(testCases))
-
-	for i, tc := range testCases {
-		results[i] = BenchmarkResult{
+func RunBenchmarks() CategorizedResults {
+	edgeCases := GetEdgeCaseTestCases()
+	edgeResults := make([]BenchmarkResult, len(edgeCases))
+	for i, tc := range edgeCases {
+		edgeResults[i] = BenchmarkResult{
 			TestCase: tc,
 			QH:       EncodeQH(tc),
 			HTTP1:    EncodeHTTP1(tc),
@@ -14,7 +13,27 @@ func RunBenchmarks() []BenchmarkResult {
 		}
 	}
 
-	return results
+	trafficCases := GetHTTPTrafficTestCases()
+	trafficResults := make([]BenchmarkResult, len(trafficCases))
+	for i, tc := range trafficCases {
+		trafficResults[i] = BenchmarkResult{
+			TestCase: tc,
+			QH:       EncodeQH(tc),
+			HTTP1:    EncodeHTTP1(tc),
+			HTTP2:    EncodeHTTP2(tc),
+			HTTP3:    EncodeHTTP3(tc),
+		}
+	}
+
+	allResults := make([]BenchmarkResult, 0, len(edgeResults)+len(trafficResults))
+	allResults = append(allResults, trafficResults...)
+	allResults = append(allResults, edgeResults...)
+
+	return CategorizedResults{
+		EdgeCases: edgeResults,
+		Traffic:   trafficResults,
+		All:       allResults,
+	}
 }
 
 func CalculateSummary(results []BenchmarkResult) Summary {
@@ -133,34 +152,76 @@ func CalculateSizeCategories(results []BenchmarkResult) []SizeCategory {
 	return sizeCategories
 }
 
-func CalculateHeaderAnalysis(results []BenchmarkResult) HeaderAnalysis {
-	var qhTotal, http1Total, http2Total, http3Total int
-
-	for _, r := range results {
-		qhTotal += r.QH.RequestSize
-		http1Total += r.HTTP1.RequestSize
-		http2Total += r.HTTP2.RequestSize
-		http3Total += r.HTTP3.RequestSize
+func FindBestWorstCases(results []BenchmarkResult) PerformanceBounds {
+	if len(results) == 0 {
+		return PerformanceBounds{HasData: false}
 	}
 
-	count := len(results)
-	qhAvg := float64(qhTotal) / float64(count)
-	http1Avg := float64(http1Total) / float64(count)
-	http2Avg := float64(http2Total) / float64(count)
-	http3Avg := float64(http3Total) / float64(count)
+	// Initialize with first result
+	http1Best := results[0]
+	http1Worst := results[0]
+	http1BestRatio := float64(results[0].QH.TotalSize) / float64(results[0].HTTP1.TotalSize)
+	http1WorstRatio := http1BestRatio
 
-	return HeaderAnalysis{
-		QHAvgHeaders:      qhAvg,
-		HTTP1AvgHeaders:   http1Avg,
-		HTTP2AvgHeaders:   http2Avg,
-		HTTP3AvgHeaders:   http3Avg,
-		QHTotalHeaders:    qhTotal,
-		HTTP1TotalHeaders: http1Total,
-		HTTP2TotalHeaders: http2Total,
-		HTTP3TotalHeaders: http3Total,
-		QHVsHTTP1Ratio:    (qhAvg / http1Avg) * 100,
-		QHVsHTTP2Ratio:    (qhAvg / http2Avg) * 100,
-		QHVsHTTP3Ratio:    (qhAvg / http3Avg) * 100,
+	http2Best := results[0]
+	http2Worst := results[0]
+	http2BestRatio := float64(results[0].QH.TotalSize) / float64(results[0].HTTP2.TotalSize)
+	http2WorstRatio := http2BestRatio
+
+	http3Best := results[0]
+	http3Worst := results[0]
+	http3BestRatio := float64(results[0].QH.TotalSize) / float64(results[0].HTTP3.TotalSize)
+	http3WorstRatio := http3BestRatio
+
+	for i := 1; i < len(results); i++ {
+		// vs HTTP/1.1
+		ratio1 := float64(results[i].QH.TotalSize) / float64(results[i].HTTP1.TotalSize)
+		if ratio1 < http1BestRatio {
+			http1BestRatio = ratio1
+			http1Best = results[i]
+		}
+		if ratio1 > http1WorstRatio {
+			http1WorstRatio = ratio1
+			http1Worst = results[i]
+		}
+
+		// vs HTTP/2
+		ratio2 := float64(results[i].QH.TotalSize) / float64(results[i].HTTP2.TotalSize)
+		if ratio2 < http2BestRatio {
+			http2BestRatio = ratio2
+			http2Best = results[i]
+		}
+		if ratio2 > http2WorstRatio {
+			http2WorstRatio = ratio2
+			http2Worst = results[i]
+		}
+
+		// vs HTTP/3
+		ratio3 := float64(results[i].QH.TotalSize) / float64(results[i].HTTP3.TotalSize)
+		if ratio3 < http3BestRatio {
+			http3BestRatio = ratio3
+			http3Best = results[i]
+		}
+		if ratio3 > http3WorstRatio {
+			http3WorstRatio = ratio3
+			http3Worst = results[i]
+		}
+	}
+
+	return PerformanceBounds{
+		VsHTTP1: ProtocolBounds{
+			BestCase:  http1Best,
+			WorstCase: http1Worst,
+		},
+		VsHTTP2: ProtocolBounds{
+			BestCase:  http2Best,
+			WorstCase: http2Worst,
+		},
+		VsHTTP3: ProtocolBounds{
+			BestCase:  http3Best,
+			WorstCase: http3Worst,
+		},
+		HasData: true,
 	}
 }
 
