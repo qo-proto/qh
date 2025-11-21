@@ -15,7 +15,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/tbocek/qotp"
+	"github.com/qo-proto/qotp"
 )
 
 const (
@@ -197,18 +197,18 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 
 	var responseBuffer []byte
 
-	c.listener.Loop(func(s *qotp.Stream) bool {
+	c.listener.Loop(func(s *qotp.Stream) (bool, error) {
 		if s == nil {
-			return true
+			return true, nil
 		}
 
 		chunk, err := s.Read()
 		if err != nil {
 			slog.Debug("Read error in response loop", "error", err)
-			return true
+			return true, nil
 		}
 		if len(chunk) == 0 {
-			return true
+			return true, nil
 		}
 
 		slog.Debug("Received chunk from server", "bytes", len(chunk))
@@ -217,14 +217,14 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 		complete, checkErr := IsResponseComplete(responseBuffer)
 		if checkErr != nil {
 			slog.Error("Error checking response completeness", "error", checkErr)
-			return false
+			return false, nil
 		}
 
 		if complete {
-			return false
+			return false, nil
 		}
 
-		return true
+		return true, nil
 	})
 
 	resp, parseErr := ParseResponse(responseBuffer)

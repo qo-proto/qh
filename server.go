@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"strconv"
 
-	"github.com/tbocek/qotp"
+	"github.com/qo-proto/qotp"
 )
 
 // handles QH requests
@@ -63,16 +63,16 @@ func (s *Server) Serve() error {
 
 	streamBuffers := make(map[*qotp.Stream][]byte)
 
-	s.listener.Loop(func(stream *qotp.Stream) bool {
+	s.listener.Loop(func(stream *qotp.Stream) (bool, error) {
 		if stream == nil {
-			return true
+			return true, nil
 		}
 
 		data, err := stream.Read()
 		if err != nil {
 			slog.Error("Stream read error", "error", err)
 			delete(streamBuffers, stream) // Clean up buffer on error
-			return true
+			return true, nil
 		}
 
 		if len(data) > 0 {
@@ -88,7 +88,7 @@ func (s *Server) Serve() error {
 				slog.Error("Request validation error", "error", checkErr)
 				s.sendErrorResponse(stream, 400, "Bad Request")
 				delete(streamBuffers, stream) // Clear buffer on error
-				return true
+				return true, nil
 			}
 
 			if complete {
@@ -98,7 +98,7 @@ func (s *Server) Serve() error {
 			}
 		}
 
-		return true
+		return true, nil
 	})
 
 	return nil

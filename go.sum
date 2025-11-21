@@ -2,7 +2,6 @@ github.com/MatusOllah/slogcolor v1.7.0 h1:Nrd7yBPv2EBEEBEwl7WEPRmMd1ozZzw2jm8SLM
 github.com/MatusOllah/slogcolor v1.7.0/go.mod h1:5y1H50XuQIBvuYTJlmokWi+4FuPiJN5L7Z0jM4K4bYA=
 github.com/andybalholm/brotli v1.2.0 h1:ukwgCxwYrmACq68yiUqwIWnGY0cTPox/M94sVwToPjQ=
 github.com/andybalholm/brotli v1.2.0/go.mod h1:rzTDkvFWvIrjDXZHkuS16NPggd91W3kUSvPlQ1pLaKY=
-github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=
@@ -19,6 +18,10 @@ github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWE
 github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/qh-project/qh v0.0.0-20251121150336-1728c373293a h1:/RGiQ8r+qEG46/7HFQCewsxl8zDpzHpHB1cmnzg8Hus=
+github.com/qh-project/qh v0.0.0-20251121150336-1728c373293a/go.mod h1:Yk5KPSZ6Y4dfismpsDKav/qKhHthw8m1Px8O3N3ihkY=
+github.com/qo-proto/qotp v0.2.5 h1:1WqoOk0ck8BljlaQk07z4Q9NFbWAAnVJ+Wyj2W2lXMM=
+github.com/qo-proto/qotp v0.2.5/go.mod h1:nVnoXcivvMr4QaigQX4GVq1p+N6QfIvMlY9Fr7D6v98=
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
