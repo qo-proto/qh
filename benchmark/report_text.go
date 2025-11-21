@@ -13,8 +13,10 @@ func formatPerformanceBounds(bounds PerformanceBounds) string {
 	http1WorstRatio := float64(bounds.VsHTTP1.WorstCase.QH.TotalSize) / float64(bounds.VsHTTP1.WorstCase.HTTP1.TotalSize) * 100
 
 	sb.WriteString("  vs HTTP/1.1:\n")
-	sb.WriteString(fmt.Sprintf("    Best case:  %.1f%% smaller (%s)\n", 100-http1BestRatio, bounds.VsHTTP1.BestCase.TestCase.Name))
-	sb.WriteString(fmt.Sprintf("    Worst case: %.1f%% smaller (%s)\n", 100-http1WorstRatio, bounds.VsHTTP1.WorstCase.TestCase.Name))
+	sb.WriteString(fmt.Sprintf("    Best case:  %.1f%% smaller - QH: %d B vs HTTP/1.1: %d B (%s)\n",
+		100-http1BestRatio, bounds.VsHTTP1.BestCase.QH.TotalSize, bounds.VsHTTP1.BestCase.HTTP1.TotalSize, bounds.VsHTTP1.BestCase.TestCase.Name))
+	sb.WriteString(fmt.Sprintf("    Worst case: %.1f%% smaller - QH: %d B vs HTTP/1.1: %d B (%s)\n",
+		100-http1WorstRatio, bounds.VsHTTP1.WorstCase.QH.TotalSize, bounds.VsHTTP1.WorstCase.HTTP1.TotalSize, bounds.VsHTTP1.WorstCase.TestCase.Name))
 	sb.WriteString("\n")
 
 	// vs HTTP/2
@@ -23,14 +25,18 @@ func formatPerformanceBounds(bounds PerformanceBounds) string {
 
 	sb.WriteString("  vs HTTP/2:\n")
 	if http2BestRatio < 100 {
-		sb.WriteString(fmt.Sprintf("    Best case:  %.1f%% smaller (%s)\n", 100-http2BestRatio, bounds.VsHTTP2.BestCase.TestCase.Name))
+		sb.WriteString(fmt.Sprintf("    Best case:  %.1f%% smaller - QH: %d B vs HTTP/2: %d B (%s)\n",
+			100-http2BestRatio, bounds.VsHTTP2.BestCase.QH.TotalSize, bounds.VsHTTP2.BestCase.HTTP2.TotalSize, bounds.VsHTTP2.BestCase.TestCase.Name))
 	} else {
-		sb.WriteString(fmt.Sprintf("    Best case:  %.1f%% larger (%s)\n", http2BestRatio-100, bounds.VsHTTP2.BestCase.TestCase.Name))
+		sb.WriteString(fmt.Sprintf("    Best case:  %.1f%% larger - QH: %d B vs HTTP/2: %d B (%s)\n",
+			http2BestRatio-100, bounds.VsHTTP2.BestCase.QH.TotalSize, bounds.VsHTTP2.BestCase.HTTP2.TotalSize, bounds.VsHTTP2.BestCase.TestCase.Name))
 	}
 	if http2WorstRatio < 100 {
-		sb.WriteString(fmt.Sprintf("    Worst case: %.1f%% smaller (%s)\n", 100-http2WorstRatio, bounds.VsHTTP2.WorstCase.TestCase.Name))
+		sb.WriteString(fmt.Sprintf("    Worst case: %.1f%% smaller - QH: %d B vs HTTP/2: %d B (%s)\n",
+			100-http2WorstRatio, bounds.VsHTTP2.WorstCase.QH.TotalSize, bounds.VsHTTP2.WorstCase.HTTP2.TotalSize, bounds.VsHTTP2.WorstCase.TestCase.Name))
 	} else {
-		sb.WriteString(fmt.Sprintf("    Worst case: %.1f%% larger (%s)\n", http2WorstRatio-100, bounds.VsHTTP2.WorstCase.TestCase.Name))
+		sb.WriteString(fmt.Sprintf("    Worst case: %.1f%% larger - QH: %d B vs HTTP/2: %d B (%s)\n",
+			http2WorstRatio-100, bounds.VsHTTP2.WorstCase.QH.TotalSize, bounds.VsHTTP2.WorstCase.HTTP2.TotalSize, bounds.VsHTTP2.WorstCase.TestCase.Name))
 	}
 	sb.WriteString("\n")
 
@@ -40,62 +46,18 @@ func formatPerformanceBounds(bounds PerformanceBounds) string {
 
 	sb.WriteString("  vs HTTP/3:\n")
 	if http3BestRatio < 100 {
-		sb.WriteString(fmt.Sprintf("    Best case:  %.1f%% smaller (%s)\n", 100-http3BestRatio, bounds.VsHTTP3.BestCase.TestCase.Name))
+		sb.WriteString(fmt.Sprintf("    Best case:  %.1f%% smaller - QH: %d B vs HTTP/3: %d B (%s)\n",
+			100-http3BestRatio, bounds.VsHTTP3.BestCase.QH.TotalSize, bounds.VsHTTP3.BestCase.HTTP3.TotalSize, bounds.VsHTTP3.BestCase.TestCase.Name))
 	} else {
-		sb.WriteString(fmt.Sprintf("    Best case:  %.1f%% larger (%s)\n", http3BestRatio-100, bounds.VsHTTP3.BestCase.TestCase.Name))
+		sb.WriteString(fmt.Sprintf("    Best case:  %.1f%% larger - QH: %d B vs HTTP/3: %d B (%s)\n",
+			http3BestRatio-100, bounds.VsHTTP3.BestCase.QH.TotalSize, bounds.VsHTTP3.BestCase.HTTP3.TotalSize, bounds.VsHTTP3.BestCase.TestCase.Name))
 	}
 	if http3WorstRatio < 100 {
-		sb.WriteString(fmt.Sprintf("    Worst case: %.1f%% smaller (%s)\n", 100-http3WorstRatio, bounds.VsHTTP3.WorstCase.TestCase.Name))
+		sb.WriteString(fmt.Sprintf("    Worst case: %.1f%% smaller - QH: %d B vs HTTP/3: %d B (%s)\n",
+			100-http3WorstRatio, bounds.VsHTTP3.WorstCase.QH.TotalSize, bounds.VsHTTP3.WorstCase.HTTP3.TotalSize, bounds.VsHTTP3.WorstCase.TestCase.Name))
 	} else {
-		sb.WriteString(fmt.Sprintf("    Worst case: %.1f%% larger (%s)\n", http3WorstRatio-100, bounds.VsHTTP3.WorstCase.TestCase.Name))
-	}
-
-	return sb.String()
-}
-
-func formatExecutiveSummary(edgeResults, trafficResults, allResults []BenchmarkResult) string {
-	var sb strings.Builder
-
-	allSummary := CalculateSummary(allResults)
-	trafficSummary := CalculateSummary(trafficResults)
-
-	sb.WriteString("Overall Performance (all test cases):\n")
-	sb.WriteString(fmt.Sprintf("  • %.1f%% bandwidth savings vs HTTP/1.1 (%d B saved)\n",
-		100-allSummary.QHVsHTTP1Ratio, allSummary.HTTP1TotalBytes-allSummary.QHTotalBytes))
-	sb.WriteString(fmt.Sprintf("  • %.1f%% bandwidth savings vs HTTP/2 (%d B saved)\n",
-		100-allSummary.QHVsHTTP2Ratio, allSummary.HTTP2TotalBytes-allSummary.QHTotalBytes))
-	sb.WriteString(fmt.Sprintf("  • Achieves %.1f%% of HTTP/3 efficiency\n", allSummary.QHVsHTTP3Ratio))
-	sb.WriteString("\n")
-
-	sb.WriteString("Real-World Traffic Performance:\n")
-	sb.WriteString(fmt.Sprintf("  • %.1f%% better than HTTP/1.1 on typical requests\n", 100-trafficSummary.QHVsHTTP1Ratio))
-	sb.WriteString(fmt.Sprintf("  • %.1f%% better than HTTP/2\n", 100-trafficSummary.QHVsHTTP2Ratio))
-
-	trafficHeaders := CalculateHeaderOnlyAnalysis(trafficResults)
-	sb.WriteString(fmt.Sprintf("  • Header overhead: %.1f%% smaller than HTTP/1.1 (requests)\n",
-		100-trafficHeaders.QHReqVsHTTP1Ratio))
-	sb.WriteString(fmt.Sprintf("  • Header overhead: %.1f%% smaller than HTTP/1.1 (responses)\n",
-		100-trafficHeaders.QHRespVsHTTP1Ratio))
-	sb.WriteString("\n")
-
-	sb.WriteString("\n")
-	bounds := FindBestWorstCases(edgeResults)
-	if bounds.HasData {
-		sb.WriteString("Edge Case Performance Bounds:\n\n")
-		// Format with bullet points for executive summary
-		http1BestRatio := float64(bounds.VsHTTP1.BestCase.QH.TotalSize) / float64(bounds.VsHTTP1.BestCase.HTTP1.TotalSize) * 100
-		sb.WriteString(fmt.Sprintf("  • vs HTTP/1.1: %.1f%% to %.1f%% smaller\n",
-			100-http1BestRatio, 100-float64(bounds.VsHTTP1.WorstCase.QH.TotalSize)/float64(bounds.VsHTTP1.WorstCase.HTTP1.TotalSize)*100))
-
-		http2BestRatio := float64(bounds.VsHTTP2.BestCase.QH.TotalSize) / float64(bounds.VsHTTP2.BestCase.HTTP2.TotalSize) * 100
-		http2WorstRatio := float64(bounds.VsHTTP2.WorstCase.QH.TotalSize) / float64(bounds.VsHTTP2.WorstCase.HTTP2.TotalSize) * 100
-		if http2WorstRatio > 100 {
-			sb.WriteString(fmt.Sprintf("  • vs HTTP/2: %.1f%% smaller to %.1f%% larger\n",
-				100-http2BestRatio, http2WorstRatio-100))
-		} else {
-			sb.WriteString(fmt.Sprintf("  • vs HTTP/2: %.1f%% to %.1f%% smaller\n",
-				100-http2BestRatio, 100-http2WorstRatio))
-		}
+		sb.WriteString(fmt.Sprintf("    Worst case: %.1f%% larger - QH: %d B vs HTTP/3: %d B (%s)\n",
+			http3WorstRatio-100, bounds.VsHTTP3.WorstCase.QH.TotalSize, bounds.VsHTTP3.WorstCase.HTTP3.TotalSize, bounds.VsHTTP3.WorstCase.TestCase.Name))
 	}
 
 	return sb.String()
@@ -104,13 +66,24 @@ func formatExecutiveSummary(edgeResults, trafficResults, allResults []BenchmarkR
 func formatEdgeCaseSection(results []BenchmarkResult) string {
 	var sb strings.Builder
 
-	sb.WriteString("EDGE CASE DETAILED RESULTS\n\n")
-	sb.WriteString(formatDetailedTable(results))
+	summary := CalculateSummary(results)
+	sb.WriteString("SUMMARY\n\n")
+	sb.WriteString(fmt.Sprintf("  Tests run:         %d (manually selected)\n", summary.TotalTests))
+	sb.WriteString(fmt.Sprintf("  QH total:          %d B\n", summary.QHTotalBytes))
+	sb.WriteString(fmt.Sprintf("  HTTP/1.1 total:    %d B (%s)\n", summary.HTTP1TotalBytes, formatDifference(summary.QHVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("  HTTP/2 total:      %d B (%s)\n", summary.HTTP2TotalBytes, formatDifference(summary.QHVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("  HTTP/3 total:      %d B (%s)\n", summary.HTTP3TotalBytes, formatDifference(summary.QHVsHTTP3Ratio)))
 	sb.WriteString("\n\n")
 
-	summary := CalculateSummary(results)
-	sb.WriteString("EDGE CASE SUMMARY\n\n")
-	sb.WriteString(formatOverall(summary))
+	bounds := FindBestWorstCases(results)
+	if bounds.HasData {
+		sb.WriteString("PERFORMANCE BOUNDS\n\n")
+		sb.WriteString(formatPerformanceBounds(bounds))
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString("EDGE CASE DETAILED RESULTS\n\n")
+	sb.WriteString(formatDetailedTable(results))
 	sb.WriteString("\n\n")
 
 	// Header analysis for edge cases
@@ -125,8 +98,12 @@ func formatTrafficSection(results []BenchmarkResult) string {
 	var sb strings.Builder
 
 	summary := CalculateSummary(results)
-	sb.WriteString("OVERALL SUMMARY\n\n")
-	sb.WriteString(formatOverall(summary))
+	sb.WriteString("SUMMARY\n\n")
+	sb.WriteString(fmt.Sprintf("  Tests run:         %d (collected from actual internet traffic)\n", summary.TotalTests))
+	sb.WriteString(fmt.Sprintf("  QH total:          %d B\n", summary.QHTotalBytes))
+	sb.WriteString(fmt.Sprintf("  HTTP/1.1 total:    %d B (%s)\n", summary.HTTP1TotalBytes, formatDifference(summary.QHVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("  HTTP/2 total:      %d B (%s)\n", summary.HTTP2TotalBytes, formatDifference(summary.QHVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("  HTTP/3 total:      %d B (%s)\n", summary.HTTP3TotalBytes, formatDifference(summary.QHVsHTTP3Ratio)))
 	sb.WriteString("\n\n")
 
 	bounds := FindBestWorstCases(results)
@@ -152,8 +129,12 @@ func formatCombinedSection(results []BenchmarkResult) string {
 	var sb strings.Builder
 
 	summary := CalculateSummary(results)
-	sb.WriteString("OVERALL SUMMARY\n\n")
-	sb.WriteString(formatOverall(summary))
+	sb.WriteString("SUMMARY\n\n")
+	sb.WriteString(fmt.Sprintf("  Tests run:         %d\n", summary.TotalTests))
+	sb.WriteString(fmt.Sprintf("  QH total:          %d B\n", summary.QHTotalBytes))
+	sb.WriteString(fmt.Sprintf("  HTTP/1.1 total:    %d B (%s)\n", summary.HTTP1TotalBytes, formatDifference(summary.QHVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("  HTTP/2 total:      %d B (%s)\n", summary.HTTP2TotalBytes, formatDifference(summary.QHVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("  HTTP/3 total:      %d B (%s)\n", summary.HTTP3TotalBytes, formatDifference(summary.QHVsHTTP3Ratio)))
 	sb.WriteString("\n\n")
 
 	bounds := FindBestWorstCases(results)
@@ -171,30 +152,6 @@ func formatCombinedSection(results []BenchmarkResult) string {
 	headerOnly := CalculateHeaderOnlyAnalysis(results)
 	sb.WriteString("REQUEST/RESPONSE BREAKDOWN\n\n")
 	sb.WriteString(formatHeaderOnlyAnalysis(headerOnly))
-
-	return sb.String()
-}
-
-func formatOverall(s Summary) string {
-	var sb strings.Builder
-
-	sb.WriteString(fmt.Sprintf("  Tests run:        %d\n", s.TotalTests))
-	sb.WriteString(fmt.Sprintf("  Total QH bytes:   %d B\n", s.QHTotalBytes))
-
-	sb.WriteString(fmt.Sprintf("  vs HTTP/1.1:      %.1f%% (%s)\n",
-		s.QHVsHTTP1Ratio, formatDifference(s.QHVsHTTP1Ratio)))
-	sb.WriteString(fmt.Sprintf("  vs HTTP/2:        %.1f%% (%s)\n",
-		s.QHVsHTTP2Ratio, formatDifference(s.QHVsHTTP2Ratio)))
-	sb.WriteString(fmt.Sprintf("  vs HTTP/3:        %.1f%% (%s)\n\n",
-		s.QHVsHTTP3Ratio, formatDifference(s.QHVsHTTP3Ratio)))
-
-	http1Savings := s.HTTP1TotalBytes - s.QHTotalBytes
-	http2Savings := s.HTTP2TotalBytes - s.QHTotalBytes
-	http3Savings := s.HTTP3TotalBytes - s.QHTotalBytes
-
-	sb.WriteString(fmt.Sprintf("  Bandwidth saved vs HTTP/1.1: %d B\n", http1Savings))
-	sb.WriteString(fmt.Sprintf("  Bandwidth saved vs HTTP/2:   %d B\n", http2Savings))
-	sb.WriteString(fmt.Sprintf("  Bandwidth saved vs HTTP/3:   %d B", http3Savings))
 
 	return sb.String()
 }

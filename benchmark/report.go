@@ -17,37 +17,28 @@ func GenerateMultiSectionReport(edgeResults, trafficResults, allResults []Benchm
 
 	// Table of Contents
 	sb.WriteString("TABLE OF CONTENTS\n")
-	sb.WriteString("  1. Executive Summary\n")
-	sb.WriteString(fmt.Sprintf("  2. Edge Case Analysis (%d test cases)\n", len(edgeResults)))
-	sb.WriteString(fmt.Sprintf("  3. Real HTTP Traffic Analysis (%d test cases)\n", len(trafficResults)))
-	sb.WriteString(fmt.Sprintf("  4. Combined Results (%d test cases)\n\n", len(allResults)))
+	sb.WriteString(fmt.Sprintf("  1. Edge Case Analysis (%d test cases)\n", len(edgeResults)))
+	sb.WriteString(fmt.Sprintf("  2. Real HTTP Traffic Analysis (%d test cases)\n", len(trafficResults)))
+	sb.WriteString(fmt.Sprintf("  3. Combined Results (%d test cases)\n\n", len(allResults)))
 
-	// Section 1: Executive Summary
+	// Section 1: Edge Case Analysis
 	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n")
-	sb.WriteString("  SECTION 1: EXECUTIVE SUMMARY\n")
-	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n\n")
-	sb.WriteString(formatExecutiveSummary(edgeResults, trafficResults, allResults))
-	sb.WriteString("\n\n")
-
-	// Section 2: Edge Case Analysis
-	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n")
-	sb.WriteString("  SECTION 2: EDGE CASE ANALYSIS\n")
+	sb.WriteString("  SECTION 1: EDGE CASE ANALYSIS\n")
 	sb.WriteString("  Protocol boundary conditions and stress tests\n")
 	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n\n")
 	sb.WriteString(formatEdgeCaseSection(edgeResults))
 	sb.WriteString("\n\n")
 
-	// Section 3: Real Traffic Analysis
+	// Section 2: Real Traffic Analysis
 	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n")
-	sb.WriteString("  SECTION 3: REAL HTTP TRAFFIC ANALYSIS\n")
-	sb.WriteString("  101 requests captured from 2025 internet traffic\n")
+	sb.WriteString("  SECTION 2: REAL HTTP TRAFFIC ANALYSIS\n")
 	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n\n")
 	sb.WriteString(formatTrafficSection(trafficResults))
 	sb.WriteString("\n\n")
 
-	// Section 4: Combined Results
+	// Section 3: Combined Results
 	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n")
-	sb.WriteString("  SECTION 4: COMBINED RESULTS\n")
+	sb.WriteString("  SECTION 3: COMBINED RESULTS\n")
 	sb.WriteString(fmt.Sprintf("  All %d test cases\n", len(allResults)))
 	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n\n")
 	sb.WriteString(formatCombinedSection(allResults))
@@ -65,31 +56,22 @@ func GenerateMultiSectionReportMarkdown(edgeResults, trafficResults, allResults 
 
 	// Table of Contents
 	sb.WriteString("## Table of Contents\n\n")
-	sb.WriteString("1. [Executive Summary](#executive-summary)\n")
-	sb.WriteString(fmt.Sprintf("2. [Edge Case Analysis](#edge-case-analysis) (%d test cases)\n", len(edgeResults)))
-	sb.WriteString(fmt.Sprintf("3. [Real HTTP Traffic Analysis](#real-http-traffic-analysis) (%d test cases)\n", len(trafficResults)))
-	sb.WriteString(fmt.Sprintf("4. [Combined Results](#combined-results) (%d test cases)\n\n", len(allResults)))
+	sb.WriteString(fmt.Sprintf("1. [Edge Case Analysis](#edge-case-analysis) (%d test cases)\n", len(edgeResults)))
+	sb.WriteString(fmt.Sprintf("2. [Real HTTP Traffic Analysis](#real-http-traffic-analysis) (%d test cases)\n", len(trafficResults)))
+	sb.WriteString(fmt.Sprintf("3. [Combined Results](#combined-results) (%d test cases)\n\n", len(allResults)))
 
-	// Section 1: Executive Summary
-	sb.WriteString("## Executive Summary\n\n")
-	sb.WriteString(formatExecutiveSummaryMarkdown(edgeResults, trafficResults, allResults))
-	sb.WriteString("\n\n")
-
-	// Section 2: Edge Case Analysis
+	// Section 1: Edge Case Analysis
 	sb.WriteString("## Edge Case Analysis\n\n")
-	sb.WriteString("*Protocol boundary conditions and stress tests*\n\n")
 	sb.WriteString(formatEdgeCaseSectionMarkdown(edgeResults))
 	sb.WriteString("\n\n")
 
-	// Section 3: Real Traffic Analysis
+	// Section 2: Real Traffic Analysis
 	sb.WriteString("## Real HTTP Traffic Analysis\n\n")
-	sb.WriteString(fmt.Sprintf("*%d requests captured from 2025 internet traffic*\n\n", len(trafficResults)))
 	sb.WriteString(formatTrafficSectionMarkdown(trafficResults))
 	sb.WriteString("\n\n")
 
-	// Section 4: Combined Results
+	// Section 3: Combined Results
 	sb.WriteString("## Combined Results\n\n")
-	sb.WriteString(fmt.Sprintf("*All %d test cases*\n\n", len(allResults)))
 	sb.WriteString(formatCombinedSectionMarkdown(allResults))
 
 	return sb.String()
@@ -105,11 +87,12 @@ func formatBytes(bytes float64) string {
 }
 
 func formatDifference(ratio float64) string {
-	diff := 100 - ratio
-	if diff > 0 {
-		return fmt.Sprintf("%.1f%% smaller", diff)
-	} else if diff < 0 {
-		return fmt.Sprintf("%.1f%% larger", -diff)
+	if ratio < 100 {
+		percentLarger := (100.0/ratio - 1.0) * 100.0
+		return fmt.Sprintf("%.1f%% larger", percentLarger)
+	} else if ratio > 100 {
+		percentSmaller := (1.0 - 100.0/ratio) * 100.0
+		return fmt.Sprintf("%.1f%% smaller", percentSmaller)
 	}
 	return "same size"
 }

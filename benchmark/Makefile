@@ -17,6 +17,8 @@ report:
 	DATE_HUMAN=$$(date '+%B %d, %Y'); \
 	GO_VERSION=$$(go version | awk '{print $$3}'); \
 	GIT_COMMIT=$$(git rev-parse --short HEAD 2>/dev/null || echo "unknown"); \
+	OS_NAME=$$(uname -s); \
+	OS_ARCH=$$(uname -m); \
 	mkdir -p ../docs/benchmarks; \
 	go run cmd/qhbench/main.go -examples=$(if $(N),$(N),3) -o .benchmark_report_tmp.md; \
 	echo "# QH Protocol Benchmark Report" > ../docs/benchmarks/report-$$DATE.md; \
@@ -24,6 +26,7 @@ report:
 	echo "**Date:** $$DATE_HUMAN  " >> ../docs/benchmarks/report-$$DATE.md; \
 	echo "**Commit:** \`$$GIT_COMMIT\`  " >> ../docs/benchmarks/report-$$DATE.md; \
 	echo "**Go Version:** $$GO_VERSION  " >> ../docs/benchmarks/report-$$DATE.md; \
+	echo "**Platform:** $$OS_NAME/$$OS_ARCH  " >> ../docs/benchmarks/report-$$DATE.md; \
 	echo "" >> ../docs/benchmarks/report-$$DATE.md; \
 	tail -n +2 .benchmark_report_tmp.md >> ../docs/benchmarks/report-$$DATE.md; \
 	rm .benchmark_report_tmp.md; \
