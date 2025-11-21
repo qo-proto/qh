@@ -1,4 +1,4 @@
-module github.com/qh-project/qh
+module github.com/qo-proto/qh
 
 go 1.25.1
 
