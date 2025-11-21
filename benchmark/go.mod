@@ -22,5 +22,4 @@ require (
 	golang.org/x/text v0.31.0 // indirect
 )
 
-// TODO: don't replace and use actual repo once ready
 replace github.com/qh-project/qh => ../
