@@ -3,7 +3,7 @@ module github.com/qo-proto/qh/benchmark
 go 1.25.1
 
 require (
-	github.com/qo-proto/qh v0.0.1
+	github.com/qo-proto/qh v0.0.4
 	github.com/quic-go/qpack v0.5.1
 	github.com/quic-go/quic-go v0.56.0
 	golang.org/x/net v0.47.0
