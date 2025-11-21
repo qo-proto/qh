@@ -23,5 +23,4 @@ require (
 )
 
 // TODO: don't replace and use actual repo once ready
-//nolint:gomoddirectives // Local replacement needed for now
 replace github.com/qh-project/qh => ../

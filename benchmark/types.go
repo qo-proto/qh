@@ -1,22 +1,22 @@
 package benchmark
 
 type TestCase struct {
-	Name        string
-	Description string
-	Request     RequestData
-	Response    ResponseData
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Request     RequestData  `json:"request"`
+	Response    ResponseData `json:"response"`
 }
 
 type RequestData struct {
-	Method  string
-	Host    string
-	Path    string
-	Headers map[string]string
+	Method  string            `json:"method"`
+	Host    string            `json:"host"`
+	Path    string            `json:"path"`
+	Headers map[string]string `json:"headers"`
 }
 
 type ResponseData struct {
-	StatusCode int
-	Headers    map[string]string
+	StatusCode int               `json:"statusCode"`
+	Headers    map[string]string `json:"headers"`
 }
 
 type BenchmarkResult struct {
