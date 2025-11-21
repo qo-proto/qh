@@ -80,7 +80,7 @@ Each protocol is encoded using the according implementations in go:
 
 ## Running the Benchmarks
 
-Run the benchmarks in the `benchmark/` directoy with the following `make` targets:
+Run the benchmarks in the `benchmark/` directory with the following `make` targets:
 
 ```
 Targets:
