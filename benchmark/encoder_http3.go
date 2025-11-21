@@ -44,13 +44,6 @@ func EncodeHTTP3(tc TestCase) EncodedResult {
 	reqResult.Write(quicvarint.Append(nil, uint64(len(reqEncodedHeaders)))) // Length
 	reqResult.Write(reqEncodedHeaders)                                      // Payload
 
-	// Add request DATA frame if there's a body
-	if len(tc.Request.Body) > 0 {
-		reqResult.Write(quicvarint.Append(nil, 0x00))                         // Frame type: DATA
-		reqResult.Write(quicvarint.Append(nil, uint64(len(tc.Request.Body)))) // Length
-		reqResult.Write(tc.Request.Body)                                      // Payload
-	}
-
 	// Encode response
 	var respQpackBuf bytes.Buffer
 	respEncoder := qpack.NewEncoder(&respQpackBuf)
@@ -80,21 +73,16 @@ func EncodeHTTP3(tc TestCase) EncodedResult {
 	respResult.Write(quicvarint.Append(nil, uint64(len(respEncodedHeaders)))) // Length
 	respResult.Write(respEncodedHeaders)                                      // Payload
 
-	// Add response DATA frame if there's a body
-	if len(tc.Response.Body) > 0 {
-		respResult.Write(quicvarint.Append(nil, 0x00))                          // Frame type: DATA
-		respResult.Write(quicvarint.Append(nil, uint64(len(tc.Response.Body)))) // Length
-		respResult.Write(tc.Response.Body)                                      // Payload
-	}
-
 	reqBytes := reqResult.Bytes()
 	respBytes := respResult.Bytes()
 
 	return EncodedResult{
-		RequestBytes:  reqBytes,
-		ResponseBytes: respBytes,
-		RequestSize:   len(reqBytes),
-		ResponseSize:  len(respBytes),
-		TotalSize:     len(reqBytes) + len(respBytes),
+		RequestBytes:       reqBytes,
+		ResponseBytes:      respBytes,
+		RequestSize:        len(reqBytes),
+		ResponseSize:       len(respBytes),
+		TotalSize:          len(reqBytes) + len(respBytes),
+		RequestHeaderSize:  len(reqBytes),
+		ResponseHeaderSize: len(respBytes),
 	}
 }

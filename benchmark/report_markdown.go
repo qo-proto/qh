@@ -1,0 +1,259 @@
+package benchmark
+
+import (
+	"fmt"
+	"strings"
+)
+
+func formatPerformanceBoundsMarkdown(bounds PerformanceBounds) string {
+	var sb strings.Builder
+
+	// vs HTTP/1.1
+	http1BestRatio := float64(bounds.VsHTTP1.BestCase.QH.TotalSize) / float64(bounds.VsHTTP1.BestCase.HTTP1.TotalSize) * 100
+	http1WorstRatio := float64(bounds.VsHTTP1.WorstCase.QH.TotalSize) / float64(bounds.VsHTTP1.WorstCase.HTTP1.TotalSize) * 100
+
+	sb.WriteString("**vs HTTP/1.1:**\n\n")
+	sb.WriteString(fmt.Sprintf("- **Best case**: %.1f%% smaller - QH: %d B vs HTTP/1.1: %d B (%s)\n",
+		100-http1BestRatio, bounds.VsHTTP1.BestCase.QH.TotalSize, bounds.VsHTTP1.BestCase.HTTP1.TotalSize, bounds.VsHTTP1.BestCase.TestCase.Name))
+	sb.WriteString(fmt.Sprintf("- **Worst case**: %.1f%% smaller - QH: %d B vs HTTP/1.1: %d B (%s)\n\n",
+		100-http1WorstRatio, bounds.VsHTTP1.WorstCase.QH.TotalSize, bounds.VsHTTP1.WorstCase.HTTP1.TotalSize, bounds.VsHTTP1.WorstCase.TestCase.Name))
+
+	// vs HTTP/2
+	http2BestRatio := float64(bounds.VsHTTP2.BestCase.QH.TotalSize) / float64(bounds.VsHTTP2.BestCase.HTTP2.TotalSize) * 100
+	http2WorstRatio := float64(bounds.VsHTTP2.WorstCase.QH.TotalSize) / float64(bounds.VsHTTP2.WorstCase.HTTP2.TotalSize) * 100
+
+	sb.WriteString("**vs HTTP/2:**\n\n")
+	if http2BestRatio < 100 {
+		sb.WriteString(fmt.Sprintf("- **Best case**: %.1f%% smaller - QH: %d B vs HTTP/2: %d B (%s)\n",
+			100-http2BestRatio, bounds.VsHTTP2.BestCase.QH.TotalSize, bounds.VsHTTP2.BestCase.HTTP2.TotalSize, bounds.VsHTTP2.BestCase.TestCase.Name))
+	} else {
+		sb.WriteString(fmt.Sprintf("- **Best case**: %.1f%% larger - QH: %d B vs HTTP/2: %d B (%s)\n",
+			http2BestRatio-100, bounds.VsHTTP2.BestCase.QH.TotalSize, bounds.VsHTTP2.BestCase.HTTP2.TotalSize, bounds.VsHTTP2.BestCase.TestCase.Name))
+	}
+	if http2WorstRatio < 100 {
+		sb.WriteString(fmt.Sprintf("- **Worst case**: %.1f%% smaller - QH: %d B vs HTTP/2: %d B (%s)\n\n",
+			100-http2WorstRatio, bounds.VsHTTP2.WorstCase.QH.TotalSize, bounds.VsHTTP2.WorstCase.HTTP2.TotalSize, bounds.VsHTTP2.WorstCase.TestCase.Name))
+	} else {
+		sb.WriteString(fmt.Sprintf("- **Worst case**: %.1f%% larger - QH: %d B vs HTTP/2: %d B (%s)\n\n",
+			http2WorstRatio-100, bounds.VsHTTP2.WorstCase.QH.TotalSize, bounds.VsHTTP2.WorstCase.HTTP2.TotalSize, bounds.VsHTTP2.WorstCase.TestCase.Name))
+	}
+
+	// vs HTTP/3
+	http3BestRatio := float64(bounds.VsHTTP3.BestCase.QH.TotalSize) / float64(bounds.VsHTTP3.BestCase.HTTP3.TotalSize) * 100
+	http3WorstRatio := float64(bounds.VsHTTP3.WorstCase.QH.TotalSize) / float64(bounds.VsHTTP3.WorstCase.HTTP3.TotalSize) * 100
+
+	sb.WriteString("**vs HTTP/3:**\n\n")
+	if http3BestRatio < 100 {
+		sb.WriteString(fmt.Sprintf("- **Best case**: %.1f%% smaller - QH: %d B vs HTTP/3: %d B (%s)\n",
+			100-http3BestRatio, bounds.VsHTTP3.BestCase.QH.TotalSize, bounds.VsHTTP3.BestCase.HTTP3.TotalSize, bounds.VsHTTP3.BestCase.TestCase.Name))
+	} else {
+		sb.WriteString(fmt.Sprintf("- **Best case**: %.1f%% larger - QH: %d B vs HTTP/3: %d B (%s)\n",
+			http3BestRatio-100, bounds.VsHTTP3.BestCase.QH.TotalSize, bounds.VsHTTP3.BestCase.HTTP3.TotalSize, bounds.VsHTTP3.BestCase.TestCase.Name))
+	}
+	if http3WorstRatio < 100 {
+		sb.WriteString(fmt.Sprintf("- **Worst case**: %.1f%% smaller - QH: %d B vs HTTP/3: %d B (%s)\n",
+			100-http3WorstRatio, bounds.VsHTTP3.WorstCase.QH.TotalSize, bounds.VsHTTP3.WorstCase.HTTP3.TotalSize, bounds.VsHTTP3.WorstCase.TestCase.Name))
+	} else {
+		sb.WriteString(fmt.Sprintf("- **Worst case**: %.1f%% larger - QH: %d B vs HTTP/3: %d B (%s)\n",
+			http3WorstRatio-100, bounds.VsHTTP3.WorstCase.QH.TotalSize, bounds.VsHTTP3.WorstCase.HTTP3.TotalSize, bounds.VsHTTP3.WorstCase.TestCase.Name))
+	}
+
+	return sb.String()
+}
+
+func formatDetailedTableMarkdown(results []BenchmarkResult) string {
+	var sb strings.Builder
+
+	sb.WriteString("| Test Case | QH (bytes) | HTTP/1 | HTTP/2 | HTTP/3 | QH/H1 | QH/H2 | QH/H3 |\n")
+	sb.WriteString("|-----------|----------:|-------:|-------:|-------:|------:|------:|------:|\n")
+
+	detailed := GetDetailedResults(results)
+	for _, d := range detailed {
+		name := d.Name
+		if len(name) > 50 {
+			name = name[:47] + "..."
+		}
+
+		sb.WriteString(fmt.Sprintf("| %s | %d | %d | %d | %d | %.1f%% | %.1f%% | %.1f%% |\n",
+			name,
+			d.QHTotalBytes,
+			d.HTTP1TotalBytes,
+			d.HTTP2TotalBytes,
+			d.HTTP3TotalBytes,
+			d.QHVsHTTP1Ratio,
+			d.QHVsHTTP2Ratio,
+			d.QHVsHTTP3Ratio,
+		))
+	}
+
+	return sb.String()
+}
+
+func formatEdgeCaseSectionMarkdown(results []BenchmarkResult) string {
+	var sb strings.Builder
+
+	summary := CalculateSummary(results)
+	sb.WriteString("### Summary\n\n")
+	sb.WriteString(fmt.Sprintf("- **%d** test cases, manually selected\n", summary.TotalTests))
+	sb.WriteString(fmt.Sprintf("- QH total: **%d B**\n", summary.QHTotalBytes))
+	sb.WriteString(fmt.Sprintf("- HTTP/1.1 total: **%d B** (%s)\n", summary.HTTP1TotalBytes, formatDifference(summary.QHVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("- HTTP/2 total: **%d B** (%s)\n", summary.HTTP2TotalBytes, formatDifference(summary.QHVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("- HTTP/3 total: **%d B** (%s)\n\n", summary.HTTP3TotalBytes, formatDifference(summary.QHVsHTTP3Ratio)))
+
+	// Performance bounds
+	bounds := FindBestWorstCases(results)
+	if bounds.HasData {
+		sb.WriteString("### Performance Bounds\n\n")
+		sb.WriteString(formatPerformanceBoundsMarkdown(bounds))
+		sb.WriteString("\n")
+	}
+
+	// Collapsible detailed results
+	sb.WriteString("<details>\n<summary><strong>Click to expand detailed test case results</strong></summary>\n\n")
+	sb.WriteString(formatDetailedTableMarkdown(results))
+	sb.WriteString("\n</details>\n\n")
+
+	// Header analysis
+	headerOnly := CalculateHeaderOnlyAnalysis(results)
+	sb.WriteString("### Request/Response Breakdown\n\n")
+	sb.WriteString(formatHeaderOnlyAnalysisMarkdown(headerOnly))
+
+	return sb.String()
+}
+
+func formatTrafficSectionMarkdown(results []BenchmarkResult) string {
+	var sb strings.Builder
+
+	summary := CalculateSummary(results)
+	sb.WriteString("### Summary\n\n")
+	sb.WriteString(fmt.Sprintf("- **%d** test cases, collected from actual internet traffic\n", summary.TotalTests))
+	sb.WriteString(fmt.Sprintf("- QH total: **%d B**\n", summary.QHTotalBytes))
+	sb.WriteString(fmt.Sprintf("- HTTP/1.1 total: **%d B** (%s)\n", summary.HTTP1TotalBytes, formatDifference(summary.QHVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("- HTTP/2 total: **%d B** (%s)\n", summary.HTTP2TotalBytes, formatDifference(summary.QHVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("- HTTP/3 total: **%d B** (%s)\n\n", summary.HTTP3TotalBytes, formatDifference(summary.QHVsHTTP3Ratio)))
+
+	// Performance bounds
+	bounds := FindBestWorstCases(results)
+	if bounds.HasData {
+		sb.WriteString("### Performance Bounds\n\n")
+		sb.WriteString(formatPerformanceBoundsMarkdown(bounds))
+		sb.WriteString("\n")
+	}
+
+	// Size categories
+	sizeCategories := CalculateSizeCategories(results)
+	sb.WriteString("### Breakdown by Size Category\n\n")
+	sb.WriteString(formatSizeCategoriesMarkdown(sizeCategories))
+	sb.WriteString("\n")
+
+	// Collapsible detailed results
+	sb.WriteString("<details>\n<summary><strong>Click to expand detailed test case results</strong></summary>\n\n")
+	sb.WriteString(formatDetailedTableMarkdown(results))
+	sb.WriteString("\n</details>\n\n")
+
+	// Header analysis
+	headerOnly := CalculateHeaderOnlyAnalysis(results)
+	sb.WriteString("### Request/Response Breakdown\n\n")
+	sb.WriteString(formatHeaderOnlyAnalysisMarkdown(headerOnly))
+
+	return sb.String()
+}
+
+func formatCombinedSectionMarkdown(results []BenchmarkResult) string {
+	var sb strings.Builder
+
+	summary := CalculateSummary(results)
+	sb.WriteString("### Summary\n\n")
+	sb.WriteString(fmt.Sprintf("- **%d** test cases\n", summary.TotalTests))
+	sb.WriteString(fmt.Sprintf("- QH total: **%d B**\n", summary.QHTotalBytes))
+	sb.WriteString(fmt.Sprintf("- HTTP/1.1 total: **%d B** (%s)\n", summary.HTTP1TotalBytes, formatDifference(summary.QHVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("- HTTP/2 total: **%d B** (%s)\n", summary.HTTP2TotalBytes, formatDifference(summary.QHVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("- HTTP/3 total: **%d B** (%s)\n\n", summary.HTTP3TotalBytes, formatDifference(summary.QHVsHTTP3Ratio)))
+
+	// Performance bounds
+	bounds := FindBestWorstCases(results)
+	if bounds.HasData {
+		sb.WriteString("### Performance Bounds\n\n")
+		sb.WriteString(formatPerformanceBoundsMarkdown(bounds))
+		sb.WriteString("\n")
+	}
+
+	// Size categories
+	sizeCategories := CalculateSizeCategories(results)
+	sb.WriteString("### Breakdown by Size Category\n\n")
+	sb.WriteString(formatSizeCategoriesMarkdown(sizeCategories))
+	sb.WriteString("\n")
+
+	// Header analysis
+	headerOnly := CalculateHeaderOnlyAnalysis(results)
+	sb.WriteString("### Request/Response Breakdown\n\n")
+	sb.WriteString(formatHeaderOnlyAnalysisMarkdown(headerOnly))
+
+	return sb.String()
+}
+
+func formatHeaderOnlyAnalysisMarkdown(h HeaderOnlyAnalysis) string {
+	var sb strings.Builder
+
+	sb.WriteString("**Request Headers:**\n\n")
+	sb.WriteString(fmt.Sprintf("- QH avg: **%.0f B** (baseline)\n", h.QHReqHeaderAvg))
+	sb.WriteString(fmt.Sprintf("- HTTP/1 avg: **%.0f B** (%s)\n",
+		h.HTTP1ReqHeaderAvg, formatDifference(h.QHReqVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("- HTTP/2 avg: **%.0f B** (%s)\n",
+		h.HTTP2ReqHeaderAvg, formatDifference(h.QHReqVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("- HTTP/3 avg: **%.0f B** (%s)\n\n",
+		h.HTTP3ReqHeaderAvg, formatDifference(h.QHReqVsHTTP3Ratio)))
+
+	sb.WriteString("**Response Headers:**\n\n")
+	sb.WriteString(fmt.Sprintf("- QH avg: **%.0f B** (baseline)\n", h.QHRespHeaderAvg))
+	sb.WriteString(fmt.Sprintf("- HTTP/1 avg: **%.0f B** (%s)\n",
+		h.HTTP1RespHeaderAvg, formatDifference(h.QHRespVsHTTP1Ratio)))
+	sb.WriteString(fmt.Sprintf("- HTTP/2 avg: **%.0f B** (%s)\n",
+		h.HTTP2RespHeaderAvg, formatDifference(h.QHRespVsHTTP2Ratio)))
+	sb.WriteString(fmt.Sprintf("- HTTP/3 avg: **%.0f B** (%s)\n\n",
+		h.HTTP3RespHeaderAvg, formatDifference(h.QHRespVsHTTP3Ratio)))
+
+	// Calculate total (request + response) headers
+	qhTotal := h.QHReqHeaderAvg + h.QHRespHeaderAvg
+	http1Total := h.HTTP1ReqHeaderAvg + h.HTTP1RespHeaderAvg
+	http2Total := h.HTTP2ReqHeaderAvg + h.HTTP2RespHeaderAvg
+	http3Total := h.HTTP3ReqHeaderAvg + h.HTTP3RespHeaderAvg
+
+	totalVsHTTP1 := (qhTotal / http1Total) * 100
+	totalVsHTTP2 := (qhTotal / http2Total) * 100
+	totalVsHTTP3 := (qhTotal / http3Total) * 100
+
+	sb.WriteString("**Total Headers (Request + Response):**\n\n")
+	sb.WriteString(fmt.Sprintf("- QH avg: **%.0f B** (baseline)\n", qhTotal))
+	sb.WriteString(fmt.Sprintf("- HTTP/1 avg: **%.0f B** (%s)\n",
+		http1Total, formatDifference(totalVsHTTP1)))
+	sb.WriteString(fmt.Sprintf("- HTTP/2 avg: **%.0f B** (%s)\n",
+		http2Total, formatDifference(totalVsHTTP2)))
+	sb.WriteString(fmt.Sprintf("- HTTP/3 avg: **%.0f B** (%s)",
+		http3Total, formatDifference(totalVsHTTP3)))
+
+	return sb.String()
+}
+
+func formatSizeCategoriesMarkdown(categories []SizeCategory) string {
+	var sb strings.Builder
+
+	sb.WriteString("| Category | Count | QH Avg | H1 Avg | H2 Avg | H3 Avg | QH/H1 | QH/H2 | QH/H3 |\n")
+	sb.WriteString("|----------|------:|-------:|-------:|-------:|-------:|------:|------:|------:|\n")
+
+	for _, c := range categories {
+		sb.WriteString(fmt.Sprintf("| %s | %d | %s | %s | %s | %s | %.1f%% | %.1f%% | %.1f%% |\n",
+			c.Name,
+			c.Count,
+			formatBytes(c.QHAvg),
+			formatBytes(c.HTTP1Avg),
+			formatBytes(c.HTTP2Avg),
+			formatBytes(c.HTTP3Avg),
+			c.QHVsHTTP1Ratio,
+			c.QHVsHTTP2Ratio,
+			c.QHVsHTTP3Ratio,
+		))
+	}
+
+	return sb.String()
+}

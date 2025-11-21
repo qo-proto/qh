@@ -36,20 +36,13 @@ func EncodeHTTP2(tc TestCase) EncodedResult {
 		}
 	}
 
-	endStream := len(tc.Request.Body) == 0
 	if err := reqFramer.WriteHeaders(http2.HeadersFrameParam{
 		StreamID:      1,
 		BlockFragment: reqHeaderBuf.Bytes(),
 		EndHeaders:    true,
-		EndStream:     endStream,
+		EndStream:     true,
 	}); err != nil {
 		panic("failed to write HEADERS frame: " + err.Error())
-	}
-
-	if len(tc.Request.Body) > 0 {
-		if err := reqFramer.WriteData(1, true, tc.Request.Body); err != nil {
-			panic("failed to write DATA frame: " + err.Error())
-		}
 	}
 
 	// Encode response
@@ -72,30 +65,25 @@ func EncodeHTTP2(tc TestCase) EncodedResult {
 		}
 	}
 
-	endStream = len(tc.Response.Body) == 0
 	if err := respFramer.WriteHeaders(http2.HeadersFrameParam{
 		StreamID:      1,
 		BlockFragment: respHeaderBuf.Bytes(),
 		EndHeaders:    true,
-		EndStream:     endStream,
+		EndStream:     true,
 	}); err != nil {
 		panic("failed to write response HEADERS frame: " + err.Error())
-	}
-
-	if len(tc.Response.Body) > 0 {
-		if err := respFramer.WriteData(1, true, tc.Response.Body); err != nil {
-			panic("failed to write response DATA frame: " + err.Error())
-		}
 	}
 
 	reqBytes := reqBuf.Bytes()
 	respBytes := respBuf.Bytes()
 
 	return EncodedResult{
-		RequestBytes:  reqBytes,
-		ResponseBytes: respBytes,
-		RequestSize:   len(reqBytes),
-		ResponseSize:  len(respBytes),
-		TotalSize:     len(reqBytes) + len(respBytes),
+		RequestBytes:       reqBytes,
+		ResponseBytes:      respBytes,
+		RequestSize:        len(reqBytes),
+		ResponseSize:       len(respBytes),
+		TotalSize:          len(reqBytes) + len(respBytes),
+		RequestHeaderSize:  len(reqBytes),
+		ResponseHeaderSize: len(respBytes),
 	}
 }

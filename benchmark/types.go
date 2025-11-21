@@ -1,24 +1,22 @@
 package benchmark
 
 type TestCase struct {
-	Name        string
-	Description string
-	Request     RequestData
-	Response    ResponseData
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Request     RequestData  `json:"request"`
+	Response    ResponseData `json:"response"`
 }
 
 type RequestData struct {
-	Method  string
-	Host    string
-	Path    string
-	Headers map[string]string
-	Body    []byte
+	Method  string            `json:"method"`
+	Host    string            `json:"host"`
+	Path    string            `json:"path"`
+	Headers map[string]string `json:"headers"`
 }
 
 type ResponseData struct {
-	StatusCode int
-	Headers    map[string]string
-	Body       []byte
+	StatusCode int               `json:"statusCode"`
+	Headers    map[string]string `json:"headers"`
 }
 
 type BenchmarkResult struct {
@@ -30,11 +28,13 @@ type BenchmarkResult struct {
 }
 
 type EncodedResult struct {
-	RequestBytes  []byte
-	ResponseBytes []byte
-	RequestSize   int
-	ResponseSize  int
-	TotalSize     int
+	RequestBytes       []byte
+	ResponseBytes      []byte
+	RequestSize        int
+	ResponseSize       int
+	TotalSize          int
+	RequestHeaderSize  int
+	ResponseHeaderSize int
 }
 
 type Summary struct {
@@ -69,4 +69,51 @@ type DetailedResult struct {
 	QHVsHTTP1Ratio  float64
 	QHVsHTTP2Ratio  float64
 	QHVsHTTP3Ratio  float64
+}
+
+type SizeCategory struct {
+	Name           string
+	Count          int
+	QHAvg          float64
+	HTTP1Avg       float64
+	HTTP2Avg       float64
+	HTTP3Avg       float64
+	QHVsHTTP1Ratio float64
+	QHVsHTTP2Ratio float64
+	QHVsHTTP3Ratio float64
+}
+
+type HeaderOnlyAnalysis struct {
+	QHReqHeaderAvg     float64
+	HTTP1ReqHeaderAvg  float64
+	HTTP2ReqHeaderAvg  float64
+	HTTP3ReqHeaderAvg  float64
+	QHRespHeaderAvg    float64
+	HTTP1RespHeaderAvg float64
+	HTTP2RespHeaderAvg float64
+	HTTP3RespHeaderAvg float64
+	QHReqVsHTTP1Ratio  float64
+	QHReqVsHTTP2Ratio  float64
+	QHReqVsHTTP3Ratio  float64
+	QHRespVsHTTP1Ratio float64
+	QHRespVsHTTP2Ratio float64
+	QHRespVsHTTP3Ratio float64
+}
+
+type ProtocolBounds struct {
+	BestCase  BenchmarkResult
+	WorstCase BenchmarkResult
+}
+
+type PerformanceBounds struct {
+	VsHTTP1 ProtocolBounds
+	VsHTTP2 ProtocolBounds
+	VsHTTP3 ProtocolBounds
+	HasData bool
+}
+
+type CategorizedResults struct {
+	EdgeCases []BenchmarkResult
+	Traffic   []BenchmarkResult
+	All       []BenchmarkResult
 }

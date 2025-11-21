@@ -6,7 +6,7 @@ require (
 	github.com/qh-project/qh v0.0.0
 	github.com/quic-go/qpack v0.5.1
 	github.com/quic-go/quic-go v0.56.0
-	golang.org/x/net v0.46.0
+	golang.org/x/net v0.47.0
 )
 
 require (
@@ -17,11 +17,10 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/tbocek/qotp v0.2.2 // indirect
-	golang.org/x/crypto v0.43.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
-	golang.org/x/text v0.30.0 // indirect
+	golang.org/x/crypto v0.44.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 )
 
 // TODO: don't replace and use actual repo once ready
-//nolint:gomoddirectives // Local replacement needed for now
 replace github.com/qh-project/qh => ../
