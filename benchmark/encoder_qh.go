@@ -3,7 +3,7 @@ package benchmark
 import (
 	"log/slog"
 
-	"github.com/qh-project/qh"
+	"github.com/qo-proto/qh"
 )
 
 func EncodeQH(tc TestCase) EncodedResult {

@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/qh-project/qh/benchmark"
+	"github.com/qo-proto/qh/benchmark"
 )
 
 const version = "0.0.1"
