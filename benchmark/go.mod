@@ -1,9 +1,9 @@
-module github.com/qh-project/qh/benchmark
+module github.com/qo-proto/qh/benchmark
 
 go 1.25.1
 
 require (
-	github.com/qh-project/qh v0.0.0
+	github.com/qo-proto/qh v0.0.0
 	github.com/quic-go/qpack v0.5.1
 	github.com/quic-go/quic-go v0.56.0
 	golang.org/x/net v0.47.0
@@ -22,4 +22,4 @@ require (
 	golang.org/x/text v0.31.0 // indirect
 )
 
-replace github.com/qh-project/qh => ../
+replace github.com/qo-proto/qh => ../

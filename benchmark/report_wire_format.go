@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/qh-project/qh"
+	"github.com/qo-proto/qh"
 )
 
 func GenerateWireFormatExamples(results []BenchmarkResult, count int) string {
