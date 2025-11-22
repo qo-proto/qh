@@ -18,6 +18,7 @@ type Server struct {
 	handlers           map[string]map[Method]Handler // path -> method -> handler (method parsed from request first byte)
 	supportedEncodings []Encoding                    // compression algorithms this server supports, in order of preference
 	maxRequestSize     int
+	minCompressionSize int
 }
 
 type ServerOption func(*Server)
@@ -28,11 +29,24 @@ func WithMaxRequestSize(size int) ServerOption {
 	}
 }
 
+func WithMinCompressionSize(size int) ServerOption {
+	return func(s *Server) {
+		s.minCompressionSize = size
+	}
+}
+
+func WithSupportedEncodings(encodings []Encoding) ServerOption {
+	return func(s *Server) {
+		s.supportedEncodings = encodings
+	}
+}
+
 func NewServer(opts ...ServerOption) *Server {
 	s := &Server{
 		handlers:           make(map[string]map[Method]Handler),
 		supportedEncodings: []Encoding{Zstd, Brotli, Gzip},
 		maxRequestSize:     10 * 1024 * 1024, // 10MB default
+		minCompressionSize: 1024,             // 1KB default
 	}
 
 	for _, opt := range opts {
@@ -225,9 +239,8 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 	}
 
 	// Don't compress very small responses (overhead not worth it)
-	const minCompressionSize = 1024 // 1KB - typical HTTP server threshold
-	if len(resp.Body) < minCompressionSize {
-		slog.Debug("Skipping compression for small response", "bytes", len(resp.Body), "threshold", minCompressionSize)
+	if len(resp.Body) < s.minCompressionSize {
+		slog.Debug("Skipping compression for small response", "bytes", len(resp.Body), "threshold", s.minCompressionSize)
 		return
 	}
 
