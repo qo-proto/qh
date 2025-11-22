@@ -1,6 +1,6 @@
 # qh:// - The Quite Ok HTTP Protocol
 
-**qh://** is a simplified HTTP-like protocol. Built on top of [QOTP (Quite Ok Transport Protocol)](https://github.com/tbocek/qotp), it provides 0-RTT connections, built-in encryption and uses DNS TXT records for key distribution. The protocol uses a compact binary format which eliminates the use of header compression schemes like HPACK or QPACK.
+**qh://** is a simplified HTTP-like protocol. Built on top of [QOTP (Quite Ok Transport Protocol)](https://github.com/qo-proto/qotp), it provides 0-RTT connections, built-in encryption and uses DNS TXT records for key distribution. The protocol uses a compact binary format which eliminates the use of header compression schemes like HPACK or QPACK.
 
 **STATUS:** Experimental - Under active development
 
