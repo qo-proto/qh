@@ -123,7 +123,7 @@ func Decompress(data []byte, encoding Encoding, maxSize int) ([]byte, error) {
 		return nil, fmt.Errorf("unsupported encoding: %s", encoding)
 	}
 
-	limitR := io.LimitReader(r, int64(maxSize)+1) 
+	limitR := io.LimitReader(r, int64(maxSize)+1)
 	decompressed, err := io.ReadAll(limitR)
 	if err != nil {
 		return nil, fmt.Errorf("%s read error: %w", encoding, err)

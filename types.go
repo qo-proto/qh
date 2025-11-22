@@ -195,8 +195,6 @@ func (r *Response) Format() []byte {
 	return result
 }
 
-
-
 func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
 	keyLen, n, readErr := ReadUvarint(data, offset)
 	if readErr != nil {

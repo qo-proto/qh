@@ -18,19 +18,40 @@ import (
 	"github.com/qo-proto/qotp"
 )
 
-const (
-	MaxRedirects = 10
-)
-
 type Client struct {
-	listener   *qotp.Listener
-	conn       *qotp.Conn
-	streamID   uint32
-	remoteAddr *net.UDPAddr
+	listener        *qotp.Listener
+	conn            *qotp.Conn
+	streamID        uint32
+	remoteAddr      *net.UDPAddr
+	maxResponseSize int
+	maxRedirects    int
 }
 
-func NewClient() *Client {
-	return &Client{}
+type ClientOption func(*Client)
+
+func WithMaxResponseSize(size int) ClientOption {
+	return func(c *Client) {
+		c.maxResponseSize = size
+	}
+}
+
+func WithMaxRedirects(limit int) ClientOption {
+	return func(c *Client) {
+		c.maxRedirects = limit
+	}
+}
+
+func NewClient(opts ...ClientOption) *Client {
+	c := &Client{
+		maxResponseSize: 50 * 1024 * 1024, // 50MB default
+		maxRedirects:    10,               // 10 redirects default
+	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c
 }
 
 func (c *Client) Connect(addr string) error {
@@ -212,6 +233,11 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 		}
 
 		slog.Debug("Received chunk from server", "bytes", len(chunk))
+
+		if len(responseBuffer)+len(chunk) > c.maxResponseSize {
+			return false, fmt.Errorf("response size exceeds limit of %d bytes", c.maxResponseSize)
+		}
+
 		responseBuffer = append(responseBuffer, chunk...)
 
 		complete, checkErr := IsResponseComplete(responseBuffer)
@@ -316,8 +342,7 @@ func (c *Client) decompressResponse(resp *Response) error {
 	originalSize := len(resp.Body)
 	slog.Debug("Decompressing response", "encoding", contentEncoding, "compressed_bytes", originalSize)
 
-	const maxDecompressedSize = 50 * 1024 * 1024 // 50MB
-	decompressed, err := Decompress(resp.Body, Encoding(contentEncoding), maxDecompressedSize)
+	decompressed, err := Decompress(resp.Body, Encoding(contentEncoding), c.maxResponseSize)
 	if err != nil {
 		return fmt.Errorf("failed to decompress with %s: %w", contentEncoding, err)
 	}
@@ -346,7 +371,7 @@ func (c *Client) reconnect(host string, port int) error {
 }
 
 func (c *Client) handleRedirect(req *Request, resp *Response, redirectCount int) (*Response, error) {
-	if redirectCount >= MaxRedirects {
+	if redirectCount >= c.maxRedirects {
 		return nil, errors.New("too many redirects")
 	}
 
