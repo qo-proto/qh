@@ -93,44 +93,45 @@ func Compress(data []byte, encoding Encoding) ([]byte, error) {
 	}
 }
 
-func Decompress(data []byte, encoding Encoding) ([]byte, error) {
+func Decompress(data []byte, encoding Encoding, maxSize int) ([]byte, error) {
 	if len(data) == 0 || encoding == "" {
 		return data, nil
 	}
 
+	var r io.Reader
 	switch encoding {
 	case Gzip:
-		r, err := gzip.NewReader(bytes.NewReader(data))
+		gz, err := gzip.NewReader(bytes.NewReader(data))
 		if err != nil {
 			return nil, fmt.Errorf("gzip reader error: %w", err)
 		}
-		defer r.Close()
-		decompressed, err := io.ReadAll(r)
-		if err != nil {
-			return nil, fmt.Errorf("gzip read error: %w", err)
-		}
-		return decompressed, nil
+		defer gz.Close()
+		r = gz
 
 	case Brotli:
-		r := brotli.NewReader(bytes.NewReader(data))
-		decompressed, err := io.ReadAll(r)
-		if err != nil {
-			return nil, fmt.Errorf("brotli read error: %w", err)
-		}
-		return decompressed, nil
+		r = brotli.NewReader(bytes.NewReader(data))
 
 	case Zstd:
-		decoder, err := zstd.NewReader(nil)
+		zs, err := zstd.NewReader(bytes.NewReader(data))
 		if err != nil {
 			return nil, fmt.Errorf("zstd decoder error: %w", err)
 		}
-		decompressed, err := decoder.DecodeAll(data, nil)
-		if err != nil {
-			return nil, fmt.Errorf("zstd decode error: %w", err)
-		}
-		return decompressed, nil
+		defer zs.Close()
+		r = zs
 
 	default:
 		return nil, fmt.Errorf("unsupported encoding: %s", encoding)
 	}
+
+	limitR := io.LimitReader(r, int64(maxSize)+1) 
+	decompressed, err := io.ReadAll(limitR)
+	if err != nil {
+		return nil, fmt.Errorf("%s read error: %w", encoding, err)
+	}
+
+	if len(decompressed) > maxSize {
+		return nil, fmt.Errorf("decompressed size exceeds limit of %d bytes", maxSize)
+	}
+
+	return decompressed, nil
 }

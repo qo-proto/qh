@@ -145,7 +145,7 @@ func TestCompressDecompress(t *testing.T) {
 					encoding, savings, len(testData), len(compressed))
 			}
 
-			decompressed, err := Decompress(compressed, encoding)
+			decompressed, err := Decompress(compressed, encoding, 10*1024*1024)
 			require.NoError(t, err, "decompression should succeed")
 			assert.Equal(t, testData, decompressed, "decompressed data should match original")
 		})
@@ -159,7 +159,7 @@ func TestCompressDecompressEmptyEncoding(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, testData, compressed, "empty encoding compression should return same data")
 
-	decompressed, err := Decompress(compressed, "")
+	decompressed, err := Decompress(compressed, "", 10*1024*1024)
 	require.NoError(t, err)
 	assert.Equal(t, testData, decompressed, "empty encoding decompression should return same data")
 }
@@ -173,7 +173,7 @@ func TestCompressDecompressEmpty(t *testing.T) {
 			compressed, err := Compress(testData, encoding)
 			require.NoError(t, err, "compression of empty data should succeed")
 
-			decompressed, err := Decompress(compressed, encoding)
+			decompressed, err := Decompress(compressed, encoding, 10*1024*1024)
 			require.NoError(t, err, "decompression of empty data should succeed")
 
 			assert.Empty(t, decompressed, "decompressed empty data should remain empty")
@@ -189,7 +189,7 @@ func TestCompressInvalidEncoding(t *testing.T) {
 
 func TestDecompressInvalidEncoding(t *testing.T) {
 	testData := []byte("test")
-	_, err := Decompress(testData, Encoding("invalid"))
+	_, err := Decompress(testData, Encoding("invalid"), 10*1024*1024)
 	assert.Error(t, err, "should return error for invalid encoding")
 }
 

@@ -13,17 +13,37 @@ import (
 // handles QH requests
 type Handler func(*Request) *Response
 
+const (
+	MaxRequestSize = 10 * 1024 * 1024 // 10MB
+)
+
 type Server struct {
 	listener           *qotp.Listener
 	handlers           map[string]map[Method]Handler // path -> method -> handler (method parsed from request first byte)
 	supportedEncodings []Encoding                    // compression algorithms this server supports, in order of preference
+	maxRequestSize     int
 }
 
-func NewServer() *Server {
-	return &Server{
+type ServerOption func(*Server)
+
+func WithMaxRequestSize(size int) ServerOption {
+	return func(s *Server) {
+		s.maxRequestSize = size
+	}
+}
+
+func NewServer(opts ...ServerOption) *Server {
+	s := &Server{
 		handlers:           make(map[string]map[Method]Handler),
 		supportedEncodings: []Encoding{Zstd, Brotli, Gzip},
+		maxRequestSize:     MaxRequestSize,
 	}
+
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s
 }
 
 // HandleFunc registers a handler for a given path and method.
@@ -78,6 +98,16 @@ func (s *Server) Serve() error {
 		if len(data) > 0 {
 			// Get or create buffer for this stream
 			buffer := streamBuffers[stream]
+
+			// Check for max request size
+			if len(buffer)+len(data) > s.maxRequestSize {
+				slog.Error("Request size exceeds limit", "bytes", len(buffer)+len(data), "limit", s.maxRequestSize)
+				s.sendErrorResponse(stream, 413, "Payload Too Large")
+				delete(streamBuffers, stream)
+				stream.Close()
+				return true, nil
+			}
+
 			buffer = append(buffer, data...)
 			streamBuffers[stream] = buffer
 
@@ -93,7 +123,7 @@ func (s *Server) Serve() error {
 
 			if complete {
 				slog.Info("Complete request received", "bytes", len(buffer))
-				s.handleRequest(stream, buffer)
+				go s.handleRequest(stream, buffer)
 				delete(streamBuffers, stream) // Clear buffer
 			}
 		}

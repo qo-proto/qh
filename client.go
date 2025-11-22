@@ -316,7 +316,8 @@ func (c *Client) decompressResponse(resp *Response) error {
 	originalSize := len(resp.Body)
 	slog.Debug("Decompressing response", "encoding", contentEncoding, "compressed_bytes", originalSize)
 
-	decompressed, err := Decompress(resp.Body, Encoding(contentEncoding))
+	const maxDecompressedSize = 50 * 1024 * 1024 // 50MB
+	decompressed, err := Decompress(resp.Body, Encoding(contentEncoding), maxDecompressedSize)
 	if err != nil {
 		return fmt.Errorf("failed to decompress with %s: %w", contentEncoding, err)
 	}
