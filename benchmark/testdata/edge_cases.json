@@ -1,0 +1,88 @@
+[
+  {
+    "name": "Edge Case 1: QH Best Case - All Static Table Complete Pairs",
+    "description": "Maximum QH efficiency: all headers use Format 1 (complete key-value pairs, 1 byte each)",
+    "request": {
+      "method": "GET",
+      "host": "api.example.com",
+      "path": "/resource",
+      "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "en-US,en;q=0.5",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Linux\"",
+        "sec-ch-ua-arch": "\"x86\"",
+        "sec-ch-ua-bitness": "\"64\"",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-dest": "empty",
+        "x-requested-with": "XMLHttpRequest",
+        "content-type": "application/json"
+      }
+    },
+    "response": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "content-encoding": "gzip",
+        "cache-control": "public, max-age=3600",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "deny"
+      }
+    }
+  },
+  {
+    "name": "Edge Case 2: QH Worst Case - All Custom Headers",
+    "description": "Minimum QH efficiency: all headers use Format 3 (custom headers with full key+value transmission)",
+    "request": {
+      "method": "POST",
+      "host": "custom-api.example.com",
+      "path": "/custom/endpoint",
+      "headers": {
+        "x-custom-auth-token": "FAKE_JWT_TOKEN_FOR_TESTING_NOT_REAL_DATA",
+        "x-request-id": "req-a1asdklj-e5f6-7890-abcd-ef1234567890",
+        "x-correlation-id": "corr-1236-5432-1098-7654-3210",
+        "x-client-version": "mobile-app-v3.14.159",
+        "x-device-fingerprint": "d41d8cdalksdj934958ru998ecf8427e",
+        "x-api-key": "test_fake_key_not_real_a1b2c3d4e5f6",
+        "x-tenant-id": "tenant-uuid-aasd2344-e5f6",
+        "x-feature-flags": "flag1:enabled,flag2:disabled,flag3:beta",
+        "x-session-token": "test_session_fake_token_12345",
+        "x-trace-parent": "00-4bfasldjaslkdjalskdjalskdj0e4736-00f067aa0ba902b7-01"
+      }
+    },
+    "response": {
+      "statusCode": 200,
+      "headers": {
+        "x-custom-response-id": "resp-9876-5432-1098-1234",
+        "x-processing-time-ms": "42",
+        "x-rate-limit-remaining": "95",
+        "x-rate-limit-reset": "1735689600",
+        "x-backend-server": "backend-node-42.us-west-2.internal",
+        "x-cache-status": "MISS",
+        "x-request-cost": "0.00123",
+        "x-api-version": "v2.5.1-beta"
+      }
+    }
+  },
+  {
+    "name": "Edge Case 3: HTTP/1.1 Best Case - Minimal Headers",
+    "description": "Best case for HTTP/1.1: very few short headers (less text overhead)",
+    "request": {
+      "method": "GET",
+      "host": "cdn.example.com",
+      "path": "/img.jpg",
+      "headers": {
+        "accept": "*/*"
+      }
+    },
+    "response": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": "image/jpeg",
+        "cache-control": "max-age=31536000"
+      }
+    }
+  }
+]

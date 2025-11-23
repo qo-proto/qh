@@ -6,16 +6,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/qh-project/qh/benchmark"
+	"github.com/qo-proto/qh/benchmark"
 )
 
 const version = "0.0.1"
 
 func main() {
 	var (
-		outputFile     = flag.String("o", "", "Output file for benchmark report (default: stdout)")
-		wireExamples   = flag.Int("examples", 3, "Number of wire format examples to include")
-		detailedOutput = flag.Bool("detailed", false, "Include detailed per-test results")
+		outputFile   = flag.String("o", "", "Output file for benchmark report (default: stdout)")
+		wireExamples = flag.Int("examples", 2, "Number of wire format examples to include (0 to disable)")
 	)
 
 	flag.Usage = func() {
@@ -38,28 +37,31 @@ func main() {
 
 	results := benchmark.RunBenchmarks()
 
-	fmt.Printf("Completed %d test cases\n", len(results))
+	fmt.Printf("Completed %d test cases\n", len(results.All))
 	fmt.Println()
 
-	var report string
-	report = fmt.Sprintf(
-		"QH Protocol Benchmark Report\nVersion: %s\nTimestamp: %s\n\n",
-		version,
-		timestamp,
-	)
-	report += benchmark.GenerateReport(results)
-	if *detailedOutput {
-		report += "\n" + benchmark.GenerateWireFormatExamples(results, *wireExamples)
+	// stdout: use multi-section report
+	if *outputFile == "" {
+		report := benchmark.GenerateMultiSectionReport(results.EdgeCases, results.Traffic, results.All)
+		if *wireExamples > 0 {
+			report += "\n" + benchmark.GenerateWireFormatExamples(results.All, *wireExamples)
+		}
+		fmt.Println(report)
+		return
 	}
 
-	if *outputFile != "" {
-		err := os.WriteFile(*outputFile, []byte(report), 0o600)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing output file: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Printf("Report written to: %s\n", *outputFile)
-	} else {
-		fmt.Println(report)
+	// file output: use multi-section report with wire examples
+	report := benchmark.GenerateMultiSectionReportMarkdown(results.EdgeCases, results.Traffic, results.All)
+
+	if *wireExamples > 0 {
+		report += "\n\n## Wire Format Examples\n\n"
+		report += benchmark.GenerateWireFormatExamplesMarkdown(results.All, *wireExamples)
 	}
+
+	err := os.WriteFile(*outputFile, []byte(report), 0o600)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error writing output file: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Report written to: %s\n", *outputFile)
 }

@@ -2,7 +2,6 @@ package benchmark
 
 import (
 	"bytes"
-	"io"
 	"net/http"
 	"net/url"
 )
@@ -20,16 +19,11 @@ func EncodeHTTP1(tc TestCase) EncodedResult {
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 		Header:     make(http.Header),
-		Body:       io.NopCloser(bytes.NewReader(tc.Request.Body)),
 		Host:       tc.Request.Host,
 	}
 
 	for k, v := range tc.Request.Headers {
 		req.Header.Set(k, v)
-	}
-
-	if len(tc.Request.Body) > 0 {
-		req.ContentLength = int64(len(tc.Request.Body))
 	}
 
 	if err := req.Write(reqBuf); err != nil {
@@ -44,15 +38,10 @@ func EncodeHTTP1(tc TestCase) EncodedResult {
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 		Header:     make(http.Header),
-		Body:       io.NopCloser(bytes.NewReader(tc.Response.Body)),
 	}
 
 	for k, v := range tc.Response.Headers {
 		resp.Header.Set(k, v)
-	}
-
-	if len(tc.Response.Body) > 0 {
-		resp.ContentLength = int64(len(tc.Response.Body))
 	}
 
 	if err := resp.Write(respBuf); err != nil {
@@ -63,10 +52,12 @@ func EncodeHTTP1(tc TestCase) EncodedResult {
 	respBytes := respBuf.Bytes()
 
 	return EncodedResult{
-		RequestBytes:  reqBytes,
-		ResponseBytes: respBytes,
-		RequestSize:   len(reqBytes),
-		ResponseSize:  len(respBytes),
-		TotalSize:     len(reqBytes) + len(respBytes),
+		RequestBytes:       reqBytes,
+		ResponseBytes:      respBytes,
+		RequestSize:        len(reqBytes),
+		ResponseSize:       len(respBytes),
+		TotalSize:          len(reqBytes) + len(respBytes),
+		RequestHeaderSize:  len(reqBytes),
+		ResponseHeaderSize: len(respBytes),
 	}
 }

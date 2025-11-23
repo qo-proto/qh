@@ -14,22 +14,43 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/tbocek/qotp"
-)
-
-const (
-	MaxRedirects = 10
+	"github.com/qo-proto/qotp"
 )
 
 type Client struct {
-	listener   *qotp.Listener
-	conn       *qotp.Conn
-	streamID   uint32
-	remoteAddr *net.UDPAddr
+	listener        *qotp.Listener
+	conn            *qotp.Conn
+	streamID        uint32
+	remoteAddr      *net.UDPAddr
+	maxResponseSize int
+	maxRedirects    int
 }
 
-func NewClient() *Client {
-	return &Client{}
+type ClientOption func(*Client)
+
+func WithMaxResponseSize(size int) ClientOption {
+	return func(c *Client) {
+		c.maxResponseSize = size
+	}
+}
+
+func WithMaxRedirects(limit int) ClientOption {
+	return func(c *Client) {
+		c.maxRedirects = limit
+	}
+}
+
+func NewClient(opts ...ClientOption) *Client {
+	c := &Client{
+		maxResponseSize: 50 * 1024 * 1024, // 50MB default
+		maxRedirects:    10,               // 10 redirects default
+	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c
 }
 
 func (c *Client) Connect(addr string) error {
@@ -196,34 +217,39 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 
 	var responseBuffer []byte
 
-	c.listener.Loop(func(s *qotp.Stream) bool {
+	c.listener.Loop(func(s *qotp.Stream) (bool, error) {
 		if s == nil {
-			return true
+			return true, nil
 		}
 
 		chunk, err := s.Read()
 		if err != nil {
 			slog.Debug("Read error in response loop", "error", err)
-			return true
+			return true, nil
 		}
 		if len(chunk) == 0 {
-			return true
+			return true, nil
 		}
 
 		slog.Debug("Received chunk from server", "bytes", len(chunk))
+
+		if len(responseBuffer)+len(chunk) > c.maxResponseSize {
+			return false, fmt.Errorf("response size exceeds limit of %d bytes", c.maxResponseSize)
+		}
+
 		responseBuffer = append(responseBuffer, chunk...)
 
 		complete, checkErr := IsResponseComplete(responseBuffer)
 		if checkErr != nil {
 			slog.Error("Error checking response completeness", "error", checkErr)
-			return false
+			return false, nil
 		}
 
 		if complete {
-			return false
+			return false, nil
 		}
 
-		return true
+		return true, nil
 	})
 
 	resp, parseErr := ParseResponse(responseBuffer)
@@ -315,7 +341,7 @@ func (c *Client) decompressResponse(resp *Response) error {
 	originalSize := len(resp.Body)
 	slog.Debug("Decompressing response", "encoding", contentEncoding, "compressed_bytes", originalSize)
 
-	decompressed, err := Decompress(resp.Body, Encoding(contentEncoding))
+	decompressed, err := Decompress(resp.Body, Encoding(contentEncoding), c.maxResponseSize)
 	if err != nil {
 		return fmt.Errorf("failed to decompress with %s: %w", contentEncoding, err)
 	}
@@ -344,7 +370,7 @@ func (c *Client) reconnect(host string, port int) error {
 }
 
 func (c *Client) handleRedirect(req *Request, resp *Response, redirectCount int) (*Response, error) {
-	if redirectCount >= MaxRedirects {
+	if redirectCount >= c.maxRedirects {
 		return nil, errors.New("too many redirects")
 	}
 

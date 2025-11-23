@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"strconv"
 
-	"github.com/tbocek/qotp"
+	"github.com/qo-proto/qotp"
 )
 
 // handles QH requests
@@ -18,13 +18,43 @@ type Server struct {
 	listener           *qotp.Listener
 	handlers           map[string]map[Method]Handler // path -> method -> handler (method parsed from request first byte)
 	supportedEncodings []Encoding                    // compression algorithms this server supports, in order of preference
+	maxRequestSize     int
+	minCompressionSize int
 }
 
-func NewServer() *Server {
-	return &Server{
+type ServerOption func(*Server)
+
+func WithMaxRequestSize(size int) ServerOption {
+	return func(s *Server) {
+		s.maxRequestSize = size
+	}
+}
+
+func WithMinCompressionSize(size int) ServerOption {
+	return func(s *Server) {
+		s.minCompressionSize = size
+	}
+}
+
+func WithSupportedEncodings(encodings []Encoding) ServerOption {
+	return func(s *Server) {
+		s.supportedEncodings = encodings
+	}
+}
+
+func NewServer(opts ...ServerOption) *Server {
+	s := &Server{
 		handlers:           make(map[string]map[Method]Handler),
 		supportedEncodings: []Encoding{Zstd, Brotli, Gzip},
+		maxRequestSize:     10 * 1024 * 1024, // 10MB default
+		minCompressionSize: 1024,             // 1KB default
 	}
+
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s
 }
 
 // HandleFunc registers a handler for a given path and method.
@@ -67,21 +97,30 @@ func (s *Server) Serve() error {
 
 	streamBuffers := make(map[*qotp.Stream][]byte)
 
-	s.listener.Loop(func(stream *qotp.Stream) bool {
+	s.listener.Loop(func(stream *qotp.Stream) (bool, error) {
 		if stream == nil {
-			return true
+			return true, nil
 		}
 
 		data, err := stream.Read()
 		if err != nil {
 			slog.Error("Stream read error", "error", err)
 			delete(streamBuffers, stream) // Clean up buffer on error
-			return true
+			return true, nil
 		}
 
 		if len(data) > 0 {
 			// Get or create buffer for this stream
 			buffer := streamBuffers[stream]
+
+			if len(buffer)+len(data) > s.maxRequestSize {
+				slog.Error("Request size exceeds limit", "bytes", len(buffer)+len(data), "limit", s.maxRequestSize)
+				s.sendErrorResponse(stream, 413, "Payload Too Large")
+				delete(streamBuffers, stream)
+				stream.Close()
+				return true, nil
+			}
+
 			buffer = append(buffer, data...)
 			streamBuffers[stream] = buffer
 
@@ -92,17 +131,17 @@ func (s *Server) Serve() error {
 				slog.Error("Request validation error", "error", checkErr)
 				s.sendErrorResponse(stream, 400, "Bad Request")
 				delete(streamBuffers, stream) // Clear buffer on error
-				return true
+				return true, nil
 			}
 
 			if complete {
 				slog.Info("Complete request received", "bytes", len(buffer))
-				s.handleRequest(stream, buffer)
+				go s.handleRequest(stream, buffer)
 				delete(streamBuffers, stream) // Clear buffer
 			}
 		}
 
-		return true
+		return true, nil
 	})
 
 	return nil
@@ -204,9 +243,8 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 	}
 
 	// Don't compress very small responses (overhead not worth it)
-	const minCompressionSize = 1024 // 1KB - typical HTTP server threshold
-	if len(resp.Body) < minCompressionSize {
-		slog.Debug("Skipping compression for small response", "bytes", len(resp.Body), "threshold", minCompressionSize)
+	if len(resp.Body) < s.minCompressionSize {
+		slog.Debug("Skipping compression for small response", "bytes", len(resp.Body), "threshold", s.minCompressionSize)
 		return
 	}
 

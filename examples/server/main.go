@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/qh-project/qh"
+	"github.com/qo-proto/qh"
 )
 
 var errServerStart = errors.New("server startup failed")
