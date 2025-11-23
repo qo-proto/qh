@@ -1,4 +1,4 @@
-// +build !keylog
+//go:build !keylog
 
 package qh
 
@@ -7,7 +7,7 @@ import (
 )
 
 // addKeyLogWriter is a no-op when building without keylog support
-func (s *Server) addKeyLogWriter(opts *[]qotp.ListenFunc) {
+func (s *Server) addKeyLogWriter(_ *[]qotp.ListenFunc) {
 	// Keylog not available in this build
 	// To enable keylog:
 	// 1. Add to go.mod: replace github.com/qo-proto/qotp => ../qotp

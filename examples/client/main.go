@@ -160,6 +160,6 @@ func logResponse(method, path string, response *qh.Response) {
 	if len(response.Body) > 100 {
 		bodyPreview = string(response.Body[:100]) + "... (truncated)"
 	}
-	sb.WriteString(fmt.Sprintf("Body (%d bytes): %s\n", len(response.Body), bodyPreview)) //nolint:sloglint
+	sb.WriteString(fmt.Sprintf("Body (%d bytes): %s\n", len(response.Body), bodyPreview))
 	slog.Info(sb.String())
 }

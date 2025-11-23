@@ -183,6 +183,7 @@ func main() {
 	keyLogFile, err := os.OpenFile("qotp_keylog.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		slog.Error("Failed to open key log file", "error", err)
+		_ = keyLogFile.Close()
 		os.Exit(1)
 	}
 	defer func() {

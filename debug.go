@@ -30,12 +30,21 @@ func (r *Request) AnnotateWireFormat(data []byte) string {
 	}
 
 	hostLen := annotateVarint(&sb, data, &offset, "Host length")
+	if hostLen > uint64(len(data)-offset) {
+		hostLen = uint64(len(data) - offset)
+	}
 	annotateString(&sb, data, &offset, int(hostLen), "Host")
 
 	pathLen := annotateVarint(&sb, data, &offset, "Path length")
+	if pathLen > uint64(len(data)-offset) {
+		pathLen = uint64(len(data) - offset)
+	}
 	annotateString(&sb, data, &offset, int(pathLen), "Path")
 
 	headersLen := annotateVarint(&sb, data, &offset, "Headers length")
+	if headersLen > uint64(len(data)-offset) {
+		headersLen = uint64(len(data) - offset)
+	}
 	headersEndOffset := offset + int(headersLen)
 	annotateHeaders(&sb, data, &offset, headersEndOffset, true)
 	offset = headersEndOffset

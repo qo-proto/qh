@@ -1,5 +1,4 @@
 //go:build keylog
-// +build keylog
 
 package qh
 

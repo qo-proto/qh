@@ -75,7 +75,8 @@ func (s *Server) HandleFunc(path string, method Method, handler Handler) {
 
 // Listen starts listening on the given address.
 // It uses qotp with auto-generated keys.
-func (s *Server) Listen(addr string, keyLogWriter io.Writer, seed ...string) error {
+// Deprecated: keyLogWriter parameter is unused. Use WithServerKeyLogWriter option instead.
+func (s *Server) Listen(addr string, _ io.Writer, seed ...string) error {
 	opts := []qotp.ListenFunc{qotp.WithListenAddr(addr)}
 	// TODO: Re-enable when using qotp v0.2.7+ with WithKeyLogWriter support
 	// if keyLogWriter != nil {
