@@ -30,22 +30,34 @@ func (r *Request) AnnotateWireFormat(data []byte) string {
 	}
 
 	hostLen := annotateVarint(&sb, data, &offset, "Host length")
-	if hostLen > uint64(len(data)-offset) {
-		hostLen = uint64(len(data) - offset)
+	remaining := len(data) - offset
+	if remaining < 0 {
+		remaining = 0
 	}
-	annotateString(&sb, data, &offset, int(hostLen), "Host")
+	if hostLen > uint64(remaining) {
+		hostLen = uint64(remaining)
+	}
+	annotateString(&sb, data, &offset, int(hostLen), "Host") //nolint:gosec // bounds checked above
 
 	pathLen := annotateVarint(&sb, data, &offset, "Path length")
-	if pathLen > uint64(len(data)-offset) {
-		pathLen = uint64(len(data) - offset)
+	remaining = len(data) - offset
+	if remaining < 0 {
+		remaining = 0
 	}
-	annotateString(&sb, data, &offset, int(pathLen), "Path")
+	if pathLen > uint64(remaining) {
+		pathLen = uint64(remaining)
+	}
+	annotateString(&sb, data, &offset, int(pathLen), "Path") //nolint:gosec // bounds checked above
 
 	headersLen := annotateVarint(&sb, data, &offset, "Headers length")
-	if headersLen > uint64(len(data)-offset) {
-		headersLen = uint64(len(data) - offset)
+	remaining = len(data) - offset
+	if remaining < 0 {
+		remaining = 0
 	}
-	headersEndOffset := offset + int(headersLen)
+	if headersLen > uint64(remaining) {
+		headersLen = uint64(remaining)
+	}
+	headersEndOffset := offset + int(headersLen) //nolint:gosec // bounds checked above
 	annotateHeaders(&sb, data, &offset, headersEndOffset, true)
 	offset = headersEndOffset
 
