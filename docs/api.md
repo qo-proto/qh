@@ -165,6 +165,44 @@ The server only compresses responses when all conditions are met:
 - QH does not support wildcard encodings (`*`)
 - QH does not support `identity` encoding - use empty string `""` to disable compression
 
+## Debugging and Analysis
+
+### Keylog Support (Wireshark Decryption)
+
+QH provides optional keylog support for decrypting QOTP traffic in Wireshark. This requires building with the `keylog` build tag.
+
+#### Server-side Keylog
+
+Server-side keylog is recommended as it has access to all encryption keys during connection acceptance:
+
+```go
+// Create a keylog file
+keylogFile, err := os.Create("qh_server_keylog.txt")
+if err != nil {
+    log.Fatal(err)
+}
+defer keylogFile.Close()
+
+// Pass keylog writer to server
+srv := qh.NewServer(qh.WithServerKeyLogWriter(keylogFile))
+```
+
+**Build and run:**
+
+```bash
+go run -tags keylog ./examples/server/main.go
+```
+
+The keylog file will contain entries in the format:
+```
+QOTP_SHARED_SECRET <connId_hex> <secret_hex>
+```
+
+**Notes:**
+- Keylog is only available when building with `-tags keylog`
+- Without the build tag, keylog functions are no-ops
+- The keylog format is compatible with the QOTP Wireshark dissector
+
 ## DNS
 
 ### Server Configuration

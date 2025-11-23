@@ -20,6 +20,7 @@ type Server struct {
 	supportedEncodings []Encoding                    // compression algorithms this server supports, in order of preference
 	maxRequestSize     int
 	minCompressionSize int
+	keylogWriter       io.Writer
 }
 
 type ServerOption func(*Server)
@@ -39,6 +40,12 @@ func WithMinCompressionSize(size int) ServerOption {
 func WithSupportedEncodings(encodings []Encoding) ServerOption {
 	return func(s *Server) {
 		s.supportedEncodings = encodings
+	}
+}
+
+func WithServerKeyLogWriter(w io.Writer) ServerOption {
+	return func(s *Server) {
+		s.keylogWriter = w
 	}
 }
 
@@ -77,6 +84,9 @@ func (s *Server) Listen(addr string, keyLogWriter io.Writer, seed ...string) err
 	if len(seed) > 0 && seed[0] != "" {
 		opts = append(opts, qotp.WithSeedStr(seed[0]))
 		slog.Info("QH server listening with provided seed")
+	}
+	if s.keylogWriter != nil {
+		s.addKeyLogWriter(&opts)
 	}
 	listener, err := qotp.Listen(opts...)
 	if err != nil {
