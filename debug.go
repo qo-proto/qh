@@ -63,7 +63,7 @@ func (r *Request) AnnotateWireFormat(data []byte) string {
 
 	bodyLen := annotateVarint(&sb, data, &offset, "Body length")
 	if bodyLen > 0 && offset+int(bodyLen) <= len(data) { //nolint:gosec // bounds checked in condition
-		bodyPreview := string(data[offset : offset+int(bodyLen)]) //nolint:gosec // bounds checked in condition
+		bodyPreview := string(data[offset : offset+int(bodyLen)])
 		if len(bodyPreview) > 50 {
 			bodyPreview = bodyPreview[:50] + "..."
 		}
@@ -76,7 +76,8 @@ func (r *Request) AnnotateWireFormat(data []byte) string {
 	return sb.String()
 }
 
-func (r *Response) AnnotateWireFormat(data []byte) string {
+// DebugResponse formats a response in a human-readable debug format
+func DebugResponse(data []byte) string {
 	if len(data) == 0 {
 		return "    (empty)\n"
 	}
@@ -108,12 +109,12 @@ func (r *Response) AnnotateWireFormat(data []byte) string {
 
 	bodyLen := annotateVarint(&sb, data, &offset, "Body length")
 	if bodyLen > 0 && offset+int(bodyLen) <= len(data) { //nolint:gosec // bounds checked in condition
-		bodyPreview := string(data[offset : offset+int(bodyLen)]) //nolint:gosec // bounds checked in condition
+		bodyPreview := string(data[offset : offset+int(bodyLen)])
 		if len(bodyPreview) > 50 {
 			bodyPreview = bodyPreview[:50] + "..."
 		}
 		sb.WriteString(fmt.Sprintf("    (body data)                  Body: %s\n", bodyPreview))
-		offset += int(bodyLen) //nolint:gosec // bounds checked in condition
+		offset += int(bodyLen)
 	}
 
 	fmt.Fprintf(&sb, "    (parsed %d / %d bytes)\n", offset, len(data))
@@ -210,7 +211,7 @@ func annotateHeaders(
 			// Only read value if it's Format 2 (name-only header)
 			if hasValue && *offset < len(data) {
 				valueLen := annotateVarint(sb, data, offset, "Value length")
-				annotateString(sb, data, offset, int(valueLen), "Value")
+				annotateString(sb, data, offset, int(valueLen), "Value") //nolint:gosec // length from varint
 			}
 		}
 	}
