@@ -26,6 +26,21 @@ go run ./examples/client/main.go
 ./run-demo-tmux.sh
 ```
 
+### Keylog Support (for Wireshark Decryption)
+
+QH supports QOTP keylog output for decrypting network traffic in Wireshark. This is useful for debugging and protocol analysis.
+
+**Server-side keylog** (recommended):
+
+```bash
+# Build with keylog support
+go run -tags keylog ./examples/server/main.go
+
+# The server will create qh_server_keylog.txt automatically
+```
+
+The keylog file format follows the SSLKEYLOGFILE convention with `QOTP_SHARED_SECRET` entries that can be used with the QOTP Wireshark dissector.
+
 ## Benchmarks
 
 QH protocol wire format efficiency compared against HTTP/1.1, HTTP/2, and HTTP/3.

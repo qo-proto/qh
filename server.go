@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"strconv"
 
@@ -19,6 +20,7 @@ type Server struct {
 	supportedEncodings []Encoding                    // compression algorithms this server supports, in order of preference
 	maxRequestSize     int
 	minCompressionSize int
+	keylogWriter       io.Writer
 }
 
 type ServerOption func(*Server)
@@ -38,6 +40,12 @@ func WithMinCompressionSize(size int) ServerOption {
 func WithSupportedEncodings(encodings []Encoding) ServerOption {
 	return func(s *Server) {
 		s.supportedEncodings = encodings
+	}
+}
+
+func WithServerKeyLogWriter(w io.Writer) ServerOption {
+	return func(s *Server) {
+		s.keylogWriter = w
 	}
 }
 
@@ -67,11 +75,20 @@ func (s *Server) HandleFunc(path string, method Method, handler Handler) {
 
 // Listen starts listening on the given address.
 // It uses qotp with auto-generated keys.
-func (s *Server) Listen(addr string, seed ...string) error {
+//
+// Deprecated: keyLogWriter parameter is unused. Use WithServerKeyLogWriter option instead.
+func (s *Server) Listen(addr string, _ io.Writer, seed ...string) error {
 	opts := []qotp.ListenFunc{qotp.WithListenAddr(addr)}
+	// TODO: Re-enable when using qotp v0.2.7+ with WithKeyLogWriter support
+	// if keyLogWriter != nil {
+	// 	opts = append(opts, qotp.WithKeyLogWriter(keyLogWriter))
+	// }
 	if len(seed) > 0 && seed[0] != "" {
 		opts = append(opts, qotp.WithSeedStr(seed[0]))
 		slog.Info("QH server listening with provided seed")
+	}
+	if s.keylogWriter != nil {
+		s.addKeyLogWriter(&opts)
 	}
 	listener, err := qotp.Listen(opts...)
 	if err != nil {

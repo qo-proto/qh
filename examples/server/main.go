@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -11,10 +12,22 @@ import (
 	"github.com/qo-proto/qh"
 )
 
+var errServerStart = errors.New("server startup failed")
+
 func main() {
 	slog.Info("QH Protocol Server starting")
 
-	srv := qh.NewServer()
+	// Optionally enable keylog for Wireshark decryption
+	// Run with: go run -tags keylog .\examples\server\
+	var serverOpts []qh.ServerOption
+	keylogFile, err := os.Create("qh_server_keylog.txt")
+	if err == nil {
+		defer keylogFile.Close()
+		serverOpts = append(serverOpts, qh.WithServerKeyLogWriter(keylogFile))
+		slog.Info("Keylog file created", "path", "qh_server_keylog.txt")
+	}
+
+	srv := qh.NewServer(serverOpts...)
 
 	srv.HandleFunc("/hello", qh.GET, func(_ *qh.Request) *qh.Response {
 		slog.Info("Handling request", "method", "GET", "path", "/hello")
@@ -167,15 +180,18 @@ func main() {
 
 	// listening with auto-generated keys
 	addr := "127.0.0.1:8090"
+
+	// You can provide a seed for deterministic keys
 	seed := "Start123"
-	if err := srv.Listen(addr, seed); err != nil {
+	//nolint:staticcheck // keyLogWriter parameter deprecated, use WithServerKeyLogWriter instead
+	if err := srv.Listen(addr, nil, seed); err != nil {
 		slog.Error("Failed to start server", "error", err)
-		os.Exit(1)
+		return
 	}
 
 	slog.Info("QH Server started", "address", addr)
 
-	if err := srv.Serve(); err != nil {
+	if err := srv.Serve(); err != nil && !errors.Is(err, errServerStart) {
 		slog.Error("Server error", "error", err)
 	}
 }
