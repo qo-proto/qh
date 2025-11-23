@@ -70,9 +70,10 @@ func (s *Server) HandleFunc(path string, method Method, handler Handler) {
 // It uses qotp with auto-generated keys.
 func (s *Server) Listen(addr string, keyLogWriter io.Writer, seed ...string) error {
 	opts := []qotp.ListenFunc{qotp.WithListenAddr(addr)}
-	if keyLogWriter != nil {
-		opts = append(opts, qotp.WithKeyLogWriter(keyLogWriter))
-	}
+	// TODO: Re-enable when using qotp v0.2.7+ with WithKeyLogWriter support
+	// if keyLogWriter != nil {
+	// 	opts = append(opts, qotp.WithKeyLogWriter(keyLogWriter))
+	// }
 	if len(seed) > 0 && seed[0] != "" {
 		opts = append(opts, qotp.WithSeedStr(seed[0]))
 		slog.Info("QH server listening with provided seed")
