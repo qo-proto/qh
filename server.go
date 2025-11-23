@@ -132,7 +132,7 @@ func (s *Server) Serve() error {
 
 			if complete {
 				slog.Info("Complete request received", "bytes", len(buffer))
-				go s.handleRequest(stream, buffer)
+				s.handleRequest(stream, buffer)
 				delete(streamBuffers, stream) // Clear buffer
 			}
 		}
