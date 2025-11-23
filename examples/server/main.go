@@ -180,21 +180,11 @@ func main() {
 
 	// listening with auto-generated keys
 	addr := "127.0.0.1:8090"
-	keyLogFile, err := os.OpenFile("qotp_keylog.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		slog.Error("Failed to open key log file", "error", err)
-		os.Exit(1)
-	}
-	defer func() {
-		if err := keyLogFile.Close(); err != nil {
-			slog.Error("Failed to close key log file", "error", err)
-		}
-	}()
 
 	// You can provide a seed for deterministic keys
-	// if err := srv.Listen(addr, keyLogFile); err != nil {
 	seed := "Start123"
-	if err := srv.Listen(addr, keyLogFile, seed); err != nil {
+	//nolint:staticcheck // keyLogWriter parameter deprecated, use WithServerKeyLogWriter instead
+	if err := srv.Listen(addr, nil, seed); err != nil {
 		slog.Error("Failed to start server", "error", err)
 		return
 	}
