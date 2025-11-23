@@ -30,16 +30,16 @@ func main() {
 		body   string
 	}{
 		{method: "GET", path: "/hello"},
-		//{method: "GET", path: "/status"},
-		//{method: "GET", path: "/api/user"}, // JSON response
+		{method: "GET", path: "/status"},
+		{method: "GET", path: "/api/user"}, // JSON response
 		{method: "POST", path: "/echo", body: "Hello QH World!"},
-		//{method: "POST", path: "/data", body: "Updated data!"},
-		//{method: "PUT", path: "/api/user", body: `{"name": "Jane Doe", "id": 123}`},
+		{method: "POST", path: "/data", body: "Updated data!"},
+		{method: "PUT", path: "/api/user", body: `{"name": "Jane Doe", "id": 123}`},
 		{method: "PATCH", path: "/api/user", body: `{"status": "inactive"}`},
-		//{method: "POST", path: "/large-post", body: strings.Repeat("LARGE_DATA_", 20000)}, // ~220KB
-		//{method: "HEAD", path: "/file"},
+		{method: "POST", path: "/large-post", body: strings.Repeat("LARGE_DATA_", 20000)}, // ~220KB
+		{method: "HEAD", path: "/file"},
 		{method: "GET", path: "/file"},
-		//{method: "GET", path: "/image"},
+		{method: "GET", path: "/image"},
 		{method: "GET", path: "/not-found"}, // This will trigger a 404
 		{
 			method: "GET",

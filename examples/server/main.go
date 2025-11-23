@@ -185,7 +185,11 @@ func main() {
 		slog.Error("Failed to open key log file", "error", err)
 		os.Exit(1)
 	}
-	defer keyLogFile.Close()
+	defer func() {
+		if err := keyLogFile.Close(); err != nil {
+			slog.Error("Failed to close key log file", "error", err)
+		}
+	}()
 
 	// You can provide a seed for deterministic keys
 	// if err := srv.Listen(addr, keyLogFile); err != nil {
