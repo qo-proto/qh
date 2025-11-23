@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -11,6 +12,9 @@ import (
 	"github.com/qo-proto/qh"
 )
 
+var errUnsupportedMethod = errors.New("unsupported method")
+
+//nolint:funlen
 func main() {
 	slog.Info("QH Protocol Client starting")
 
@@ -26,16 +30,16 @@ func main() {
 		body   string
 	}{
 		{method: "GET", path: "/hello"},
-		{method: "GET", path: "/status"},
-		{method: "GET", path: "/api/user"}, // JSON response
+		//{method: "GET", path: "/status"},
+		//{method: "GET", path: "/api/user"}, // JSON response
 		{method: "POST", path: "/echo", body: "Hello QH World!"},
-		{method: "POST", path: "/data", body: "Updated data!"},
-		{method: "PUT", path: "/api/user", body: `{"name": "Jane Doe", "id": 123}`},
+		//{method: "POST", path: "/data", body: "Updated data!"},
+		//{method: "PUT", path: "/api/user", body: `{"name": "Jane Doe", "id": 123}`},
 		{method: "PATCH", path: "/api/user", body: `{"status": "inactive"}`},
-		{method: "POST", path: "/large-post", body: strings.Repeat("LARGE_DATA_", 20000)}, // ~220KB
-		{method: "HEAD", path: "/file"},
+		//{method: "POST", path: "/large-post", body: strings.Repeat("LARGE_DATA_", 20000)}, // ~220KB
+		//{method: "HEAD", path: "/file"},
 		{method: "GET", path: "/file"},
-		{method: "GET", path: "/image"},
+		//{method: "GET", path: "/image"},
 		{method: "GET", path: "/not-found"}, // This will trigger a 404
 		{
 			method: "GET",
@@ -87,7 +91,7 @@ func main() {
 			// HEAD requests have no body and expect headers only.
 			resp, err = c.HEAD(hostname, req.path, nil)
 		default:
-			slog.Error("Unsupported method", "method", req.method, "path", req.path)
+			slog.Error("Unsupported method", "error", errUnsupportedMethod, "method", req.method, "path", req.path)
 			continue
 		}
 
@@ -110,7 +114,7 @@ func main() {
 		if filename != "" && len(resp.Body) > 0 {
 			// Create directory if it doesn't exist
 			if err := os.MkdirAll("examples/client/downloaded_files", 0o755); err != nil {
-				slog.Error("Failed to create directory", "error", err)
+				slog.Error("Failed to create directory", "path", "examples/client/downloaded_files", "error", err)
 			} else if err := os.WriteFile(filename, resp.Body, 0o600); err != nil {
 				slog.Error("Failed to save file", "path", filename, "error", err)
 			} else {
@@ -156,6 +160,6 @@ func logResponse(method, path string, response *qh.Response) {
 	if len(response.Body) > 100 {
 		bodyPreview = string(response.Body[:100]) + "... (truncated)"
 	}
-	sb.WriteString(fmt.Sprintf("Body (%d bytes): %s\n", len(response.Body), bodyPreview))
+	sb.WriteString(fmt.Sprintf("Body (%d bytes): %s\n", len(response.Body), bodyPreview)) //nolint:sloglint
 	slog.Info(sb.String())
 }
