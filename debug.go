@@ -45,7 +45,7 @@ func (r *Request) AnnotateWireFormat(data []byte) string {
 		remaining = 0
 	}
 	if pathLen > uint64(remaining) { //nolint:gosec // remaining is non-negative
-		pathLen = uint64(remaining)
+		pathLen = uint64(remaining) //nolint:gosec // remaining is non-negative
 	}
 	annotateString(&sb, data, &offset, int(pathLen), "Path") //nolint:gosec // bounds checked above
 
@@ -54,16 +54,16 @@ func (r *Request) AnnotateWireFormat(data []byte) string {
 	if remaining < 0 {
 		remaining = 0
 	}
-	if headersLen > uint64(remaining) {
-		headersLen = uint64(remaining)
+	if headersLen > uint64(remaining) { //nolint:gosec // remaining is non-negative
+		headersLen = uint64(remaining) //nolint:gosec // remaining is non-negative
 	}
 	headersEndOffset := offset + int(headersLen) //nolint:gosec // bounds checked above
 	annotateHeaders(&sb, data, &offset, headersEndOffset, true)
 	offset = headersEndOffset
 
 	bodyLen := annotateVarint(&sb, data, &offset, "Body length")
-	if bodyLen > 0 && offset+int(bodyLen) <= len(data) {
-		bodyPreview := string(data[offset : offset+int(bodyLen)])
+	if bodyLen > 0 && offset+int(bodyLen) <= len(data) { //nolint:gosec // bounds checked in condition
+		bodyPreview := string(data[offset : offset+int(bodyLen)]) //nolint:gosec // bounds checked in condition
 		if len(bodyPreview) > 50 {
 			bodyPreview = bodyPreview[:50] + "..."
 		}
@@ -108,12 +108,12 @@ func (r *Response) AnnotateWireFormat(data []byte) string {
 
 	bodyLen := annotateVarint(&sb, data, &offset, "Body length")
 	if bodyLen > 0 && offset+int(bodyLen) <= len(data) { //nolint:gosec // bounds checked in condition
-		bodyPreview := string(data[offset : offset+int(bodyLen)]) //nolint:gosec // bounds checked above
+		bodyPreview := string(data[offset : offset+int(bodyLen)]) //nolint:gosec // bounds checked in condition
 		if len(bodyPreview) > 50 {
 			bodyPreview = bodyPreview[:50] + "..."
 		}
 		sb.WriteString(fmt.Sprintf("    (body data)                  Body: %s\n", bodyPreview))
-		offset += int(bodyLen) //nolint:gosec // bounds checked above
+		offset += int(bodyLen) //nolint:gosec // bounds checked in condition
 	}
 
 	fmt.Fprintf(&sb, "    (parsed %d / %d bytes)\n", offset, len(data))
@@ -182,9 +182,9 @@ func annotateHeaders(
 			}
 
 			keyLen := annotateVarint(sb, data, offset, "Key length")
-			annotateString(sb, data, offset, int(keyLen), "Key")
+			annotateString(sb, data, offset, int(keyLen), "Key") //nolint:gosec // length from varint
 			valueLen := annotateVarint(sb, data, offset, "Value length")
-			annotateString(sb, data, offset, int(valueLen), "Value")
+			annotateString(sb, data, offset, int(valueLen), "Value") //nolint:gosec // length from varint
 		} else {
 			var headerName string
 			var hasValue bool
