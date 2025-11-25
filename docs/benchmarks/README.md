@@ -98,7 +98,39 @@ Options:
 
 ## Interpretation
 
-TODO
+These interpretations are based on the benchmark report found in `docs/benchmarks/`.
+
+### Considerations
+
+While the byte size comparison is important, the encoding/decoding speed is not measured here which would be another advantage of QH.
+
+### Key Findings
+
+The benchmarks reveal QH's wire format efficiency characteristics across different scenarios:
+
+#### Comparison with HTTP/1.1
+
+QH consistently outperforms HTTP/1.1 in all scenarios (edge-cases and actual traffic). The core advantage over the text-based HTTP/1.1 comres from various improvements/design decisions in the protocols design.
+
+#### Comparison with HTTP/2 & HTTP/3
+
+Against modern binary protocols, QH's performance varies by scenario: In the edge-cases QH outperforms both HTTP/2 and HTTP/3 as the test cases were designed to highlight QH's strengths (static table matches, simple headers). In real traffic however QH is slightly bigger than both HTTP/2 and HTTP/3.
+
+This difference can be explained by the following reasons:
+
+- **Static table coverage**: QH's static table is optimized for common patterns. When requests match the static table (Edge Case 1) or have a header name only entry (Format 2), QH greatly benefits from it. Completely custom headers (Format 3) are less efficient compared to HTTP/2/3's compression.
+- **HPACK/QPACK dynamic tables**: HTTP/2/3 benefit from dynamic header compression across multiple requests on the same connection. These benchmarks use fresh encoders per request, so dynamic table benefits are not measured. In production, HTTP/2/3 would likely achieve better compression ratios over long-lived connections.
+
+### Conclusions
+
+QH dramatically improves over HTTP/1 in terms of wire format size and is competitive compared to HTTP/2 and HTTP/3 for simpler requests/responses.
+
+For maximum compression HTTP/3 is the best choice.
+
+The main benefits of QH are:
+
+- Simpler implementation (no HPACK/QPACK complexity)
+- Faster encoder/decoder (no dynamic table lookups or updates)
 
 ## Version History
 
