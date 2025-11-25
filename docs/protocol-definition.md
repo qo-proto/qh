@@ -225,12 +225,18 @@ Value 16,384:  0x80 0x80 0x01          (3 bytes)
 
 ### 3.2 Protocol Limits
 
-QH does not mandate specific limits. Implementations SHOULD enforce reasonable limits based on their deployment environment to prevent resource exhaustion attacks.
+The following limits apply to QH protocol messages:
+
+**Required limits:**
+
+- **Maximum host length**: 253 bytes
+  - Implementations MUST reject requests with host values exceeding this limit
 
 **Recommended guidelines:**
 
 - For broad interoperability, implementations SHOULD support paths up to 8 KB and header sections up to 16 KB
 - Body size limits are application-specific
+- Implementations SHOULD document their maximum message size limits
 
 Implementations that reject messages due to size constraints SHOULD return:
 

@@ -129,18 +129,6 @@ func main() {
 		return qh.NewResponse(301, nil, headers)
 	})
 
-	// A HEAD request should return the same headers as a GET request, but with no body.
-	// This is useful for checking resource metadata without downloading the content.
-	srv.HandleFunc("/file", qh.HEAD, func(_ *qh.Request) *qh.Response {
-		slog.Info("Handling request", "method", "HEAD", "path", "/file")
-		// We don't need to read the file, just set the headers.
-		headers := map[string]string{
-			"Content-Type": qh.TextPlain.HeaderValue(),
-		}
-		// For HEAD, the body is nil, and Content-Length should be set to 0.
-		return qh.NewResponse(200, nil, headers)
-	})
-
 	srv.HandleFunc("/permanent-hello", qh.GET, func(_ *qh.Request) *qh.Response {
 		slog.Info("Handling request", "method", "GET", "path", "/permanent-hello")
 		return qh.TextResponse(200, "Hello from the new, permanent location!")

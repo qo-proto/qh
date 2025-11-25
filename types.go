@@ -476,6 +476,10 @@ func ParseRequest(data []byte) (*Request, error) {
 		return nil, errors.New("invalid request: empty host")
 	}
 
+	if len(host) > 253 {
+		return nil, errors.New("invalid request: host exceeds maximum length of 253 characters")
+	}
+
 	pathLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read path length: %w", err)
