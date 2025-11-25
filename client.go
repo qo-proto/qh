@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/qo-proto/qotp"
 )
@@ -20,7 +21,7 @@ import (
 type Client struct {
 	listener        *qotp.Listener
 	conn            *qotp.Conn
-	streamID        uint32
+	streamID        atomic.Uint32
 	remoteAddr      *net.UDPAddr
 	maxResponseSize int
 	maxRedirects    int
@@ -112,6 +113,8 @@ func (c *Client) Connect(addr string) error {
 		pubKeyBytes, decodeErr := base64.StdEncoding.DecodeString(serverPubKey)
 		if decodeErr != nil {
 			slog.Warn("Failed to decode base64 public key from DNS, falling back to in-band handshake", "error", decodeErr)
+		} else if len(pubKeyBytes) != 32 {
+			slog.Warn("Invalid public key length from DNS, expected 32 bytes for X25519, falling back to in-band handshake", "got", len(pubKeyBytes))
 		} else {
 			pubKeyHex := hex.EncodeToString(pubKeyBytes)
 			conn, err = listener.DialWithCryptoString(ipAddr, pubKeyHex)
@@ -160,6 +163,11 @@ func lookupPubKey(host string) string {
 
 	// Parse the first TXT record, expecting "v=0;k=..."
 	record := txtRecords[0]
+
+	if len(record) > 80 {
+		slog.Warn("DNS TXT record too long, ignoring", "length", len(record), "host", host)
+		return ""
+	}
 	parts := strings.Split(record, ";")
 	version := -1
 	var key string
@@ -201,9 +209,8 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 		req.Headers["accept-encoding"] = "zstd, br, gzip"
 	}
 
-	// use next available stream ID
-	currentStreamID := c.streamID
-	c.streamID++
+	// Get next available stream ID
+	currentStreamID := c.streamID.Add(1) - 1
 
 	stream := c.conn.Stream(currentStreamID)
 
