@@ -1,3 +1,4 @@
+//nolint:gosec // G115: Ignore integer overflow warnings for this file
 package qh
 
 import (
@@ -5,7 +6,16 @@ import (
 	"strings"
 )
 
-func (r *Request) AnnotateWireFormat(data []byte) string {
+const (
+	hexPaddingWidth        = 28  // Width to pad hex output for alignment with labels
+	bodyPreviewMaxLength   = 50  // Maximum length of body preview before truncation
+	stringInlineThreshold  = 20  // Maximum string length to display inline (vs multiline)
+	maxHexBytesDisplay     = 128 // Maximum hex bytes to display for long strings
+	hexChunkSize           = 16  // Number of bytes per line in hex dump
+	stringPreviewMaxLength = 100 // Maximum length of decoded string preview
+)
+
+func DebugRequest(data []byte) string {
 	if len(data) == 0 {
 		return "    (empty)\n"
 	}
@@ -30,44 +40,25 @@ func (r *Request) AnnotateWireFormat(data []byte) string {
 	}
 
 	hostLen := annotateVarint(&sb, data, &offset, "Host length")
-	remaining := len(data) - offset
-	if remaining < 0 {
-		remaining = 0
-	}
-	if hostLen > uint64(remaining) { //nolint:gosec // remaining is non-negative
-		hostLen = uint64(remaining) //nolint:gosec // remaining is non-negative
-	}
-	annotateString(&sb, data, &offset, int(hostLen), "Host") //nolint:gosec // bounds checked above
+	hostLen = min(hostLen, uint64(len(data)-offset))
+	annotateString(&sb, data, &offset, int(hostLen), "Host")
 
 	pathLen := annotateVarint(&sb, data, &offset, "Path length")
-	remaining = len(data) - offset
-	if remaining < 0 {
-		remaining = 0
-	}
-	if pathLen > uint64(remaining) { //nolint:gosec // remaining is non-negative
-		pathLen = uint64(remaining) //nolint:gosec // remaining is non-negative
-	}
-	annotateString(&sb, data, &offset, int(pathLen), "Path") //nolint:gosec // bounds checked above
+	pathLen = min(pathLen, uint64(len(data)-offset))
+	annotateString(&sb, data, &offset, int(pathLen), "Path")
 
 	headersLen := annotateVarint(&sb, data, &offset, "Headers length")
-	remaining = len(data) - offset
-	if remaining < 0 {
-		remaining = 0
-	}
-	if headersLen > uint64(remaining) { //nolint:gosec // remaining is non-negative
-		headersLen = uint64(remaining) //nolint:gosec // remaining is non-negative
-	}
-	headersEndOffset := offset + int(headersLen) //nolint:gosec // bounds checked above
+	headersEndOffset := min(offset+int(headersLen), len(data))
 	annotateHeaders(&sb, data, &offset, headersEndOffset, true)
 	offset = headersEndOffset
 
 	bodyLen := annotateVarint(&sb, data, &offset, "Body length")
-	if bodyLen > 0 && offset+int(bodyLen) <= len(data) { //nolint:gosec // bounds checked in condition
+	if bodyLen > 0 && offset+int(bodyLen) <= len(data) {
 		bodyPreview := string(data[offset : offset+int(bodyLen)])
-		if len(bodyPreview) > 50 {
-			bodyPreview = bodyPreview[:50] + "..."
+		if len(bodyPreview) > bodyPreviewMaxLength {
+			bodyPreview = bodyPreview[:bodyPreviewMaxLength] + "..."
 		}
-		sb.WriteString(fmt.Sprintf("    (body data)                  Body: %s\n", bodyPreview))
+		fmt.Fprintf(&sb, "    (body data)                  Body: %s\n", bodyPreview)
 		offset += int(bodyLen)
 	}
 
@@ -76,7 +67,6 @@ func (r *Request) AnnotateWireFormat(data []byte) string {
 	return sb.String()
 }
 
-// DebugResponse formats a response in a human-readable debug format
 func DebugResponse(data []byte) string {
 	if len(data) == 0 {
 		return "    (empty)\n"
@@ -103,17 +93,17 @@ func DebugResponse(data []byte) string {
 	}
 
 	headersLen := annotateVarint(&sb, data, &offset, "Headers length")
-	headersEndOffset := offset + int(headersLen) //nolint:gosec // annotateVarint validates length
+	headersEndOffset := min(offset+int(headersLen), len(data))
 	annotateHeaders(&sb, data, &offset, headersEndOffset, false)
 	offset = headersEndOffset
 
 	bodyLen := annotateVarint(&sb, data, &offset, "Body length")
-	if bodyLen > 0 && offset+int(bodyLen) <= len(data) { //nolint:gosec // bounds checked in condition
+	if bodyLen > 0 && offset+int(bodyLen) <= len(data) {
 		bodyPreview := string(data[offset : offset+int(bodyLen)])
-		if len(bodyPreview) > 50 {
-			bodyPreview = bodyPreview[:50] + "..."
+		if len(bodyPreview) > bodyPreviewMaxLength {
+			bodyPreview = bodyPreview[:bodyPreviewMaxLength] + "..."
 		}
-		sb.WriteString(fmt.Sprintf("    (body data)                  Body: %s\n", bodyPreview))
+		fmt.Fprintf(&sb, "    (body data)                  Body: %s\n", bodyPreview)
 		offset += int(bodyLen)
 	}
 
@@ -139,7 +129,7 @@ func annotateVarint(sb *strings.Builder, data []byte, offset *int, label string)
 
 	sb.WriteString("    ")
 	writeHex(sb, data[*offset:*offset+n])
-	for i := n * 5; i < 28; i++ {
+	for i := n * 5; i < hexPaddingWidth; i++ {
 		sb.WriteByte(' ')
 	}
 	fmt.Fprintf(sb, " %s: %d\n", label, value)
@@ -153,15 +143,56 @@ func annotateString(sb *strings.Builder, data []byte, offset *int, length int, l
 		return
 	}
 	value := string(data[*offset : *offset+length])
+	hexData := data[*offset : *offset+length]
 
+	if length <= stringInlineThreshold {
+		annotateShortString(sb, hexData, value, length, label)
+	} else {
+		annotateLongString(sb, hexData, value, length, label)
+	}
+
+	*offset += length
+}
+
+func annotateShortString(sb *strings.Builder, hexData []byte, value string, length int, label string) {
 	sb.WriteString("    ")
-	writeHex(sb, data[*offset:*offset+length])
-	for i := length * 5; i < 28; i++ {
+	writeHex(sb, hexData)
+	for i := length * 5; i < hexPaddingWidth; i++ {
 		sb.WriteByte(' ')
 	}
 	fmt.Fprintf(sb, " %s: %s\n", label, value)
+}
 
-	*offset += length
+func annotateLongString(sb *strings.Builder, hexData []byte, value string, length int, label string) {
+	displayLength := length
+	truncated := false
+	if displayLength > maxHexBytesDisplay {
+		displayLength = maxHexBytesDisplay
+		truncated = true
+	}
+
+	fmt.Fprintf(sb, "    %s:\n", label)
+
+	// Print hex in chunks
+	for i := 0; i < displayLength; i += hexChunkSize {
+		sb.WriteString("      ")
+		end := i + hexChunkSize
+		if end > displayLength {
+			end = displayLength
+		}
+		writeHex(sb, hexData[i:end])
+		sb.WriteString("\n")
+	}
+
+	if truncated {
+		fmt.Fprintf(sb, "      ... (%d more bytes)\n", length-maxHexBytesDisplay)
+	}
+
+	if len(value) > stringPreviewMaxLength {
+		fmt.Fprintf(sb, "      → %s...\n", value[:stringPreviewMaxLength])
+	} else {
+		fmt.Fprintf(sb, "      → %s\n", value)
+	}
 }
 
 //nolint:nestif // acceptable, maybe fix later
@@ -183,9 +214,9 @@ func annotateHeaders(
 			}
 
 			keyLen := annotateVarint(sb, data, offset, "Key length")
-			annotateString(sb, data, offset, int(keyLen), "Key") //nolint:gosec // length from varint
+			annotateString(sb, data, offset, int(keyLen), "Key")
 			valueLen := annotateVarint(sb, data, offset, "Value length")
-			annotateString(sb, data, offset, int(valueLen), "Value") //nolint:gosec // length from varint
+			annotateString(sb, data, offset, int(valueLen), "Value")
 		} else {
 			var headerName string
 			var hasValue bool
@@ -211,7 +242,7 @@ func annotateHeaders(
 			// Only read value if it's Format 2 (name-only header)
 			if hasValue && *offset < len(data) {
 				valueLen := annotateVarint(sb, data, offset, "Value length")
-				annotateString(sb, data, offset, int(valueLen), "Value") //nolint:gosec // length from varint
+				annotateString(sb, data, offset, int(valueLen), "Value")
 			}
 		}
 	}

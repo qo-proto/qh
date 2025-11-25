@@ -111,11 +111,12 @@ func (c *Client) Connect(addr string) error {
 		// Out-of-band key exchange (0-RTT)
 		slog.Info("Attempting connection with out-of-band key (0-RTT)")
 		pubKeyBytes, decodeErr := base64.StdEncoding.DecodeString(serverPubKey)
-		if decodeErr != nil {
+		switch {
+		case decodeErr != nil:
 			slog.Warn("Failed to decode base64 public key from DNS, falling back to in-band handshake", "error", decodeErr)
-		} else if len(pubKeyBytes) != 32 {
+		case len(pubKeyBytes) != 32:
 			slog.Warn("Invalid public key length from DNS, expected 32 bytes for X25519, falling back to in-band handshake", "got", len(pubKeyBytes))
-		} else {
+		default:
 			pubKeyHex := hex.EncodeToString(pubKeyBytes)
 			conn, err = listener.DialWithCryptoString(ipAddr, pubKeyHex)
 		}

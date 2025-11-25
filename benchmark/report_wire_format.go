@@ -30,15 +30,7 @@ func GenerateWireFormatExamples(results []BenchmarkResult, count int) string {
 		sb.WriteString(fmt.Sprintf("  HTTP/3:   %d bytes\n\n", r.HTTP3.RequestSize))
 
 		sb.WriteString("  QH Wire Format (annotated):\n")
-		req := &qh.Request{
-			Method:  parseMethod(r.TestCase.Request.Method),
-			Host:    r.TestCase.Request.Host,
-			Path:    r.TestCase.Request.Path,
-			Version: qh.Version,
-			Headers: r.TestCase.Request.Headers,
-			Body:    nil,
-		}
-		sb.WriteString(req.AnnotateWireFormat(r.QH.RequestBytes))
+		sb.WriteString(qh.DebugRequest(r.QH.RequestBytes))
 		sb.WriteString("\n\n")
 
 		sb.WriteString("RESPONSE:\n")
@@ -48,13 +40,7 @@ func GenerateWireFormatExamples(results []BenchmarkResult, count int) string {
 		sb.WriteString(fmt.Sprintf("  HTTP/3:   %d bytes\n\n", r.HTTP3.ResponseSize))
 
 		sb.WriteString("  QH Wire Format (annotated):\n")
-		resp := &qh.Response{
-			Version:    qh.Version,
-			StatusCode: r.TestCase.Response.StatusCode,
-			Headers:    r.TestCase.Response.Headers,
-			Body:       nil,
-		}
-		sb.WriteString(resp.AnnotateWireFormat(r.QH.ResponseBytes))
+		sb.WriteString(qh.DebugResponse(r.QH.ResponseBytes))
 		sb.WriteString("\n\n")
 	}
 
@@ -80,15 +66,7 @@ func GenerateWireFormatExamplesMarkdown(results []BenchmarkResult, count int) st
 
 		sb.WriteString("**QH Request Wire Format (annotated):**\n\n")
 		sb.WriteString("```\n")
-		req := &qh.Request{
-			Method:  parseMethod(r.TestCase.Request.Method),
-			Host:    r.TestCase.Request.Host,
-			Path:    r.TestCase.Request.Path,
-			Version: qh.Version,
-			Headers: r.TestCase.Request.Headers,
-			Body:    nil,
-		}
-		sb.WriteString(req.AnnotateWireFormat(r.QH.RequestBytes))
+		sb.WriteString(qh.DebugRequest(r.QH.RequestBytes))
 		sb.WriteString("```\n\n")
 
 		sb.WriteString("**Response Sizes:**\n\n")
@@ -99,13 +77,7 @@ func GenerateWireFormatExamplesMarkdown(results []BenchmarkResult, count int) st
 
 		sb.WriteString("**QH Response Wire Format (annotated):**\n\n")
 		sb.WriteString("```\n")
-		resp := &qh.Response{
-			Version:    qh.Version,
-			StatusCode: r.TestCase.Response.StatusCode,
-			Headers:    r.TestCase.Response.Headers,
-			Body:       nil,
-		}
-		sb.WriteString(resp.AnnotateWireFormat(r.QH.ResponseBytes))
+		sb.WriteString(qh.DebugResponse(r.QH.ResponseBytes))
 		sb.WriteString("```\n\n")
 	}
 
