@@ -8,7 +8,7 @@ import (
 
 const (
 	customHeaderID         = 0x00 // Header ID indicating a custom header
-	stringInlineThreshold  = 20   // Maximum string length to display inline (vs multiline)
+	stringInlineThreshold  = 15   // Maximum string length to display inline (vs multiline)
 	maxHexBytesDisplay     = 128  // Maximum hex bytes to display for long strings
 	hexChunkSize           = 16   // Number of bytes per line in hex dump
 	stringPreviewMaxLength = 100  // Maximum length of decoded string preview
@@ -187,13 +187,13 @@ func annotateString(sb *strings.Builder, data []byte, offset *int, length int, l
 		writeTableRow(sb, *offset, hexData, fmt.Sprintf("%s: %s", label, value))
 	} else {
 		// Long string: multiline with truncation info
-		truncated := ""
 		displayValue := value
+		suffix := ""
 		if len(value) > stringPreviewMaxLength {
 			displayValue = value[:stringPreviewMaxLength]
-			truncated = fmt.Sprintf(" [%d bytes total, showing %d]", len(value), stringPreviewMaxLength)
+			suffix = fmt.Sprintf("... [%d bytes total, showing %d]", len(value), stringPreviewMaxLength)
 		}
-		writeTableRowMultiline(sb, *offset, hexData, fmt.Sprintf("%s: %s...%s", label, displayValue, truncated))
+		writeTableRowMultiline(sb, *offset, hexData, fmt.Sprintf("%s: %s%s", label, displayValue, suffix))
 	}
 
 	*offset += length
