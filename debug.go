@@ -253,7 +253,7 @@ func annotateStaticTableHeader(sb *strings.Builder, data []byte, offset *int, he
 	}
 }
 
-func lookupHeaderInStaticTable(headerID byte, isRequest bool) (name string, value string, valueFollows bool) {
+func lookupHeaderInStaticTable(headerID byte, isRequest bool) (string, string, bool) {
 	if isRequest {
 		if entry, ok := requestHeaderStaticTable[headerID]; ok {
 			// If entry.value is empty, the value bytes follow in the wire format (Format 2)
