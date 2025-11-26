@@ -12,6 +12,10 @@ import (
 	"github.com/klauspost/compress/zstd"
 )
 
+const (
+	defaultBrotliQuality = 4
+)
+
 type Encoding string
 
 const (
@@ -69,8 +73,7 @@ func Compress(data []byte, encoding Encoding) ([]byte, error) {
 
 	case Brotli:
 		var buf bytes.Buffer
-		// use quality 4 for now
-		w := brotli.NewWriterLevel(&buf, 4)
+		w := brotli.NewWriterLevel(&buf, defaultBrotliQuality)
 		if _, err := w.Write(data); err != nil {
 			return nil, fmt.Errorf("brotli write error: %w", err)
 		}

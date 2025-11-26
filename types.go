@@ -8,7 +8,18 @@ import (
 	"strings"
 )
 
-const Version = 0
+const (
+	Version = 0 // Version is the current QH protocol version
+
+	versionBitShift     = 6          // Version is stored in upper 2 bits (bits 7-6)
+	methodBitShift      = 3          // Method is stored in middle 3 bits (bits 5-3)
+	statusCodeMask      = 0b00111111 // Status code uses lower 6 bits
+	methodMask          = 0b00000111 // Method uses 3 bits
+	maxVersionValue     = 3          // Maximum version (2 bits: 0-3)
+	maxContentTypeValue = 15         // Maximum content type (4 bits: 0-15)
+	maxHostLength       = 253        // Maximum host length (DNS label length limit)
+	firstByteOffset     = 1          // Offset to skip the first byte in wire format
+)
 
 type Method int
 
@@ -56,7 +67,7 @@ const (
 )
 
 func IsValidContentType(code int) bool {
-	return code >= 0 && code <= 15
+	return code >= 0 && code <= maxContentTypeValue
 }
 
 func (ct ContentType) String() string {
@@ -158,7 +169,7 @@ func encodeHeaders(
 func (r *Request) Format() []byte {
 	// The first byte contains: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
 	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
-	firstByte := (r.Version << 6) | (byte(r.Method) << 3)
+	firstByte := (r.Version << versionBitShift) | (byte(r.Method) << methodBitShift)
 	result := []byte{firstByte}
 	result = AppendUvarint(result, uint64(len(r.Host)))
 	result = append(result, []byte(r.Host)...)
@@ -181,7 +192,7 @@ func (r *Request) Format() []byte {
 func (r *Response) Format() []byte {
 	compactStatus := EncodeStatusCode(r.StatusCode)
 	// First byte: Version (upper 2 bits) + Status Code (lower 6 bits)
-	firstByte := (r.Version << 6) | compactStatus
+	firstByte := (r.Version << versionBitShift) | compactStatus
 	result := []byte{firstByte}
 
 	// Encode headers first to get total length
@@ -335,7 +346,7 @@ func IsRequestComplete(data []byte) (bool, error) {
 		return false, nil
 	}
 
-	offset := 1 // Skip first byte (version + method)
+	offset := firstByteOffset // Skip first byte (version + method)
 
 	if complete, err := checkField(data, &offset, "host"); !complete {
 		return false, err
@@ -362,7 +373,7 @@ func IsResponseComplete(data []byte) (bool, error) {
 		return false, nil
 	}
 
-	offset := 1 // Skip first byte (version + status)
+	offset := firstByteOffset // Skip first byte (version + status)
 
 	// Check headers length field and skip headers section
 	if complete, err := checkField(data, &offset, "headers"); !complete {
@@ -387,10 +398,10 @@ func ParseResponse(data []byte) (*Response, error) {
 	firstByte := data[offset]
 	offset++
 
-	version := firstByte >> 6               // Extract upper 2 bits
-	compactStatus := firstByte & 0b00111111 // Extract lower 6 bits
+	version := firstByte >> versionBitShift     // Extract upper 2 bits
+	compactStatus := firstByte & statusCodeMask // Extract lower 6 bits
 
-	if version > 3 {
+	if version > maxVersionValue {
 		return nil, fmt.Errorf("invalid version: %d", version)
 	}
 
@@ -448,10 +459,10 @@ func ParseRequest(data []byte) (*Request, error) {
 	firstByte := data[offset]
 	offset++
 
-	version := firstByte >> 6                       // Extract upper 2 bits
-	method := Method((firstByte >> 3) & 0b00000111) // Extract middle 3 bits
+	version := firstByte >> versionBitShift                      // Extract upper 2 bits
+	method := Method((firstByte >> methodBitShift) & methodMask) // Extract middle 3 bits
 
-	if version > 3 {
+	if version > maxVersionValue {
 		return nil, fmt.Errorf("invalid version: %d", version)
 	}
 
@@ -476,8 +487,8 @@ func ParseRequest(data []byte) (*Request, error) {
 		return nil, errors.New("invalid request: empty host")
 	}
 
-	if len(host) > 253 {
-		return nil, errors.New("invalid request: host exceeds maximum length of 253 characters")
+	if len(host) > maxHostLength {
+		return nil, fmt.Errorf("invalid request: host exceeds maximum length of %d characters", maxHostLength)
 	}
 
 	pathLen, n, err := ReadUvarint(data, offset)

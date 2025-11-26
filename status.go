@@ -1,11 +1,61 @@
 package qh
 
 const (
+	// 1xx Informational
+	StatusContinue           = 100
+	StatusSwitchingProtocols = 101
+	StatusProcessing         = 102
+	StatusEarlyHints         = 103
+
+	// 2xx Success
+	StatusOK              = 200
+	StatusCreated         = 201
+	StatusAccepted        = 202
+	StatusNoContent       = 204
+	StatusResetContent    = 205
+	StatusPartialContent  = 206
+	StatusMultiStatus     = 207
+	StatusAlreadyReported = 208
+	StatusIMUsed          = 226
+
+	// 3xx Redirection
 	StatusMultipleChoices   = 300
 	StatusMovedPermanently  = 301
 	StatusFound             = 302
+	StatusSeeOther          = 303
+	StatusNotModified       = 304
+	StatusUseProxy          = 305
 	StatusTemporaryRedirect = 307
 	StatusPermanentRedirect = 308
+
+	// 4xx Client Errors
+	StatusBadRequest           = 400
+	StatusUnauthorized         = 401
+	StatusPaymentRequired      = 402
+	StatusForbidden            = 403
+	StatusNotFound             = 404
+	StatusMethodNotAllowed     = 405
+	StatusNotAcceptable        = 406
+	StatusProxyAuthRequired    = 407
+	StatusRequestTimeout       = 408
+	StatusConflict             = 409
+	StatusGone                 = 410
+	StatusLengthRequired       = 411
+	StatusPreconditionFailed   = 412
+	StatusPayloadTooLarge      = 413
+	StatusURITooLong           = 414
+	StatusUnsupportedMediaType = 415
+	StatusRangeNotSatisfiable  = 416
+	StatusExpectationFailed    = 417
+	StatusUnprocessableEntity  = 422
+	StatusTooManyRequests      = 429
+
+	// 5xx Server Error
+	StatusInternalServerError   = 500
+	StatusBadGateway            = 502
+	StatusServiceUnavailable    = 503
+	StatusGatewayTimeout        = 504
+	StatusQHVersionNotSupported = 505
 )
 
 // map common HTTP status codes to a compact wire format, ordered by frequency
@@ -83,7 +133,7 @@ func EncodeStatusCode(httpCode int) uint8 {
 		return compact
 	}
 	// Fallback: use compact code for 500 Internal Server Error for unmapped codes
-	return StatusToCompact[500] // 2
+	return StatusToCompact[StatusInternalServerError]
 }
 
 // convert compact format to HTTP status code
@@ -93,5 +143,5 @@ func DecodeStatusCode(compact uint8) int {
 	}
 	// Fallback: if the compact code is not in our map, it's an unknown or custom code.
 	// A safe default is to return a generic server error.
-	return 500 // Internal Server Error
+	return StatusInternalServerError
 }

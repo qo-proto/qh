@@ -11,6 +11,12 @@ import (
 	"github.com/qo-proto/qotp"
 )
 
+const (
+	// Default server configuration values
+	defaultMaxRequestSize     = 10 * 1024 * 1024 // 10MB
+	defaultMinCompressionSize = 1024             // 1KB
+)
+
 // handles QH requests
 type Handler func(*Request) *Response
 
@@ -53,8 +59,8 @@ func NewServer(opts ...ServerOption) *Server {
 	s := &Server{
 		handlers:           make(map[string]map[Method]Handler),
 		supportedEncodings: []Encoding{Zstd, Brotli, Gzip},
-		maxRequestSize:     10 * 1024 * 1024, // 10MB default
-		minCompressionSize: 1024,             // 1KB default
+		maxRequestSize:     defaultMaxRequestSize,
+		minCompressionSize: defaultMinCompressionSize,
 	}
 
 	for _, opt := range opts {
@@ -128,7 +134,7 @@ func (s *Server) Serve() error {
 
 			if len(buffer)+len(data) > s.maxRequestSize {
 				slog.Error("Request size exceeds limit", "bytes", len(buffer)+len(data), "limit", s.maxRequestSize)
-				s.sendErrorResponse(stream, 413, "Payload Too Large")
+				s.sendErrorResponse(stream, StatusPayloadTooLarge, "Payload Too Large")
 				delete(streamBuffers, stream)
 				stream.Close()
 				return true, nil
@@ -142,7 +148,7 @@ func (s *Server) Serve() error {
 			complete, checkErr := IsRequestComplete(buffer)
 			if checkErr != nil {
 				slog.Error("Request validation error", "error", checkErr)
-				s.sendErrorResponse(stream, 400, "Bad Request")
+				s.sendErrorResponse(stream, StatusBadRequest, "Bad Request")
 				delete(streamBuffers, stream) // Clear buffer on error
 				return true, nil
 			}
@@ -182,7 +188,7 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	req, err := ParseRequest(requestData)
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
-		s.sendErrorResponse(stream, 400, "Bad Request")
+		s.sendErrorResponse(stream, StatusBadRequest, "Bad Request")
 		return
 	}
 
@@ -221,7 +227,7 @@ func (s *Server) validateContentType(req *Request, stream *qotp.Stream) error {
 	contentType, parseErr := strconv.Atoi(contentTypeStr)
 	if parseErr != nil || !IsValidContentType(contentType) {
 		slog.Error("Invalid content-type", "value", contentTypeStr)
-		s.sendErrorResponse(stream, 415, "Unsupported Media Type")
+		s.sendErrorResponse(stream, StatusUnsupportedMediaType, "Unsupported Media Type")
 		return fmt.Errorf("invalid content-type: %s", contentTypeStr)
 	}
 
@@ -239,7 +245,7 @@ func (s *Server) routeRequest(req *Request) *Response {
 	}
 
 	// no handler found, return 404
-	return TextResponse(404, "Not Found")
+	return TextResponse(StatusNotFound, "Not Found")
 }
 
 func (s *Server) sendErrorResponse(stream *qotp.Stream, statusCode int, message string) {

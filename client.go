@@ -18,6 +18,15 @@ import (
 	"github.com/qo-proto/qotp"
 )
 
+const (
+	// Default client configuration values
+	defaultMaxResponseSize = 50 * 1024 * 1024 // 50MB
+	defaultMaxRedirects    = 10
+
+	x25519KeySize         = 32 // X25519 public key size in bytes
+	maxDNSTXTRecordLength = 80
+)
+
 type Client struct {
 	listener        *qotp.Listener
 	conn            *qotp.Conn
@@ -43,8 +52,8 @@ func WithMaxRedirects(limit int) ClientOption {
 
 func NewClient(opts ...ClientOption) *Client {
 	c := &Client{
-		maxResponseSize: 50 * 1024 * 1024, // 50MB default
-		maxRedirects:    10,               // 10 redirects default
+		maxResponseSize: defaultMaxResponseSize,
+		maxRedirects:    defaultMaxRedirects,
 	}
 
 	for _, opt := range opts {
@@ -114,8 +123,8 @@ func (c *Client) Connect(addr string) error {
 		switch {
 		case decodeErr != nil:
 			slog.Warn("Failed to decode base64 public key from DNS, falling back to in-band handshake", "error", decodeErr)
-		case len(pubKeyBytes) != 32:
-			slog.Warn("Invalid public key length from DNS, expected 32 bytes for X25519, falling back to in-band handshake", "got", len(pubKeyBytes))
+		case len(pubKeyBytes) != x25519KeySize:
+			slog.Warn("Invalid public key length from DNS, expected X25519 key size, falling back to in-band handshake", "expected", x25519KeySize, "got", len(pubKeyBytes))
 		default:
 			pubKeyHex := hex.EncodeToString(pubKeyBytes)
 			conn, err = listener.DialWithCryptoString(ipAddr, pubKeyHex)
@@ -165,8 +174,8 @@ func lookupPubKey(host string) string {
 	// Parse the first TXT record, expecting "v=0;k=..."
 	record := txtRecords[0]
 
-	if len(record) > 80 {
-		slog.Warn("DNS TXT record too long, ignoring", "length", len(record), "host", host)
+	if len(record) > maxDNSTXTRecordLength {
+		slog.Warn("DNS TXT record too long, ignoring", "max_length", maxDNSTXTRecordLength, "actual_length", len(record), "host", host)
 		return ""
 	}
 	parts := strings.Split(record, ";")
