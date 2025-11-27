@@ -1,6 +1,7 @@
 [files]
 extend-exclude = [
   "benchmark/testdata/*",
+  "docs/benchmarks/report.md",
   # external code
   "qotp/*",
   # Do not self-check
