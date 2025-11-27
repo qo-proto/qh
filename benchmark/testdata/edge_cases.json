@@ -26,7 +26,7 @@
       "headers": {
         "content-type": "application/json; charset=utf-8",
         "content-encoding": "gzip",
-        "cache-control": "public, max-age=3600",
+        "cache-control": "public, max-age=7200",
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny"
       }
@@ -82,6 +82,195 @@
       "headers": {
         "content-type": "image/jpeg",
         "cache-control": "max-age=31536000"
+      }
+    }
+  },
+  {
+    "name": "Edge Case 4: QH Format 2 - Static Names, Custom Values",
+    "description": "Tests QH Format 2: header names from static table but custom values follow",
+    "request": {
+      "method": "GET",
+      "host": "api.example.com",
+      "path": "/very/long/path/to/resource/with/many/segments/and/query?param1=value1&param2=value2&param3=value3&param4=verylongvalue",
+      "headers": {
+        "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CustomClient/1.2.3",
+        "accept": "application/json, text/plain, */*",
+        "accept-language": "en-US,en;q=0.9,de;q=0.8,fr;q=0.7",
+        "referer": "https://example.com/previous/page/with/long/url?tracking=12345",
+        "cookie": "session_id=abc123def456; user_pref=darkmode; analytics_id=xyz789"
+      }
+    },
+    "response": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": "application/json; charset=utf-8; boundary=----WebKitFormBoundaryASDHJKxkTrZu0gW",
+        "cache-control": "private, no-cache, no-store, must-revalidate, max-age=0",
+        "set-cookie": "new_session=newvalue123; Path=/; HttpOnly; Secure; SameSite=Strict"
+      }
+    }
+  },
+  {
+    "name": "Edge Case 5: QH Mixed Formats",
+    "description": "Realistic mix of Format 1 (static pairs), Format 2 (static name + value), and Format 3 (custom)",
+    "request": {
+      "method": "POST",
+      "host": "app.example.com",
+      "path": "/api/v1/users/profile",
+      "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "content-type": "application/json",
+        "user-agent": "MyApp/2.1.0 (iOS 17.2; iPhone 15 Pro)",
+        "authorization": "Bearer askldjh349uw9489jncncer9t8ujIkpXVCJ9.laskdjLKASJDh9834439haldskj.fake",
+        "x-request-id": "req-mixed-abc123",
+        "origin": "https://app.example.com"
+      }
+    },
+    "response": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-cache",
+        "x-response-time": "45ms",
+        "vary": "Accept-Encoding, Origin"
+      }
+    }
+  },
+  {
+    "name": "Edge Case 6: Many Headers",
+    "description": "Tests performance with many headers (30+) mixing all formats",
+    "request": {
+      "method": "POST",
+      "host": "enterprise-api.example.com",
+      "path": "/api/process",
+      "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "en-US,en;q=0.5",
+        "content-type": "application/json",
+        "user-agent": "EnterpriseClient/1.0",
+        "authorization": "Bearer enterprise_token_12345",
+        "x-api-key": "api_key_67890",
+        "x-request-id": "req-enterprise-001",
+        "x-correlation-id": "corr-enterprise-001",
+        "x-tenant-id": "tenant-001",
+        "x-organization-id": "org-001",
+        "x-user-id": "user-001",
+        "x-session-id": "session-001",
+        "x-device-id": "device-001",
+        "x-app-version": "1.2.3",
+        "x-platform": "web",
+        "x-client-ip": "203.0.113.42",
+        "x-forwarded-for": "203.0.113.42, 198.51.100.1",
+        "x-real-ip": "203.0.113.42",
+        "x-trace-id": "trace-001",
+        "x-span-id": "span-001",
+        "x-parent-span-id": "parent-span-001",
+        "x-feature-flags": "feature1,feature2,feature3",
+        "x-ab-test": "variant-b",
+        "x-geo-country": "US",
+        "x-geo-region": "CA",
+        "x-geo-city": "San Francisco",
+        "x-timezone": "America/Los_Angeles",
+        "x-language": "en-US",
+        "x-currency": "USD"
+      }
+    },
+    "response": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-cache",
+        "x-response-id": "resp-001",
+        "x-processing-time": "125ms",
+        "x-rate-limit-limit": "1000",
+        "x-rate-limit-remaining": "999",
+        "x-rate-limit-reset": "1735689600",
+        "x-server-id": "server-42",
+        "x-request-cost": "0.05"
+      }
+    }
+  },
+  {
+    "name": "Edge Case 7: Minimal Response - 204 No Content",
+    "description": "Tests minimal overhead case with status code but no body or content headers",
+    "request": {
+      "method": "DELETE",
+      "host": "api.example.com",
+      "path": "/resource/123",
+      "headers": {
+        "authorization": "Bearer token123"
+      }
+    },
+    "response": {
+      "statusCode": 204,
+      "headers": {}
+    }
+  },
+  {
+    "name": "Edge Case 8: Verbose Headers",
+    "description": "Worst case for HTTP/1.1 and QH: many long header names and values (maximum text overhead)",
+    "request": {
+      "method": "POST",
+      "host": "verbose-api.example.com",
+      "path": "/api/endpoint",
+      "headers": {
+        "x-very-long-custom-header-name-for-authentication": "very_long_value_that_contains_lots_of_information_and_data",
+        "x-another-extremely-long-header-name-for-tracking": "another_very_long_value_with_lots_of_tracking_data_and_metadata",
+        "x-third-unnecessarily-verbose-header-name": "third_long_value_string_with_redundant_information",
+        "accept": "application/json, application/xml, text/html, text/plain, application/x-www-form-urlencoded",
+        "accept-language": "en-US,en;q=0.9,es;q=0.8,fr;q=0.7,de;q=0.6,it;q=0.5,pt;q=0.4,ja;q=0.3,zh;q=0.2",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
+      }
+    },
+    "response": {
+      "statusCode": 200,
+      "headers": {
+        "x-custom-response-header-with-very-long-name": "response_value_that_is_also_very_long_and_verbose",
+        "x-another-custom-response-header-name": "another_long_response_value_here",
+        "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.example.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.example.com"
+      }
+    }
+  },
+  {
+    "name": "Edge Case 9: Large Single Header - Security Policy",
+    "description": "Tests handling of one very large header value (Content-Security-Policy)",
+    "request": {
+      "method": "GET",
+      "host": "secure.example.com",
+      "path": "/page",
+      "headers": {
+        "accept": "text/html"
+      }
+    },
+    "response": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "content-security-policy": "default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://code.jquery.com https://stackpath.bootstrapcdn.com https://ajax.googleapis.com https://maxcdn.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com; img-src 'self' data: https: http:; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https://api.example.com https://analytics.example.com wss://websocket.example.com; frame-src 'self' https://www.youtube.com https://player.vimeo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests; block-all-mixed-content"
+      }
+    }
+  },
+  {
+    "name": "Edge Case 10: Empty Values - Present But Empty Headers",
+    "description": "Tests headers with empty values (name present, value empty)",
+    "request": {
+      "method": "OPTIONS",
+      "host": "api.example.com",
+      "path": "/resource",
+      "headers": {
+        "origin": "https://example.com",
+        "access-control-request-method": "POST",
+        "access-control-request-headers": ""
+      }
+    },
+    "response": {
+      "statusCode": 204,
+      "headers": {
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "access-control-allow-headers": "",
+        "access-control-max-age": "86400"
       }
     }
   }

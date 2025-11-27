@@ -46,4 +46,4 @@ The keylog file format follows the SSLKEYLOGFILE convention with `QOTP_SHARED_SE
 QH protocol wire format efficiency compared against HTTP/1.1, HTTP/2, and HTTP/3.
 
 - [Benchmark Documentation](./docs/benchmarks/README.md) - Methodology and documentation
-- [Benchmark Reports](./docs/benchmarks/) - Generated reports
+- [Benchmark Report](./docs/benchmarks/report.md) - Generated report

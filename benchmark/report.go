@@ -49,8 +49,7 @@ func GenerateMultiSectionReport(edgeResults, trafficResults, allResults []Benchm
 func GenerateMultiSectionReportMarkdown(edgeResults, trafficResults, allResults []BenchmarkResult) string {
 	var sb strings.Builder
 
-	// Header
-	sb.WriteString("# QH Protocol Benchmark Report\n\n")
+	// Test case summary
 	sb.WriteString(fmt.Sprintf("**%d Test Cases** (%d Edge Cases + %d Real Traffic)\n\n",
 		len(allResults), len(edgeResults), len(trafficResults)))
 

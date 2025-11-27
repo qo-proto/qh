@@ -87,7 +87,7 @@ Targets:
   make              - Run benchmarks to stdout (default)
   make build        - Build qhbench binary
   make run          - Run benchmarks to stdout
-  make report       - Generate dated markdown report in docs/benchmarks/ (3 wire examples)
+  make report       - Generate benchmark report in docs/benchmarks/report.md
   make clean        - Clean build artifacts
   make test         - Run tests
   make help         - Show this help
