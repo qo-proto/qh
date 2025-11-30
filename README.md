@@ -16,13 +16,13 @@
 - Prerequisites: Go 1.25 or higher
 
 ```bash
-# Start the server
+# Terminal 1: Start the server
 go run ./examples/server/main.go
 
-# In another terminal, run the client
+# Terminal 2: Run the client
 go run ./examples/client/main.go
 
-# or the concurrent client
+# Or run concurrent requests (demonstrates QOTP stream multiplexing)
 go run ./examples/client-concurrent/main.go
 
 # Or directly in tmux with a shell script (basic client)
