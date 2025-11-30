@@ -22,7 +22,10 @@ go run ./examples/server/main.go
 # In another terminal, run the client
 go run ./examples/client/main.go
 
-# Or directly in tmux with a shell script
+# or the concurrent client
+go run ./examples/client-concurrent/main.go
+
+# Or directly in tmux with a shell script (basic client)
 ./run-demo-tmux.sh
 ```
 

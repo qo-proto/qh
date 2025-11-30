@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"strconv"
+	"sync"
 
 	"github.com/qo-proto/qotp"
 )
@@ -121,9 +122,11 @@ func (s *Server) Serve() error {
 			return true, nil
 		}
 
+		streamID := stream.StreamID()
+
 		data, err := stream.Read()
 		if err != nil {
-			slog.Error("Stream read error", "error", err)
+			slog.Error("Stream read error", "stream_id", streamID, "error", err)
 			delete(streamBuffers, stream) // Clean up buffer on error
 			return true, nil
 		}
@@ -132,8 +135,13 @@ func (s *Server) Serve() error {
 			// Get or create buffer for this stream
 			buffer := streamBuffers[stream]
 
+			// Log if this is a new stream
+			if len(buffer) == 0 {
+				slog.Debug("New stream received", "stream_id", streamID)
+			}
+
 			if len(buffer)+len(data) > s.maxRequestSize {
-				slog.Error("Request size exceeds limit", "bytes", len(buffer)+len(data), "limit", s.maxRequestSize)
+				slog.Error("Request size exceeds limit", "stream_id", streamID, "bytes", len(buffer)+len(data), "limit", s.maxRequestSize)
 				s.sendErrorResponse(stream, StatusPayloadTooLarge, "Payload Too Large")
 				delete(streamBuffers, stream)
 				stream.Close()
@@ -143,18 +151,18 @@ func (s *Server) Serve() error {
 			buffer = append(buffer, data...)
 			streamBuffers[stream] = buffer
 
-			slog.Debug("Received data fragment", "fragment_bytes", len(data), "total_bytes", len(buffer))
+			slog.Debug("Received data fragment", "stream_id", streamID, "fragment_bytes", len(data), "total_bytes", len(buffer))
 
 			complete, checkErr := IsRequestComplete(buffer)
 			if checkErr != nil {
-				slog.Error("Request validation error", "error", checkErr)
+				slog.Error("Request validation error", "stream_id", streamID, "error", checkErr)
 				s.sendErrorResponse(stream, StatusBadRequest, "Bad Request")
 				delete(streamBuffers, stream) // Clear buffer on error
 				return true, nil
 			}
 
 			if complete {
-				slog.Info("Complete request received", "bytes", len(buffer))
+				slog.Debug("Complete request received", "stream_id", streamID, "bytes", len(buffer))
 				s.handleRequest(stream, buffer)
 				delete(streamBuffers, stream) // Clear buffer
 			}
@@ -183,11 +191,12 @@ func (s *Server) getPublicKeyDNS() string {
 
 // handleRequest parses a request from a stream, routes it, and sends a response.
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
-	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
+	streamID := stream.StreamID()
+	slog.Debug("Received request", "stream_id", streamID, "bytes", len(requestData), "data", string(requestData))
 
 	req, err := ParseRequest(requestData)
 	if err != nil {
-		slog.Error("Failed to parse request", "error", err)
+		slog.Error("Failed to parse request", "stream_id", streamID, "error", err)
 		s.sendErrorResponse(stream, StatusBadRequest, "Bad Request")
 		return
 	}
@@ -203,16 +212,16 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 
 	// send response
 	respData := resp.Format()
-	slog.Debug("Sending response", "bytes", len(respData))
+	slog.Debug("Sending response", "stream_id", streamID, "bytes", len(respData), "status", resp.StatusCode)
 
 	_, err = stream.Write(respData)
 	if err != nil {
-		slog.Error("Failed to write response", "error", err)
+		slog.Error("Failed to write response", "stream_id", streamID, "error", err)
 		stream.Close()
 		return
 	}
 
-	slog.Debug("Response sent, stream kept open for reuse")
+	slog.Debug("Response sent successfully", "stream_id", streamID, "status", resp.StatusCode, "bytes", len(respData))
 }
 
 func (s *Server) validateContentType(req *Request, stream *qotp.Stream) error {
