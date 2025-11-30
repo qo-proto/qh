@@ -7,7 +7,6 @@ import (
 	"io"
 	"log/slog"
 	"strconv"
-	"sync"
 
 	"github.com/qo-proto/qotp"
 )
