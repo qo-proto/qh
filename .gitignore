@@ -1,2 +1,4 @@
 examples/client/downloaded_files/
 benchmark/cmd/generate-testcases/*.har
+
+*_keylog.*
