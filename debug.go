@@ -1,3 +1,4 @@
+//nolint:gosec // G115: false warnings
 package qh
 
 import (

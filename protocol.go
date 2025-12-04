@@ -1,4 +1,6 @@
 // Package qh implements the QH (Quite Ok HTTP) protocol.
+//
+//nolint:gosec // G115: false warnings
 package qh
 
 import (
