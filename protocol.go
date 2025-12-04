@@ -1,3 +1,5 @@
+// Package qh implements the QH (Quite Ok HTTP) protocol.
+
 //nolint:gosec // G115: Ignore integer overflow warnings
 package qh
 
@@ -9,7 +11,9 @@ import (
 )
 
 const (
-	Version = 0 // Version is the current QH protocol version
+	// Version is the current QH protocol version number.
+	// This value is encoded in the first byte of both requests and responses.
+	Version = 0
 
 	versionBitShift     = 6          // Version is stored in upper 2 bits (bits 7-6)
 	methodBitShift      = 3          // Method is stored in middle 3 bits (bits 5-3)
@@ -21,18 +25,23 @@ const (
 	firstByteOffset     = 1          // Offset to skip the first byte in wire format
 )
 
+// Method represents a QH method encoded as an integer for compact wire format.
+// Methods are encoded in 3 bits.
 type Method int
 
+// QH method constants for use in QH requests.
+// These are encoded as 3-bit values in the wire format.
 const (
-	GET Method = iota
-	POST
-	PUT
-	PATCH
-	DELETE
-	HEAD
-	OPTIONS
+	GET     Method = iota // GET retrieves a resource
+	POST                  // POST submits data to be processed
+	PUT                   // PUT replaces a resource
+	PATCH                 // PATCH partially modifies a resource
+	DELETE                // DELETE removes a resource
+	HEAD                  // HEAD retrieves headers only
+	OPTIONS               // OPTIONS describes communication options
 )
 
+// String returns the HTTP method name as a string (e.g., "GET", "POST").
 func (m Method) String() string {
 	switch m {
 	case GET:
@@ -54,22 +63,25 @@ func (m Method) String() string {
 	}
 }
 
+// ContentType represents a MIME content type encoded as an integer.
+// This allows compact representation of common content types in headers.
 type ContentType int
 
+// Content type constants for use in QH headers.
 const (
-	// 4 bits for content type (16 types)
-	Custom ContentType = iota // Allows for a custom string in the body if needed
-	TextPlain
-	JSON
-	HTML
-	OctetStream
-	// ... up to 15
+	Custom      ContentType = iota // Custom allows for a custom string content type
+	TextPlain                      // TextPlain represents "text/plain"
+	JSON                           // JSON represents "application/json"
+	HTML                           // HTML represents "text/html"
+	OctetStream                    // OctetStream represents "application/octet-stream"
+	// Additional content types can be added up to 15
 )
 
 func isValidContentType(code int) bool {
 	return code >= 0 && code <= maxContentTypeValue
 }
 
+// String returns the MIME type string for this content type (e.g., "application/json").
 func (ct ContentType) String() string {
 	switch ct {
 	case Custom:
@@ -87,10 +99,15 @@ func (ct ContentType) String() string {
 	}
 }
 
+// HeaderValue returns the content type as a string suitable for use in headers.
+// This returns the integer value as a string for compact wire encoding.
 func (ct ContentType) HeaderValue() string {
 	return strconv.Itoa(int(ct))
 }
 
+// AcceptHeader creates an Accept header value from a list of content types.
+// The returned string contains comma-separated integer values representing
+// the accepted content types in order of preference.
 func AcceptHeader(types ...ContentType) string {
 	if len(types) == 0 {
 		return ""
@@ -107,20 +124,25 @@ const (
 	customHeader byte = 0
 )
 
+// Request represents a QH protocol request message.
+// It contains the QH method, target host and path, protocol version,
+// headers as key-value pairs, and an optional body.
 type Request struct {
-	Method  Method
-	Host    string
-	Path    string
-	Version uint8
-	Headers map[string]string
-	Body    []byte
+	Method  Method            // QH method (GET, POST, etc.)
+	Host    string            // Target hostname
+	Path    string            // Request path (e.g., "/api/users")
+	Version uint8             // Protocol version number
+	Headers map[string]string // Request headers as key-value pairs
+	Body    []byte            // Optional request body
 }
 
+// Response represents a QH protocol response message.
+// It contains the protocol version, QH status code, headers, and body.
 type Response struct {
-	Version    uint8
-	StatusCode int
-	Headers    map[string]string
-	Body       []byte
+	Version    uint8             // Protocol version number
+	StatusCode int               // QH status code
+	Headers    map[string]string // Response headers as key-value pairs
+	Body       []byte            // Response body content
 }
 
 // encodeHeaders implements the three-format header encoding:
@@ -164,8 +186,14 @@ func encodeHeaders(
 	return result
 }
 
-// Format encodes a QH request into the wire Format using varint length prefixes.
-// Wire Format: <1-byte-method><varint:hostLen><host><varint:pathLen><path><varint:headersLen>[headers]<varint:bodyLen><body>
+// Format encodes a QH request into wire format bytes using varint length prefixes.
+//
+// Wire format structure:
+//   - 1 byte: Version (2 bits) | Method (3 bits) | Reserved (3 bits)
+//   - varint: host length, followed by host bytes
+//   - varint: path length, followed by path bytes
+//   - varint: headers length, followed by encoded headers
+//   - varint: body length, followed by body bytes
 func (r *Request) Format() []byte {
 	// The first byte contains: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
 	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
@@ -187,8 +215,12 @@ func (r *Request) Format() []byte {
 	return result
 }
 
-// Format encodes a QH response into the wire Format using varint length prefixes.
-// Wire Format: <1-byte-status><varint:headersLen>[headers]<varint:bodyLen><body>
+// Format encodes a QH response into wire format bytes using varint length prefixes.
+//
+// Wire format structure:
+//   - 1 byte: Version (2 bits) | Status code (6 bits)
+//   - varint: headers length, followed by encoded headers
+//   - varint: body length, followed by body bytes
 func (r *Response) Format() []byte {
 	compactStatus := encodeStatusCode(r.StatusCode)
 	// First byte: Version (upper 2 bits) + Status Code (lower 6 bits)

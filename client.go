@@ -27,6 +27,9 @@ const (
 	maxDNSTXTRecordLength = 80
 )
 
+// Client is a QH protocol client that manages connections to QH servers.
+// It supports connection establishment with optional 0-RTT via DNS-based key exchange,
+// automatic response decompression, and redirect handling.
 type Client struct {
 	listener        *qotp.Listener
 	conn            *qotp.Conn
@@ -36,20 +39,28 @@ type Client struct {
 	maxRedirects    int
 }
 
+// ClientOption is a functional option for configuring a Client.
 type ClientOption func(*Client)
 
+// WithMaxResponseSize sets the maximum allowed response size in bytes.
+// Responses exceeding this limit will return an error.
+// Default is 50MB.
 func WithMaxResponseSize(size int) ClientOption {
 	return func(c *Client) {
 		c.maxResponseSize = size
 	}
 }
 
+// WithMaxRedirects sets the maximum number of redirects to follow.
+// If this limit is exceeded, the request will return an error.
+// Default is 10.
 func WithMaxRedirects(limit int) ClientOption {
 	return func(c *Client) {
 		c.maxRedirects = limit
 	}
 }
 
+// NewClient creates a new QH client with the specified options.
 func NewClient(opts ...ClientOption) *Client {
 	c := &Client{
 		maxResponseSize: defaultMaxResponseSize,
@@ -63,6 +74,13 @@ func NewClient(opts ...ClientOption) *Client {
 	return c
 }
 
+// Connect establishes a connection to a QH server at the specified address.
+// The address should be in "host:port" format.
+//
+// Connect performs concurrent DNS lookups to resolve the hostname and
+// optionally retrieve the server's public key from a DNS TXT record
+// (at _qotp.<host>) for 0-RTT connection establishment. If no valid DNS key
+// is found, Connect falls back to a standard in-band key exchange handshake.
 func (c *Client) Connect(addr string) error {
 	host, portStr, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -210,6 +228,12 @@ func lookupPubKey(host string) string {
 	return ""
 }
 
+// Request sends a QH request and returns the response.
+// The redirectCount parameter tracks the number of redirects followed
+// and should typically be 0 for initial requests.
+//
+// This method handles automatic decompression of responses if the server
+// uses compression and the client advertised support via Accept-Encoding.
 func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 	if c.conn == nil {
 		return nil, errors.New("client not connected")
@@ -289,30 +313,44 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 	return resp, nil
 }
 
+// GET performs a GET request to the specified host and path.
+// Returns the server's response or an error if the request fails.
 func (c *Client) GET(host, path string, headers map[string]string) (*Response, error) {
 	return c.do(GET, host, path, headers, nil)
 }
 
+// POST performs a POST request with the given body to the specified host and path.
+// The Content-Length header is automatically set based on the body size.
 func (c *Client) POST(host, path string, body []byte, headers map[string]string) (*Response, error) {
 	return c.do(POST, host, path, headers, body)
 }
 
+// PUT performs a PUT request with the given body to the specified host and path.
+// The Content-Length header is automatically set based on the body size.
 func (c *Client) PUT(host, path string, body []byte, headers map[string]string) (*Response, error) {
 	return c.do(PUT, host, path, headers, body)
 }
 
+// PATCH performs a PATCH request with the given body to the specified host and path.
+// The Content-Length header is automatically set based on the body size.
 func (c *Client) PATCH(host, path string, body []byte, headers map[string]string) (*Response, error) {
 	return c.do(PATCH, host, path, headers, body)
 }
 
+// DELETE performs a DELETE request to the specified host and path.
+// Returns the server's response or an error if the request fails.
 func (c *Client) DELETE(host, path string, headers map[string]string) (*Response, error) {
 	return c.do(DELETE, host, path, headers, nil)
 }
 
+// HEAD performs a HEAD request to the specified host and path.
+// Returns only headers without a response body.
 func (c *Client) HEAD(host, path string, headers map[string]string) (*Response, error) {
 	return c.do(HEAD, host, path, headers, nil)
 }
 
+// Close closes the client connection and releases associated resources.
+// After calling Close, the client should not be used for further requests.
 func (c *Client) Close() error {
 	if c.conn != nil {
 		c.conn.Close()

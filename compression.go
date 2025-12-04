@@ -16,8 +16,11 @@ const (
 	defaultBrotliQuality = 4
 )
 
+// Encoding represents a compression encoding type used in Content-Encoding
+// and Accept-Encoding headers.
 type Encoding string
 
+// Supported compression encoding constants.
 const (
 	Gzip   Encoding = "gzip"
 	Brotli Encoding = "br"

@@ -1,13 +1,16 @@
 package qh
 
+// HTTP status code constants.
+// These mirror standard HTTP status codes and are used in QH responses.
+// The wire format uses a compact 6-bit encoding for common status codes.
 const (
-	// 1xx Informational
+	// 1xx Informational responses
 	StatusContinue           = 100
 	StatusSwitchingProtocols = 101
 	StatusProcessing         = 102
 	StatusEarlyHints         = 103
 
-	// 2xx Success
+	// 2xx Success responses
 	StatusOK              = 200
 	StatusCreated         = 201
 	StatusAccepted        = 202
@@ -18,7 +21,7 @@ const (
 	StatusAlreadyReported = 208
 	StatusIMUsed          = 226
 
-	// 3xx Redirection
+	// 3xx Redirection responses
 	StatusMultipleChoices   = 300
 	StatusMovedPermanently  = 301
 	StatusFound             = 302
@@ -28,7 +31,7 @@ const (
 	StatusTemporaryRedirect = 307
 	StatusPermanentRedirect = 308
 
-	// 4xx Client Errors
+	// 4xx Client Error responses
 	StatusBadRequest           = 400
 	StatusUnauthorized         = 401
 	StatusPaymentRequired      = 402
@@ -50,7 +53,7 @@ const (
 	StatusUnprocessableEntity  = 422
 	StatusTooManyRequests      = 429
 
-	// 5xx Server Error
+	// 5xx Server Error responses
 	StatusInternalServerError   = 500
 	StatusBadGateway            = 502
 	StatusServiceUnavailable    = 503

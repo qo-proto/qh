@@ -18,6 +18,9 @@ const (
 	nestedFieldIndent      = "  " // Indentation for nested fields (custom headers, header values)
 )
 
+// DebugRequest returns a human-readable annotated representation of a QH request
+// in wire format. It displays each field with its byte offset, hex values, and
+// decoded description.
 func DebugRequest(data []byte) string {
 	if len(data) == 0 {
 		return "(empty)\n"
@@ -61,6 +64,9 @@ func DebugRequest(data []byte) string {
 	return sb.String()
 }
 
+// DebugResponse returns a human-readable annotated representation of a QH response
+// in wire format. It displays each field with its byte offset, hex values, and
+// decoded description.
 func DebugResponse(data []byte) string {
 	if len(data) == 0 {
 		return "(empty)\n"
