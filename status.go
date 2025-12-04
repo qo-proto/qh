@@ -1,13 +1,15 @@
 package qh
 
+// Status code constants.
+// These mirror standard HTTP status codes and are used in QH responses.
 const (
-	// 1xx Informational
+	// 1xx Informational responses
 	StatusContinue           = 100
 	StatusSwitchingProtocols = 101
 	StatusProcessing         = 102
 	StatusEarlyHints         = 103
 
-	// 2xx Success
+	// 2xx Success responses
 	StatusOK              = 200
 	StatusCreated         = 201
 	StatusAccepted        = 202
@@ -18,7 +20,7 @@ const (
 	StatusAlreadyReported = 208
 	StatusIMUsed          = 226
 
-	// 3xx Redirection
+	// 3xx Redirection responses
 	StatusMultipleChoices   = 300
 	StatusMovedPermanently  = 301
 	StatusFound             = 302
@@ -28,7 +30,7 @@ const (
 	StatusTemporaryRedirect = 307
 	StatusPermanentRedirect = 308
 
-	// 4xx Client Errors
+	// 4xx Client Error responses
 	StatusBadRequest           = 400
 	StatusUnauthorized         = 401
 	StatusPaymentRequired      = 402
@@ -50,7 +52,7 @@ const (
 	StatusUnprocessableEntity  = 422
 	StatusTooManyRequests      = 429
 
-	// 5xx Server Error
+	// 5xx Server Error responses
 	StatusInternalServerError   = 500
 	StatusBadGateway            = 502
 	StatusServiceUnavailable    = 503
@@ -58,8 +60,8 @@ const (
 	StatusQHVersionNotSupported = 505
 )
 
-// map common HTTP status codes to a compact wire format, ordered by frequency
-var StatusToCompact = map[int]uint8{
+// statusToCompact maps HTTP status codes to compact wire format values.
+var statusToCompact = map[int]uint8{
 	// 1xx Informational
 	100: 10, // Continue
 	101: 11, // Switching Protocols
@@ -100,7 +102,7 @@ var StatusToCompact = map[int]uint8{
 	409: 49, // Conflict
 	410: 80, // Gone
 	411: 81, // Length Required
-	412: 81, // Precondition Failed
+	412: 82, // Precondition Failed
 	413: 83, // Payload Too Large
 	414: 84, // URI Too Long
 	415: 85, // Unsupported Media Type
@@ -118,27 +120,27 @@ var StatusToCompact = map[int]uint8{
 	// room for additional codes up until 63
 }
 
-var CompactToStatus map[uint8]int // reverse mapping for decoding
+var compactToStatus map[uint8]int // reverse mapping for decoding
 
 func init() {
-	CompactToStatus = make(map[uint8]int, len(StatusToCompact))
-	for httpCode, compactCode := range StatusToCompact {
-		CompactToStatus[compactCode] = httpCode
+	compactToStatus = make(map[uint8]int, len(statusToCompact))
+	for httpCode, compactCode := range statusToCompact {
+		compactToStatus[compactCode] = httpCode
 	}
 }
 
 // convert HTTP status code to compact format
-func EncodeStatusCode(httpCode int) uint8 {
-	if compact, exists := StatusToCompact[httpCode]; exists {
+func encodeStatusCode(httpCode int) uint8 {
+	if compact, exists := statusToCompact[httpCode]; exists {
 		return compact
 	}
 	// Fallback: use compact code for 500 Internal Server Error for unmapped codes
-	return StatusToCompact[StatusInternalServerError]
+	return statusToCompact[StatusInternalServerError]
 }
 
 // convert compact format to HTTP status code
-func DecodeStatusCode(compact uint8) int {
-	if httpCode, exists := CompactToStatus[compact]; exists {
+func decodeStatusCode(compact uint8) int {
+	if httpCode, exists := compactToStatus[compact]; exists {
 		return httpCode
 	}
 	// Fallback: if the compact code is not in our map, it's an unknown or custom code.

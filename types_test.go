@@ -68,7 +68,7 @@ func TestRequestFormat(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			wire := tt.request.Format()
-			parsed, err := ParseRequest(wire)
+			parsed, err := parseRequest(wire)
 			require.NoError(t, err, "Failed to parse formatted request")
 
 			// Verify round-trip
@@ -152,7 +152,7 @@ func TestResponseFormat(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			wire := tt.response.Format()
-			parsed, err := ParseResponse(wire)
+			parsed, err := parseResponse(wire)
 			require.NoError(t, err, "Failed to parse formatted response")
 			require.Equal(t, tt.response.Version, parsed.Version)
 			require.Equal(t, tt.response.StatusCode, parsed.StatusCode)
@@ -176,7 +176,7 @@ func TestParseRequestBasic(t *testing.T) {
 	}
 
 	data := original.Format()
-	req, err := ParseRequest(data)
+	req, err := parseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Method, req.Method)
 	require.Equal(t, original.Host, req.Host)
@@ -200,7 +200,7 @@ func TestParseRequestWithBody(t *testing.T) {
 	}
 
 	data := original.Format()
-	req, err := ParseRequest(data)
+	req, err := parseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Method, req.Method)
 	require.Equal(t, original.Host, req.Host)
@@ -221,7 +221,7 @@ func TestParseRequestWithMultilineBody(t *testing.T) {
 	}
 
 	data := original.Format()
-	req, err := ParseRequest(data)
+	req, err := parseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Method, req.Method)
 	require.Equal(t, original.Body, req.Body)
@@ -238,7 +238,7 @@ func TestParseRequestNoHeaders(t *testing.T) {
 	}
 
 	data := original.Format()
-	req, err := ParseRequest(data)
+	req, err := parseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Method, req.Method)
 	require.Empty(t, req.Headers)
@@ -256,7 +256,7 @@ func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
 	}
 
 	data := original.Format()
-	req, err := ParseRequest(data)
+	req, err := parseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, GET, req.Method)
 	require.Equal(t, "example.com", req.Host)
@@ -279,7 +279,7 @@ func TestParseRequestErrors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := ParseRequest(tt.data)
+			_, err := parseRequest(tt.data)
 			require.Error(t, err)
 		})
 	}
@@ -298,7 +298,7 @@ func TestParseResponseBasic(t *testing.T) {
 	}
 
 	data := original.Format()
-	resp, err := ParseResponse(data)
+	resp, err := parseResponse(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Version, resp.Version)
 	require.Equal(t, original.StatusCode, resp.StatusCode)
@@ -317,7 +317,7 @@ func TestParseResponseSingleHeader(t *testing.T) {
 	}
 
 	data := original.Format()
-	resp, err := ParseResponse(data)
+	resp, err := parseResponse(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Version, resp.Version)
 	require.Equal(t, original.StatusCode, resp.StatusCode)
@@ -336,7 +336,7 @@ func TestParseResponseErrors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := ParseResponse(tt.data)
+			_, err := parseResponse(tt.data)
 			require.Error(t, err)
 		})
 	}
@@ -382,7 +382,7 @@ func TestIsValidContentType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.valid, IsValidContentType(tt.code))
+			require.Equal(t, tt.valid, isValidContentType(tt.code))
 		})
 	}
 }
@@ -537,7 +537,7 @@ func TestRequestRoundTrip(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			formatted := tt.request.Format()
-			parsed, err := ParseRequest(formatted)
+			parsed, err := parseRequest(formatted)
 			require.NoError(t, err)
 			assertRequestEqual(t, tt.request, parsed)
 		})
@@ -628,7 +628,7 @@ func TestResponseRoundTrip(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			formatted := tt.response.Format()
-			parsed, err := ParseResponse(formatted)
+			parsed, err := parseResponse(formatted)
 			require.NoError(t, err)
 			assertResponseEqual(t, tt.response, parsed)
 		})
