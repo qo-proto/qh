@@ -61,60 +61,60 @@ const (
 // map common HTTP status codes to a compact wire format, ordered by frequency
 var StatusToCompact = map[int]uint8{
 	// 1xx Informational
-	100: 27, // Continue
-	101: 28, // Switching Protocols
-	102: 29, // Processing
-	103: 30, // Early Hints
+	100: 10, // Continue
+	101: 11, // Switching Protocols
+	102: 12, // Processing
+	103: 13, // Early Hints
 
 	// 2xx Success
-	200: 0,  // OK
-	201: 10, // Created
-	202: 11, // Accepted
-	204: 12, // No Content
-	205: 31, // Reset Content
-	206: 13, // Partial Content
-	207: 32, // Multi-Status
-	208: 33, // Already Reported
-	226: 34, // IM Used
+	200: 20,  // OK
+	201: 21, // Created
+	202: 22, // Accepted
+	204: 24, // No Content
+	205: 25, // Reset Content
+	206: 26, // Partial Content
+	207: 27, // Multi-Status
+	208: 28, // Already Reported
+	226: 29, // IM Used
 
 	// 3xx Redirection
-	300: 35, // Multiple Choices
-	301: 7,  // Moved Permanently
-	302: 3,  // Found (redirect)
-	303: 36, // See Other
-	304: 8,  // Not Modified
-	305: 37, // Use Proxy
-	307: 14, // Temporary Redirect
-	308: 15, // Permanent Redirect
+	300: 30, // Multiple Choices
+	301: 31,  // Moved Permanently
+	302: 32,  // Found (redirect)
+	303: 33, // See Other
+	304: 34,  // Not Modified
+	305: 35, // Use Proxy
+	307: 37, // Temporary Redirect
+	308: 38, // Permanent Redirect
 
 	// 4xx Client Error
-	400: 4,  // Bad Request
-	401: 6,  // Unauthorized
-	402: 38, // Payment Required
-	403: 5,  // Forbidden
-	404: 1,  // Not Found
-	405: 39, // Method Not Allowed
-	406: 40, // Not Acceptable
-	407: 41, // Proxy Authentication Required
-	408: 42, // Request Timeout
-	409: 16, // Conflict
-	410: 17, // Gone
-	411: 43, // Length Required
-	412: 18, // Precondition Failed
-	413: 19, // Payload Too Large
-	414: 20, // URI Too Long
-	415: 21, // Unsupported Media Type
-	416: 44, // Range Not Satisfiable
-	417: 45, // Expectation Failed
-	422: 22, // Unprocessable Entity
-	429: 23, // Too Many Requests
+	400: 40,  // Bad Request
+	401: 41,  // Unauthorized
+	402: 42, // Payment Required
+	403: 43,  // Forbidden
+	404: 44,  // Not Found
+	405: 45, // Method Not Allowed
+	406: 46, // Not Acceptable
+	407: 47, // Proxy Authentication Required
+	408: 48, // Request Timeout
+	409: 49, // Conflict
+	410: 80, // Gone
+	411: 81, // Length Required
+	412: 81, // Precondition Failed
+	413: 83, // Payload Too Large
+	414: 84, // URI Too Long
+	415: 85, // Unsupported Media Type
+	416: 86, // Range Not Satisfiable
+	417: 87, // Expectation Failed
+	422: 88, // Unprocessable Entity
+	429: 89, // Too Many Requests
 
 	// 5xx Server Error
-	500: 2,  // Internal Server Error
-	502: 24, // Bad Gateway
-	503: 9,  // Service Unavailable
-	504: 25, // Gateway Timeout
-	505: 26, // QH Version Not Supported
+	500: 50,  // Internal Server Error
+	502: 52, // Bad Gateway
+	503: 53,  // Service Unavailable
+	504: 54, // Gateway Timeout
+	505: 55, // QH Version Not Supported
 	// room for additional codes up until 63
 }
 

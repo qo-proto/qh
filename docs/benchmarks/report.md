@@ -1,9 +1,9 @@
 # QH Protocol Benchmark Report
 
-**Generated:** November 27, 2025 at 11:37:55  
-**Commit:** `94ba292`  
-**Go Version:** go1.25.1  
-**Platform:** Darwin/x86_64  
+**Generated:** December 04, 2025 at 11:22:32  
+**Commit:** `0b910ab`  
+**Go Version:** go1.25.4  
+**Platform:** Linux/x86_64  
 
 **110 Test Cases** (10 Edge Cases + 100 Real Traffic)
 
@@ -325,9 +325,16 @@ OFFSET  BYTES                                            DESCRIPTION
 0x000d  2f 6d 61 6e 69 66 65 73 74 2e 6a 73 6f 6e        Path: /manifest.json
 0x001b  fa 01                                            Headers length: 250
 
-0x001d  41                                               Header ID (user-agent)
-0x001e  75                                                 Value length: 117
-0x001f  4d 6f 7a 69 6c 6c 61 2f 35 2e 30 20 28 4d 61 63    Value: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.... [117 bytes total, showing 100]
+0x001d  44                                               Header ID (sec-ch-ua)
+0x001e  41                                                 Value length: 65
+0x001f  22 43 68 72 6f 6d 69 75 6d 22 3b 76 3d 22 31 34    Value: "Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"
+          32 22 2c 20 22 47 6f 6f 67 6c 65 20 43 68 72 6f
+          6d 65 22 3b 76 3d 22 31 34 32 22 2c 20 22 4e 6f
+          74 5f 41 20 42 72 61 6e 64 22 3b 76 3d 22 39 39
+          22
+0x0060  41                                               Header ID (user-agent)
+0x0061  75                                                 Value length: 117
+0x0062  4d 6f 7a 69 6c 6c 61 2f 35 2e 30 20 28 4d 61 63    Value: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.... [117 bytes total, showing 100]
           69 6e 74 6f 73 68 3b 20 49 6e 74 65 6c 20 4d 61
           63 20 4f 53 20 58 20 31 30 5f 31 35 5f 37 29 20
           41 70 70 6c 65 57 65 62 4b 69 74 2f 35 33 37 2e
@@ -335,23 +342,16 @@ OFFSET  BYTES                                            DESCRIPTION
           47 65 63 6b 6f 29 20 43 68 72 6f 6d 65 2f 31 34
           32 2e 30 2e 30 2e 30 20 53 61 66 61 72 69 2f 35
           33 37 2e 33 36
-0x0094  01                                               Header ID (sec-ch-ua-mobile: ?0)
-0x0095  3d                                               Header ID (sec-ch-ua-platform: "macOS")
-0x0096  51                                               Header ID (referer)
-0x0097  2c                                                 Value length: 44
-0x0098  68 74 74 70 73 3a 2f 2f 67 69 74 68 75 62 2e 63    Value: https://github.com/example-user/example-repo
+0x00d7  01                                               Header ID (sec-ch-ua-mobile: ?0)
+0x00d8  3d                                               Header ID (sec-ch-ua-platform: "macOS")
+0x00d9  51                                               Header ID (referer)
+0x00da  2c                                                 Value length: 44
+0x00db  68 74 74 70 73 3a 2f 2f 67 69 74 68 75 62 2e 63    Value: https://github.com/example-user/example-repo
           6f 6d 2f 65 78 61 6d 70 6c 65 2d 75 73 65 72 2f
           65 78 61 6d 70 6c 65 2d 72 65 70 6f
-0x00c4  4c                                               Header ID (accept-language)
-0x00c5  0e                                                 Value length: 14
-0x00c6  65 6e 2d 47 42 2c 65 6e 3b 71 3d 30 2e 39          Value: en-GB,en;q=0.9
-0x00d4  44                                               Header ID (sec-ch-ua)
-0x00d5  41                                                 Value length: 65
-0x00d6  22 43 68 72 6f 6d 69 75 6d 22 3b 76 3d 22 31 34    Value: "Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"
-          32 22 2c 20 22 47 6f 6f 67 6c 65 20 43 68 72 6f
-          6d 65 22 3b 76 3d 22 31 34 32 22 2c 20 22 4e 6f
-          74 5f 41 20 42 72 61 6e 64 22 3b 76 3d 22 39 39
-          22
+0x0107  4c                                               Header ID (accept-language)
+0x0108  0e                                                 Value length: 14
+0x0109  65 6e 2d 47 42 2c 65 6e 3b 71 3d 30 2e 39          Value: en-GB,en;q=0.9
 
 0x0117  00                                               Body length: 0
 
@@ -372,39 +372,31 @@ OFFSET  BYTES                                            DESCRIPTION
 0x0000  00                                               First byte (Version=0, Status=200)
 0x0001  c8 1e                                            Headers length: 3912
 
-0x0003  53                                               Header ID (x-frame-options: deny)
-0x0004  05                                               Header ID (content-encoding: gzip)
-0x0005  00                                               Custom header
-0x0006  13                                                 Key length: 19
-0x0007  78 2d 67 69 74 68 75 62 2d 72 65 71 75 65 73 74    Key: x-github-request-id
+0x0003  05                                               Header ID (content-encoding: gzip)
+0x0004  00                                               Custom header
+0x0005  13                                                 Key length: 19
+0x0006  78 2d 67 69 74 68 75 62 2d 72 65 71 75 65 73 74    Key: x-github-request-id
           2d 69 64
-0x001a  1f                                                 Value length: 31
-0x001b  58 58 58 58 3a 58 58 58 58 3a 58 58 58 58 58 58    Value: XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX
+0x0019  1f                                                 Value length: 31
+0x001a  58 58 58 58 3a 58 58 58 58 3a 58 58 58 58 58 58    Value: XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX
           3a 58 58 58 58 58 3a 58 58 58 58 58 58 58 58
-0x003a  8e                                               Header ID (date)
-0x003b  1d                                                 Value length: 29
-0x003c  53 61 74 2c 20 31 35 20 4e 6f 76 20 32 30 32 35    Value: Sat, 15 Nov 2025 17:15:49 GMT
-          20 31 37 3a 31 35 3a 34 39 20 47 4d 54
-0x0059  0e                                               Header ID (x-xss-protection: 0)
-0x005a  ac                                               Header ID (referrer-policy)
-0x005b  39                                                 Value length: 57
-0x005c  6f 72 69 67 69 6e 2d 77 68 65 6e 2d 63 72 6f 73    Value: origin-when-cross-origin, strict-origin-when-cross-origin
+0x0039  ac                                               Header ID (referrer-policy)
+0x003a  39                                                 Value length: 57
+0x003b  6f 72 69 67 69 6e 2d 77 68 65 6e 2d 63 72 6f 73    Value: origin-when-cross-origin, strict-origin-when-cross-origin
           73 2d 6f 72 69 67 69 6e 2c 20 73 74 72 69 63 74
           2d 6f 72 69 67 69 6e 2d 77 68 65 6e 2d 63 72 6f
           73 73 2d 6f 72 69 67 69 6e
-0x0095  a1                                               Header ID (etag)
-0x0096  26                                                 Value length: 38
-0x0097  61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61    Value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-          61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61
-          61 61 61 61 61 61
-0x00bd  01                                               Header ID (x-content-type-options: nosniff)
-0x00be  0b                                               Header ID (accept-ranges: bytes)
-0x00bf  91                                               Header ID (content-length)
-0x00c0  03                                                 Value length: 3
-0x00c1  34 37 34                                           Value: 474
-0x00c4  ab                                               Header ID (content-security-policy)
-0x00c5  b7 1b                                              Value length: 3511
-0x00c7  64 65 66 61 75 6c 74 2d 73 72 63 20 27 6e 6f 6e    Value: default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/... [3511 bytes total, showing 100]
+0x0074  8f                                               Header ID (content-type)
+0x0075  28                                                 Value length: 40
+0x0076  61 70 70 6c 69 63 61 74 69 6f 6e 2f 6d 61 6e 69    Value: application/manifest+json; charset=utf-8
+          66 65 73 74 2b 6a 73 6f 6e 3b 20 63 68 61 72 73
+          65 74 3d 75 74 66 2d 38
+0x009e  92                                               Header ID (server)
+0x009f  0a                                                 Value length: 10
+0x00a0  67 69 74 68 75 62 2e 63 6f 6d                      Value: github.com
+0x00aa  ab                                               Header ID (content-security-policy)
+0x00ab  b7 1b                                              Value length: 3511
+0x00ad  64 65 66 61 75 6c 74 2d 73 72 63 20 27 6e 6f 6e    Value: default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/... [3511 bytes total, showing 100]
           65 27 3b 20 62 61 73 65 2d 75 72 69 20 27 73 65
           6c 66 27 3b 20 63 68 69 6c 64 2d 73 72 63 20 67
           69 74 68 75 62 2e 67 69 74 68 75 62 61 73 73 65
@@ -413,18 +405,29 @@ OFFSET  BYTES                                            DESCRIPTION
           6b 65 72 2f 20 67 69 74 68 75 62 2e 63 6f 6d 2f
           61 73 73 65 74 73 2f 20 67 69 73 74 2e 67 69 74
                                                          [3511 bytes total; 128 shown]
-0x0e7e  90                                               Header ID (cache-control)
-0x0e7f  16                                                 Value length: 22
-0x0e80  6d 61 78 2d 61 67 65 3d 36 30 34 38 30 30 2c 20    Value: max-age=604800, public
+0x0e64  90                                               Header ID (cache-control)
+0x0e65  16                                                 Value length: 22
+0x0e66  6d 61 78 2d 61 67 65 3d 36 30 34 38 30 30 2c 20    Value: max-age=604800, public
           70 75 62 6c 69 63
-0x0e96  8f                                               Header ID (content-type)
-0x0e97  28                                                 Value length: 40
-0x0e98  61 70 70 6c 69 63 61 74 69 6f 6e 2f 6d 61 6e 69    Value: application/manifest+json; charset=utf-8
-          66 65 73 74 2b 6a 73 6f 6e 3b 20 63 68 61 72 73
-          65 74 3d 75 74 66 2d 38
-0x0ec0  95                                               Header ID (vary)
-0x0ec1  7d                                                 Value length: 125
-0x0ec2  58 2d 46 65 74 63 68 2d 4e 6f 6e 63 65 2c 20 58    Value: X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding,... [125 bytes total, showing 100]
+0x0e7c  01                                               Header ID (x-content-type-options: nosniff)
+0x0e7d  0b                                               Header ID (accept-ranges: bytes)
+0x0e7e  8e                                               Header ID (date)
+0x0e7f  1d                                                 Value length: 29
+0x0e80  53 61 74 2c 20 31 35 20 4e 6f 76 20 32 30 32 35    Value: Sat, 15 Nov 2025 17:15:49 GMT
+          20 31 37 3a 31 35 3a 34 39 20 47 4d 54
+0x0e9d  0e                                               Header ID (x-xss-protection: 0)
+0x0e9e  91                                               Header ID (content-length)
+0x0e9f  03                                                 Value length: 3
+0x0ea0  34 37 34                                           Value: 474
+0x0ea3  53                                               Header ID (x-frame-options: deny)
+0x0ea4  a1                                               Header ID (etag)
+0x0ea5  26                                                 Value length: 38
+0x0ea6  61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61    Value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61
+          61 61 61 61 61 61
+0x0ecc  95                                               Header ID (vary)
+0x0ecd  7d                                                 Value length: 125
+0x0ece  58 2d 46 65 74 63 68 2d 4e 6f 6e 63 65 2c 20 58    Value: X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding,... [125 bytes total, showing 100]
           2d 50 4a 41 58 2c 20 58 2d 50 4a 41 58 2d 43 6f
           6e 74 61 69 6e 65 72 2c 20 54 75 72 62 6f 2d 56
           69 73 69 74 2c 20 54 75 72 62 6f 2d 46 72 61 6d
@@ -432,9 +435,6 @@ OFFSET  BYTES                                            DESCRIPTION
           69 74 68 2c 41 63 63 65 70 74 2d 45 6e 63 6f 64
           69 6e 67 2c 20 41 63 63 65 70 74 2c 20 58 2d 52
           65 71 75 65 73 74 65 64 2d 57 69 74 68
-0x0f3f  92                                               Header ID (server)
-0x0f40  0a                                                 Value length: 10
-0x0f41  67 69 74 68 75 62 2e 63 6f 6d                      Value: github.com
 
 0x0f4b  00                                               Body length: 0
 
@@ -463,34 +463,32 @@ OFFSET  BYTES                                            DESCRIPTION
 0x0027  91 03                                            Headers length: 401
 
 0x0029  00                                               Custom header
-0x002a  15                                                 Key length: 21
-0x002b  67 69 74 68 75 62 2d 76 65 72 69 66 69 65 64 2d    Key: github-verified-fetch
-          66 65 74 63 68
-0x0040  04                                                 Value length: 4
-0x0041  74 72 75 65                                        Value: true
-0x0045  16                                               Header ID (sec-fetch-dest: empty)
-0x0046  00                                               Custom header
-0x0047  17                                                 Key length: 23
-0x0048  78 2d 67 69 74 68 75 62 2d 63 6c 69 65 6e 74 2d    Key: x-github-client-version
-          76 65 72 73 69 6f 6e
-0x005f  1b                                                 Value length: 27
-0x0060  41 4e 4f 4e 59 4d 49 5a 45 44 5f 43 4c 49 45 4e    Value: ANONYMIZED_CLIENT_VERSION_1
-          54 5f 56 45 52 53 49 4f 4e 5f 31
-0x007b  4c                                               Header ID (accept-language)
-0x007c  0e                                                 Value length: 14
-0x007d  65 6e 2d 47 42 2c 65 6e 3b 71 3d 30 2e 39          Value: en-GB,en;q=0.9
-0x008b  53                                               Header ID (origin)
-0x008c  12                                                 Value length: 18
-0x008d  68 74 74 70 73 3a 2f 2f 67 69 74 68 75 62 2e 63    Value: https://github.com
-          6f 6d
-0x009f  51                                               Header ID (referer)
-0x00a0  1a                                                 Value length: 26
-0x00a1  68 74 74 70 73 3a 2f 2f 67 69 74 68 75 62 2e 63    Value: https://github.com/example
+0x002a  08                                                 Key length: 8
+0x002b  70 72 69 6f 72 69 74 79                            Key: priority
+0x0033  06                                                 Value length: 6
+0x0034  75 3d 31 2c 20 69                                  Value: u=1, i
+0x003a  16                                               Header ID (sec-fetch-dest: empty)
+0x003b  12                                               Header ID (sec-fetch-site: same-origin)
+0x003c  05                                               Header ID (x-requested-with: XMLHttpRequest)
+0x003d  1d                                               Header ID (accept: application/json)
+0x003e  33                                               Header ID (content-length: 0)
+0x003f  51                                               Header ID (referer)
+0x0040  1a                                                 Value length: 26
+0x0041  68 74 74 70 73 3a 2f 2f 67 69 74 68 75 62 2e 63    Value: https://github.com/example
           6f 6d 2f 65 78 61 6d 70 6c 65
-0x00bb  01                                               Header ID (sec-ch-ua-mobile: ?0)
-0x00bc  41                                               Header ID (user-agent)
-0x00bd  75                                                 Value length: 117
-0x00be  4d 6f 7a 69 6c 6c 61 2f 35 2e 30 20 28 4d 61 63    Value: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.... [117 bytes total, showing 100]
+0x005b  0f                                               Header ID (sec-fetch-mode: cors)
+0x005c  44                                               Header ID (sec-ch-ua)
+0x005d  41                                                 Value length: 65
+0x005e  22 43 68 72 6f 6d 69 75 6d 22 3b 76 3d 22 31 34    Value: "Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"
+          32 22 2c 20 22 47 6f 6f 67 6c 65 20 43 68 72 6f
+          6d 65 22 3b 76 3d 22 31 34 32 22 2c 20 22 4e 6f
+          74 5f 41 20 42 72 61 6e 64 22 3b 76 3d 22 39 39
+          22
+0x009f  01                                               Header ID (sec-ch-ua-mobile: ?0)
+0x00a0  3d                                               Header ID (sec-ch-ua-platform: "macOS")
+0x00a1  41                                               Header ID (user-agent)
+0x00a2  75                                                 Value length: 117
+0x00a3  4d 6f 7a 69 6c 6c 61 2f 35 2e 30 20 28 4d 61 63    Value: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.... [117 bytes total, showing 100]
           69 6e 74 6f 73 68 3b 20 49 6e 74 65 6c 20 4d 61
           63 20 4f 53 20 58 20 31 30 5f 31 35 5f 37 29 20
           41 70 70 6c 65 57 65 62 4b 69 74 2f 35 33 37 2e
@@ -498,32 +496,34 @@ OFFSET  BYTES                                            DESCRIPTION
           47 65 63 6b 6f 29 20 43 68 72 6f 6d 65 2f 31 34
           32 2e 30 2e 30 2e 30 20 53 61 66 61 72 69 2f 35
           33 37 2e 33 36
-0x0133  00                                               Custom header
-0x0134  0d                                                 Key length: 13
-0x0135  78 2d 66 65 74 63 68 2d 6e 6f 6e 63 65             Key: x-fetch-nonce
-0x0142  1b                                                 Value length: 27
-0x0143  76 32 3a 41 4e 4f 4e 59 4d 49 5a 45 44 5f 4e 4f    Value: v2:ANONYMIZED_NONCE_VALUE_1
+0x0118  00                                               Custom header
+0x0119  0d                                                 Key length: 13
+0x011a  78 2d 66 65 74 63 68 2d 6e 6f 6e 63 65             Key: x-fetch-nonce
+0x0127  1b                                                 Value length: 27
+0x0128  76 32 3a 41 4e 4f 4e 59 4d 49 5a 45 44 5f 4e 4f    Value: v2:ANONYMIZED_NONCE_VALUE_1
           4e 43 45 5f 56 41 4c 55 45 5f 31
-0x015e  0d                                               Header ID (accept-encoding: gzip, deflate, br, zstd)
-0x015f  0e                                               Header ID (content-type: application/json)
-0x0160  00                                               Custom header
-0x0161  08                                                 Key length: 8
-0x0162  70 72 69 6f 72 69 74 79                            Key: priority
-0x016a  06                                                 Value length: 6
-0x016b  75 3d 31 2c 20 69                                  Value: u=1, i
-0x0171  44                                               Header ID (sec-ch-ua)
-0x0172  41                                                 Value length: 65
-0x0173  22 43 68 72 6f 6d 69 75 6d 22 3b 76 3d 22 31 34    Value: "Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"
-          32 22 2c 20 22 47 6f 6f 67 6c 65 20 43 68 72 6f
-          6d 65 22 3b 76 3d 22 31 34 32 22 2c 20 22 4e 6f
-          74 5f 41 20 42 72 61 6e 64 22 3b 76 3d 22 39 39
-          22
-0x01b4  1d                                               Header ID (accept: application/json)
-0x01b5  33                                               Header ID (content-length: 0)
-0x01b6  3d                                               Header ID (sec-ch-ua-platform: "macOS")
-0x01b7  0f                                               Header ID (sec-fetch-mode: cors)
-0x01b8  12                                               Header ID (sec-fetch-site: same-origin)
-0x01b9  05                                               Header ID (x-requested-with: XMLHttpRequest)
+0x0143  00                                               Custom header
+0x0144  17                                                 Key length: 23
+0x0145  78 2d 67 69 74 68 75 62 2d 63 6c 69 65 6e 74 2d    Key: x-github-client-version
+          76 65 72 73 69 6f 6e
+0x015c  1b                                                 Value length: 27
+0x015d  41 4e 4f 4e 59 4d 49 5a 45 44 5f 43 4c 49 45 4e    Value: ANONYMIZED_CLIENT_VERSION_1
+          54 5f 56 45 52 53 49 4f 4e 5f 31
+0x0178  0e                                               Header ID (content-type: application/json)
+0x0179  00                                               Custom header
+0x017a  15                                                 Key length: 21
+0x017b  67 69 74 68 75 62 2d 76 65 72 69 66 69 65 64 2d    Key: github-verified-fetch
+          66 65 74 63 68
+0x0190  04                                                 Value length: 4
+0x0191  74 72 75 65                                        Value: true
+0x0195  53                                               Header ID (origin)
+0x0196  12                                                 Value length: 18
+0x0197  68 74 74 70 73 3a 2f 2f 67 69 74 68 75 62 2e 63    Value: https://github.com
+          6f 6d
+0x01a9  0d                                               Header ID (accept-encoding: gzip, deflate, br, zstd)
+0x01aa  4c                                               Header ID (accept-language)
+0x01ab  0e                                                 Value length: 14
+0x01ac  65 6e 2d 47 42 2c 65 6e 3b 71 3d 30 2e 39          Value: en-GB,en;q=0.9
 
 0x01ba  00                                               Body length: 0
 
@@ -544,40 +544,11 @@ OFFSET  BYTES                                            DESCRIPTION
 0x0000  00                                               First byte (Version=0, Status=200)
 0x0001  b0 1e                                            Headers length: 3888
 
-0x0003  94                                               Header ID (strict-transport-security)
-0x0004  2c                                                 Value length: 44
-0x0005  6d 61 78 2d 61 67 65 3d 33 31 35 33 36 30 30 30    Value: max-age=31536000; includeSubdomains; preload
-          3b 20 69 6e 63 6c 75 64 65 53 75 62 64 6f 6d 61
-          69 6e 73 3b 20 70 72 65 6c 6f 61 64
-0x0031  8e                                               Header ID (date)
-0x0032  1d                                                 Value length: 29
-0x0033  53 61 74 2c 20 31 35 20 4e 6f 76 20 32 30 32 35    Value: Sat, 15 Nov 2025 17:15:50 GMT
-          20 31 37 3a 31 35 3a 35 30 20 47 4d 54
-0x0050  95                                               Header ID (vary)
-0x0051  7d                                                 Value length: 125
-0x0052  58 2d 46 65 74 63 68 2d 4e 6f 6e 63 65 2c 20 58    Value: X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding,... [125 bytes total, showing 100]
-          2d 50 4a 41 58 2c 20 58 2d 50 4a 41 58 2d 43 6f
-          6e 74 61 69 6e 65 72 2c 20 54 75 72 62 6f 2d 56
-          69 73 69 74 2c 20 54 75 72 62 6f 2d 46 72 61 6d
-          65 2c 20 58 2d 52 65 71 75 65 73 74 65 64 2d 57
-          69 74 68 2c 41 63 63 65 70 74 2d 45 6e 63 6f 64
-          69 6e 67 2c 20 41 63 63 65 70 74 2c 20 58 2d 52
-          65 71 75 65 73 74 65 64 2d 57 69 74 68
-0x00cf  01                                               Header ID (x-content-type-options: nosniff)
-0x00d0  53                                               Header ID (x-frame-options: deny)
-0x00d1  00                                               Custom header
-0x00d2  13                                                 Key length: 19
-0x00d3  78 2d 67 69 74 68 75 62 2d 72 65 71 75 65 73 74    Key: x-github-request-id
-          2d 69 64
-0x00e6  1f                                                 Value length: 31
-0x00e7  58 58 58 58 3a 58 58 58 58 3a 58 58 58 58 58 58    Value: XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX
-          3a 58 58 58 58 58 3a 58 58 58 58 58 58 58 58
-0x0106  0e                                               Header ID (x-xss-protection: 0)
-0x0107  3e                                               Header ID (cache-control: max-age=0, private, must-revalidate)
-0x0108  05                                               Header ID (content-encoding: gzip)
-0x0109  ab                                               Header ID (content-security-policy)
-0x010a  b7 1b                                              Value length: 3511
-0x010c  64 65 66 61 75 6c 74 2d 73 72 63 20 27 6e 6f 6e    Value: default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/... [3511 bytes total, showing 100]
+0x0003  3e                                               Header ID (cache-control: max-age=0, private, must-revalidate)
+0x0004  05                                               Header ID (content-encoding: gzip)
+0x0005  ab                                               Header ID (content-security-policy)
+0x0006  b7 1b                                              Value length: 3511
+0x0008  64 65 66 61 75 6c 74 2d 73 72 63 20 27 6e 6f 6e    Value: default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/... [3511 bytes total, showing 100]
           65 27 3b 20 62 61 73 65 2d 75 72 69 20 27 73 65
           6c 66 27 3b 20 63 68 69 6c 64 2d 73 72 63 20 67
           69 74 68 75 62 2e 67 69 74 68 75 62 61 73 73 65
@@ -586,21 +557,50 @@ OFFSET  BYTES                                            DESCRIPTION
           6b 65 72 2f 20 67 69 74 68 75 62 2e 63 6f 6d 2f
           61 73 73 65 74 73 2f 20 67 69 73 74 2e 67 69 74
                                                          [3511 bytes total; 128 shown]
-0x0ec3  0c                                               Header ID (content-type: application/json; charset=utf-8)
-0x0ec4  a1                                               Header ID (etag)
-0x0ec5  26                                                 Value length: 38
-0x0ec6  61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61    Value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+0x0dbf  0c                                               Header ID (content-type: application/json; charset=utf-8)
+0x0dc0  94                                               Header ID (strict-transport-security)
+0x0dc1  2c                                                 Value length: 44
+0x0dc2  6d 61 78 2d 61 67 65 3d 33 31 35 33 36 30 30 30    Value: max-age=31536000; includeSubdomains; preload
+          3b 20 69 6e 63 6c 75 64 65 53 75 62 64 6f 6d 61
+          69 6e 73 3b 20 70 72 65 6c 6f 61 64
+0x0dee  95                                               Header ID (vary)
+0x0def  7d                                                 Value length: 125
+0x0df0  58 2d 46 65 74 63 68 2d 4e 6f 6e 63 65 2c 20 58    Value: X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding,... [125 bytes total, showing 100]
+          2d 50 4a 41 58 2c 20 58 2d 50 4a 41 58 2d 43 6f
+          6e 74 61 69 6e 65 72 2c 20 54 75 72 62 6f 2d 56
+          69 73 69 74 2c 20 54 75 72 62 6f 2d 46 72 61 6d
+          65 2c 20 58 2d 52 65 71 75 65 73 74 65 64 2d 57
+          69 74 68 2c 41 63 63 65 70 74 2d 45 6e 63 6f 64
+          69 6e 67 2c 20 41 63 63 65 70 74 2c 20 58 2d 52
+          65 71 75 65 73 74 65 64 2d 57 69 74 68
+0x0e6d  01                                               Header ID (x-content-type-options: nosniff)
+0x0e6e  53                                               Header ID (x-frame-options: deny)
+0x0e6f  8e                                               Header ID (date)
+0x0e70  1d                                                 Value length: 29
+0x0e71  53 61 74 2c 20 31 35 20 4e 6f 76 20 32 30 32 35    Value: Sat, 15 Nov 2025 17:15:50 GMT
+          20 31 37 3a 31 35 3a 35 30 20 47 4d 54
+0x0e8e  a1                                               Header ID (etag)
+0x0e8f  26                                                 Value length: 38
+0x0e90  61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61    Value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
           61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61
           61 61 61 61 61 61
-0x0eec  ac                                               Header ID (referrer-policy)
-0x0eed  39                                                 Value length: 57
-0x0eee  6f 72 69 67 69 6e 2d 77 68 65 6e 2d 63 72 6f 73    Value: origin-when-cross-origin, strict-origin-when-cross-origin
+0x0eb6  ac                                               Header ID (referrer-policy)
+0x0eb7  39                                                 Value length: 57
+0x0eb8  6f 72 69 67 69 6e 2d 77 68 65 6e 2d 63 72 6f 73    Value: origin-when-cross-origin, strict-origin-when-cross-origin
           73 2d 6f 72 69 67 69 6e 2c 20 73 74 72 69 63 74
           2d 6f 72 69 67 69 6e 2d 77 68 65 6e 2d 63 72 6f
           73 73 2d 6f 72 69 67 69 6e
-0x0f27  92                                               Header ID (server)
-0x0f28  0a                                                 Value length: 10
-0x0f29  67 69 74 68 75 62 2e 63 6f 6d                      Value: github.com
+0x0ef1  92                                               Header ID (server)
+0x0ef2  0a                                                 Value length: 10
+0x0ef3  67 69 74 68 75 62 2e 63 6f 6d                      Value: github.com
+0x0efd  00                                               Custom header
+0x0efe  13                                                 Key length: 19
+0x0eff  78 2d 67 69 74 68 75 62 2d 72 65 71 75 65 73 74    Key: x-github-request-id
+          2d 69 64
+0x0f12  1f                                                 Value length: 31
+0x0f13  58 58 58 58 3a 58 58 58 58 3a 58 58 58 58 58 58    Value: XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX
+          3a 58 58 58 58 58 3a 58 58 58 58 58 58 58 58
+0x0f32  0e                                               Header ID (x-xss-protection: 0)
 
 0x0f33  00                                               Body length: 0
 
@@ -629,44 +629,24 @@ OFFSET  BYTES                                            DESCRIPTION
           64 6f 63 73 2e 6a 73 6f 6e
 0x0037  e8 02                                            Headers length: 360
 
-0x0039  51                                               Header ID (referer)
-0x003a  1e                                                 Value length: 30
-0x003b  68 74 74 70 73 3a 2f 2f 67 68 6f 73 74 74 79 2e    Value: https://ghostty.org/docs/about
-          6f 72 67 2f 64 6f 63 73 2f 61 62 6f 75 74
-0x0059  44                                               Header ID (sec-ch-ua)
-0x005a  41                                                 Value length: 65
-0x005b  22 43 68 72 6f 6d 69 75 6d 22 3b 76 3d 22 31 34    Value: "Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"
-          32 22 2c 20 22 47 6f 6f 67 6c 65 20 43 68 72 6f
-          6d 65 22 3b 76 3d 22 31 34 32 22 2c 20 22 4e 6f
-          74 5f 41 20 42 72 61 6e 64 22 3b 76 3d 22 39 39
-          22
-0x009c  16                                               Header ID (sec-fetch-dest: empty)
-0x009d  12                                               Header ID (sec-fetch-site: same-origin)
-0x009e  63                                               Header ID (if-modified-since)
-0x009f  1d                                                 Value length: 29
-0x00a0  54 68 75 2c 20 32 33 20 4f 63 74 20 32 30 32 35    Value: Thu, 23 Oct 2025 17:58:54 GMT
+0x0039  00                                               Custom header
+0x003a  0d                                                 Key length: 13
+0x003b  78 2d 6e 65 78 74 6a 73 2d 64 61 74 61             Key: x-nextjs-data
+0x0048  01                                                 Value length: 1
+0x0049  31                                                 Value: 1
+0x004a  63                                               Header ID (if-modified-since)
+0x004b  1d                                                 Value length: 29
+0x004c  54 68 75 2c 20 32 33 20 4f 63 74 20 32 30 32 35    Value: Thu, 23 Oct 2025 17:58:54 GMT
           20 31 37 3a 35 38 3a 35 34 20 47 4d 54
-0x00bd  00                                               Custom header
-0x00be  08                                                 Key length: 8
-0x00bf  70 72 69 6f 72 69 74 79                            Key: priority
-0x00c7  06                                                 Value length: 6
-0x00c8  75 3d 31 2c 20 69                                  Value: u=1, i
-0x00ce  00                                               Custom header
-0x00cf  07                                                 Key length: 7
-0x00d0  70 75 72 70 6f 73 65                               Key: purpose
-0x00d7  08                                                 Value length: 8
-0x00d8  70 72 65 66 65 74 63 68                            Value: prefetch
-0x00e0  03                                               Header ID (accept: */*)
-0x00e1  60                                               Header ID (if-none-match)
-0x00e2  22                                                 Value length: 34
-0x00e3  22 36 30 62 31 39 31 32 33 39 38 37 31 32 33 61    Value: "60b19123987123asdlk3a57794917152"
-          73 64 6c 6b 33 61 35 37 37 39 34 39 31 37 31 35
-          32 22
-0x0105  01                                               Header ID (sec-ch-ua-mobile: ?0)
-0x0106  3d                                               Header ID (sec-ch-ua-platform: "macOS")
-0x0107  41                                               Header ID (user-agent)
-0x0108  75                                                 Value length: 117
-0x0109  4d 6f 7a 69 6c 6c 61 2f 35 2e 30 20 28 4d 61 63    Value: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.... [117 bytes total, showing 100]
+0x0069  00                                               Custom header
+0x006a  07                                                 Key length: 7
+0x006b  70 75 72 70 6f 73 65                               Key: purpose
+0x0072  08                                                 Value length: 8
+0x0073  70 72 65 66 65 74 63 68                            Value: prefetch
+0x007b  16                                               Header ID (sec-fetch-dest: empty)
+0x007c  41                                               Header ID (user-agent)
+0x007d  75                                                 Value length: 117
+0x007e  4d 6f 7a 69 6c 6c 61 2f 35 2e 30 20 28 4d 61 63    Value: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.... [117 bytes total, showing 100]
           69 6e 74 6f 73 68 3b 20 49 6e 74 65 6c 20 4d 61
           63 20 4f 53 20 58 20 31 30 5f 31 35 5f 37 29 20
           41 70 70 6c 65 57 65 62 4b 69 74 2f 35 33 37 2e
@@ -674,16 +654,36 @@ OFFSET  BYTES                                            DESCRIPTION
           47 65 63 6b 6f 29 20 43 68 72 6f 6d 65 2f 31 34
           32 2e 30 2e 30 2e 30 20 53 61 66 61 72 69 2f 35
           33 37 2e 33 36
-0x017e  00                                               Custom header
-0x017f  0d                                                 Key length: 13
-0x0180  78 2d 6e 65 78 74 6a 73 2d 64 61 74 61             Key: x-nextjs-data
-0x018d  01                                                 Value length: 1
-0x018e  31                                                 Value: 1
-0x018f  4c                                               Header ID (accept-language)
-0x0190  0e                                                 Value length: 14
-0x0191  65 6e 2d 47 42 2c 65 6e 3b 71 3d 30 2e 39          Value: en-GB,en;q=0.9
-0x019f  0f                                               Header ID (sec-fetch-mode: cors)
-0x01a0  0d                                               Header ID (accept-encoding: gzip, deflate, br, zstd)
+0x00f3  4c                                               Header ID (accept-language)
+0x00f4  0e                                                 Value length: 14
+0x00f5  65 6e 2d 47 42 2c 65 6e 3b 71 3d 30 2e 39          Value: en-GB,en;q=0.9
+0x0103  60                                               Header ID (if-none-match)
+0x0104  22                                                 Value length: 34
+0x0105  22 36 30 62 31 39 31 32 33 39 38 37 31 32 33 61    Value: "60b19123987123asdlk3a57794917152"
+          73 64 6c 6b 33 61 35 37 37 39 34 39 31 37 31 35
+          32 22
+0x0127  00                                               Custom header
+0x0128  08                                                 Key length: 8
+0x0129  70 72 69 6f 72 69 74 79                            Key: priority
+0x0131  06                                                 Value length: 6
+0x0132  75 3d 31 2c 20 69                                  Value: u=1, i
+0x0138  0f                                               Header ID (sec-fetch-mode: cors)
+0x0139  12                                               Header ID (sec-fetch-site: same-origin)
+0x013a  0d                                               Header ID (accept-encoding: gzip, deflate, br, zstd)
+0x013b  51                                               Header ID (referer)
+0x013c  1e                                                 Value length: 30
+0x013d  68 74 74 70 73 3a 2f 2f 67 68 6f 73 74 74 79 2e    Value: https://ghostty.org/docs/about
+          6f 72 67 2f 64 6f 63 73 2f 61 62 6f 75 74
+0x015b  44                                               Header ID (sec-ch-ua)
+0x015c  41                                                 Value length: 65
+0x015d  22 43 68 72 6f 6d 69 75 6d 22 3b 76 3d 22 31 34    Value: "Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"
+          32 22 2c 20 22 47 6f 6f 67 6c 65 20 43 68 72 6f
+          6d 65 22 3b 76 3d 22 31 34 32 22 2c 20 22 4e 6f
+          74 5f 41 20 42 72 61 6e 64 22 3b 76 3d 22 39 39
+          22
+0x019e  01                                               Header ID (sec-ch-ua-mobile: ?0)
+0x019f  3d                                               Header ID (sec-ch-ua-platform: "macOS")
+0x01a0  03                                               Header ID (accept: */*)
 
 0x01a1  00                                               Body length: 0
 
@@ -704,20 +704,20 @@ OFFSET  BYTES                                            DESCRIPTION
 0x0000  08                                               First byte (Version=0, Status=304)
 0x0001  52                                               Headers length: 82
 
-0x0002  79                                               Header ID (cache-control: public, max-age=0, must-revalidate)
-0x0003  8e                                               Header ID (date)
-0x0004  1d                                                 Value length: 29
-0x0005  53 61 74 2c 20 31 35 20 4e 6f 76 20 32 30 32 35    Value: Sat, 15 Nov 2025 17:16:16 GMT
-          20 31 37 3a 31 36 3a 31 36 20 47 4d 54
-0x0022  92                                               Header ID (server)
-0x0023  06                                                 Value length: 6
-0x0024  56 65 72 63 65 6c                                  Value: Vercel
-0x002a  00                                               Custom header
-0x002b  0b                                                 Key length: 11
-0x002c  78 2d 76 65 72 63 65 6c 2d 69 64                   Key: x-vercel-id
-0x0037  1c                                                 Value length: 28
-0x0038  66 72 61 31 3a 3a 41 4e 4f 4e 59 4d 49 5a 45 44    Value: fra1::ANONYMIZED_VERCEL_ID_1
+0x0002  00                                               Custom header
+0x0003  0b                                                 Key length: 11
+0x0004  78 2d 76 65 72 63 65 6c 2d 69 64                   Key: x-vercel-id
+0x000f  1c                                                 Value length: 28
+0x0010  66 72 61 31 3a 3a 41 4e 4f 4e 59 4d 49 5a 45 44    Value: fra1::ANONYMIZED_VERCEL_ID_1
           5f 56 45 52 43 45 4c 5f 49 44 5f 31
+0x002c  79                                               Header ID (cache-control: public, max-age=0, must-revalidate)
+0x002d  8e                                               Header ID (date)
+0x002e  1d                                                 Value length: 29
+0x002f  53 61 74 2c 20 31 35 20 4e 6f 76 20 32 30 32 35    Value: Sat, 15 Nov 2025 17:16:16 GMT
+          20 31 37 3a 31 36 3a 31 36 20 47 4d 54
+0x004c  92                                               Header ID (server)
+0x004d  06                                                 Value length: 6
+0x004e  56 65 72 63 65 6c                                  Value: Vercel
 
 0x0054  00                                               Body length: 0
 
