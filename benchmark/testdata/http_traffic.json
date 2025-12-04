@@ -21,8 +21,8 @@
         "content-security-policy": "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com github.githubassets.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/",
         "cache-control": "max-age=604800, public",
         "content-encoding": "gzip",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
+        "etag": "6f294489aadb2bf7737770ac63c5d270b8628f",
+        "x-github-request-id": "e6d8:b24b:837268:5e8ec:b97d5021",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "x-content-type-options": "nosniff",
         "accept-ranges": "bytes",
@@ -73,14 +73,14 @@
         "content-security-policy": "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com github.githubassets.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/",
         "content-type": "application/json; charset=utf-8",
         "date": "Sat, 15 Nov 2025 17:15:50 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "669049697f14a7b777dc29ed0f900f6c75183e",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "server": "github.com",
         "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
         "vary": "X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With",
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
+        "x-github-request-id": "54a8:5b18:d4354c:d93a6:db94be12",
         "x-xss-protection": "0"
       }
     }
@@ -320,25 +320,25 @@
         "cache-control": "max-age=0, private, must-revalidate",
         "content-security-policy": "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com github.githubassets.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/",
         "date": "Sat, 15 Nov 2025 17:15:50 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "997e89f68dd6ef28a3322270781945e1b27df7",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "server": "github.com",
         "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
         "vary": "X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With",
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
+        "x-github-request-id": "566f:cc19:6c9ae3:3a310:035d66ba",
         "x-xss-protection": "0"
       }
     }
   },
   {
-    "name": "Request 9: GET /complete/search?q=astro%aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET www.google.com/complete/search?q=astro%aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 9: GET /complete/search?q=astro%3e545ff0aff19f862d5134d08ba2991d5dc31746b83ea3d1478a9c36ec9f7e44179c5b46e5a6c2584a85b33f45beb5b510e74f0dd1e2347442a",
+    "description": "GET www.google.com/complete/search?q=astro%e0fd32dcbd872bebff6820f8540fc42c7c3405d7582cabb4f53976c0efb556ac0f3a59147a119eea6f3c4973ae980ff8fb8f17a2d812156572b - Status 200",
     "request": {
       "method": "GET",
       "host": "www.google.com",
-      "path": "/complete/search?q=astro%aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/complete/search?q=astro%7f03363f9c4723eaed799448ae894950d4b54fc50e922d371152e95cd9ae8b37066e16e6133eddb1bdab2a3579afaf30de5a04fefee6d4458ee",
       "headers": {
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -404,7 +404,7 @@
         "device-memory": "8",
         "origin": "https://www.youtube.com",
         "priority": "u=1, i",
-        "referer": "https://www.youtube.com/watch?v=aaaaaaaaaaa",
+        "referer": "https://www.youtube.com/watch?v=b0e69228549",
         "sec-ch-dpr": "1",
         "sec-ch-ua": "\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"",
         "sec-ch-ua-arch": "\"x86\"",
@@ -571,7 +571,7 @@
         "date": "Sat, 15 Nov 2025 17:15:51 GMT",
         "strict-transport-security": "max-age=31536000",
         "x-github-backend": "Kubernetes",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX"
+        "x-github-request-id": "091a:6ea3:046d2c:6f2ee:9ab15fd4"
       }
     }
   },
@@ -697,14 +697,14 @@
         "content-security-policy": "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com github.githubassets.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/",
         "content-type": "application/json; charset=utf-8",
         "date": "Sat, 15 Nov 2025 17:15:50 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "fa0d2b2ac2e61ec32461df79bd49cc43653035",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "server": "github.com",
         "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
         "vary": "X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With",
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
+        "x-github-request-id": "30f0:3843:547756:254bb:4c6dc50d",
         "x-xss-protection": "0"
       }
     }
@@ -738,14 +738,14 @@
         "cache-control": "max-age=604800, public",
         "content-security-policy": "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com github.githubassets.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/",
         "date": "Sat, 15 Nov 2025 17:15:49 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "002f8a6af8a561d287795ab9c62b2387a88450",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "server": "github.com",
         "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
         "vary": "X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With",
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
+        "x-github-request-id": "5f09:28fd:458d05:5d043:3f36ba92",
         "x-xss-protection": "0"
       }
     }
@@ -828,14 +828,14 @@
         "content-security-policy": "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com github.githubassets.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/",
         "content-type": "application/json; charset=utf-8",
         "date": "Sat, 15 Nov 2025 17:15:59 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "1733d4370e87ffd9253b4b878f5ff781342475",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "server": "github.com",
         "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
         "vary": "X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With",
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
+        "x-github-request-id": "1263:21dc:ad513a:0b2e8:1092e777",
         "x-xss-protection": "0"
       }
     }
@@ -872,7 +872,7 @@
         "cross-origin-opener-policy": "same-origin; report-to=\"youtube_main\"",
         "date": "Sat, 15 Nov 2025 17:16:54 GMT",
         "expires": "Mon, 01 Jan 1990 00:00:00 GMT",
-        "origin-trial": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "origin-trial": "c9b18783b9e67d87b71d348be8ebc2c82a4eadf3c275da4e92aa9320fd91c25807c1d48d93d7ccbda6f0b2cdf7523aeaa9606b4b76927658f634a66f34ef2e00ba86d380caf06544646d3330216ba485cbf17eab906511b8a260229c38d0187b0b0139a8024d46c595f78f22e0f95b1f654721b1ce91f6f4de17d3f3d7e0",
         "p3p": "CP=\"This is not a P3P policy! See http://support.google.com/accounts/answer/151657?hl=en-GB for more info.\"",
         "permissions-policy": "ch-ua-arch=*, ch-ua-bitness=*, ch-ua-full-version=*, ch-ua-full-version-list=*, ch-ua-model=*, ch-ua-wow64=*, ch-ua-form-factors=*, ch-ua-platform=*, ch-ua-platform-version=*",
         "pragma": "no-cache",
@@ -922,12 +922,12 @@
     }
   },
   {
-    "name": "Request 22: GET /complete/search?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET www.google.com/complete/search?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 22: GET /complete/search?q=13f000308de3fa057c7bbc084ffe5d8933dfe80e2e4e62c567f2c90d63e6db29e310cd5c2885a1055ed2c6c94d66f96414181fb9d5a82a3ae6",
+    "description": "GET www.google.com/complete/search?q=8f94b8b15ee3df7bc7f37017dd9bd2821675ac22050551b19c272d033f15f8e439cead35d1aad56a07777d2d3f8b2e862c811af4c96a00be31 - Status 200",
     "request": {
       "method": "GET",
       "host": "www.google.com",
-      "path": "/complete/search?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/complete/search?q=0e2f5b564ea9b75093f8a54f75a9e937f074dc5b0c4de1f1c6d29d241533108d0ea19efe6458838803f8249cc59c2300eed964aa6d809f2437",
       "headers": {
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -1022,11 +1022,11 @@
         "date": "Sat, 15 Nov 2025 17:16:40 GMT",
         "document-policy": "include-js-call-stacks-in-crash-reports",
         "expires": "Sat, 15 Nov 2025 17:16:40 GMT",
-        "origin-trial": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "origin-trial": "7d2626a0a8e375762d4f453f135f324c391e937551369f9155afea5fe80871fda2b548877203373b976f1ba2cdfa8f2fa8e9320f2102caf1a489313ea1a7c094bbe211f880bbbbce6250ac77cd9523e3df08a7766d49640edf4706051e8cab580c03a31294a8bc8a0cc99ca481f480ac34d03399a2d75e5890a3467a2001ab1cd59e8e2eb59318376d1c2830",
         "p3p": "CP=\"This is not a P3P policy! See http://support.google.com/accounts/answer/151657?hl=en-GB for more info.\"",
         "permissions-policy": "ch-ua-arch=*, ch-ua-bitness=*, ch-ua-full-version=*, ch-ua-full-version-list=*, ch-ua-model=*, ch-ua-wow64=*, ch-ua-form-factors=*, ch-ua-platform=*, ch-ua-platform-version=*",
         "report-to": "{\"group\":\"youtube_main\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://csp.withgoogle.com/csp/report-to/youtube_main\"}]}",
-        "reporting-endpoints": "default=\"/web-reports?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
+        "reporting-endpoints": "default=\"/web-reports?81db2f61fe1483bceb322133bb2ce835648a2251485a1b643bf35019fb537b381043bae4dd65e698e134b54962e1d0e006cb73ede3785a2a97680a48851dd0fa8596ad9545f4348c483f1ee41214b1ac0d412b4e32693844354fe3798783b93f43207345284ee59558703977141ffb9b5f538a828b5be23337ac26a78c8251f88b3d212068e322b66c3df22c985d47bdc48011d709ac222e87bd03c7adcea9e85adbf95be643ca95cd0e4fdd251054b245e8102c48cf5740bb04a88ab5be1aae83aeed14ca787acbdc4d103fa212ffc4f838b583e99a9bbd1e20c41c3add1e3c57e331c9a182f9b555625b1a4a2e232e440a4ff0721efaafeb68d4d809dadcb01aebd292ca7aa492c79bd9b0dd27cee6cb2dc7f0d6ff61a71027b56983bc281077c568125efb57a3c2e01e2e78cafb3446f898ca31128bca236c965a7a1bd8568505f2ebfd00c09513eb0b8c06686539c83ed5fb14beb7f25f731936dd654f47eba3545f7ee577049b6c44860793b3349f231395fcb904a9a57c86c30fcef9d63f2236354963aaffd8bc24e69a83a8095c1f4a4bac87c6b78088d58fbc11539000c806eb49a5edf7fe998940a758e1b32b4947d49db6d60041fa57a4403921c1211ebce2d6903453b4fe2ef1d795\"",
         "server": "ESF",
         "strict-transport-security": "max-age=31536000",
         "vary": "Sec-CH-UA-Arch, Sec-CH-UA-Bitness, Sec-CH-UA-Full-Version, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Model, Sec-CH-UA-WoW64, Sec-CH-UA-Form-Factors, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version, Sec-CH-Viewport-Width, Sec-CH-DPR, Device-Memory",
@@ -1052,7 +1052,7 @@
         "device-memory": "8",
         "origin": "https://www.youtube.com",
         "priority": "u=1, i",
-        "referer": "https://www.youtube.com/watch?v=aaaaaaaaaaa",
+        "referer": "https://www.youtube.com/watch?v=212b5063485",
         "sec-ch-dpr": "1",
         "sec-ch-ua": "\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"",
         "sec-ch-ua-arch": "\"x86\"",
@@ -1127,7 +1127,7 @@
         "content-security-policy": "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com github.githubassets.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/",
         "content-type": "application/json; charset=utf-8",
         "date": "Sat, 15 Nov 2025 17:15:59 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "166aa64dba30b64fdffb01258e8c881983a71f",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "server": "github.com",
         "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
@@ -1140,12 +1140,12 @@
     }
   },
   {
-    "name": "Request 26: GET /complete/search?qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET www.google.com/complete/search?qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 26: GET /complete/search?qa4d390b551388b444178d7c90fad9f6658469b61954cc9ea704b44580d89b9f25734edd5cb359a7bd1ec586bb4af2865c818fad5a752d63f29b41d",
+    "description": "GET www.google.com/complete/search?q587aa9f19fa63dcf26233d614651964e5eca797cdc10a2ceb89fd206ad4f1b2995b5dfce1175ddb8b737144ecf8f5ba604f6baaaa30bf96ebb98e5 - Status 200",
     "request": {
       "method": "GET",
       "host": "www.google.com",
-      "path": "/complete/search?qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/complete/search?q6c334956e3b04ef526eca6aa194ec3b5fd0f780e7180b474c7dc0f63f391bdce3830ced2572db777693fc20dff8bd6f9e7365d1ccb1243401f547c",
       "headers": {
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -1288,12 +1288,12 @@
     }
   },
   {
-    "name": "Request 29: GET /complete/search?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET www.google.com/complete/search?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 29: GET /complete/search?caedcc3d3a74413214e2336dc4bbdb18c6f8810838dfa1fb4c3e69b23e738b7225509edf82f42db3de52742dfca6feea6bb04b3fd4fdbc833fe6172abdaf2211dbb7c679",
+    "description": "GET www.google.com/complete/search?1b7fb4d7eed6f5119c7bc660dd45433141259a5a87acc08752eb9d54382732ae2e68ef2b864486cca8d3e12f7b09f1e8911cc064bd7eb7f66c0541b43abfc17c7de5fc06 - Status 200",
     "request": {
       "method": "GET",
       "host": "www.google.com",
-      "path": "/complete/search?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/complete/search?51b4e8a48f5dc5c2d4986fbebaa3a895ff5e47eb49581a467a6f15e940048b1b7d2709a573654dd5b2c730a3a56ee35e460a13b55c0f2f9e92b26d76bae0b04b88fafbee",
       "headers": {
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -1473,14 +1473,14 @@
         "content-security-policy": "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com images.ctfassets.net/8aevphvgewt8/; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com github.githubassets.com assets.ctfassets.net/8aevphvgewt8/ videos.ctfassets.net/8aevphvgewt8/; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/",
         "content-type": "text/html; charset=utf-8",
         "date": "Sat, 15 Nov 2025 17:15:43 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "7e189e6c8bc2f6098e5879195779bf18052563",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "server": "github.com",
         "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
         "vary": "X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With",
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
+        "x-github-request-id": "b506:935d:21af83:35f7e:98be76a6",
         "x-xss-protection": "0"
       }
     }
@@ -1523,7 +1523,7 @@
         "vary": "X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With",
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
+        "x-github-request-id": "c148:bc8d:19573c:812ad:57dd9f23",
         "x-xss-protection": "0"
       }
     }
@@ -1569,12 +1569,12 @@
         "date": "Sat, 15 Nov 2025 17:16:38 GMT",
         "document-policy": "include-js-call-stacks-in-crash-reports",
         "expires": "Mon, 01 Jan 1990 00:00:00 GMT",
-        "origin-trial": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "origin-trial": "6727c55f9a5d38c7d6744580d56fd9caf2bb445fc6f0315c87ec2e962be8a9db8c9702c7530fad3ed51885376af647b75f925473ce6d78cf10cc98260a476850fb4e513d4f9f6297167b6e145b4e15e185fc51cf2b6961bf8b70bd26cac2426f484a77d88714788ddf56ae52c2b1c3acc581d30898db3b9836cfe35e094ccc5a167e8a5cdc4d18c2a75611d0a34916ddc4e58865aa2d8b14faf8778ed03dde2ce2d9108c0b8bfb66948aef28f897f894910ac659be06abdb4d5b1eb85316569b905e25fd9998e99a439fb954b036d9454061c8007c13cf0316aa8112577dcd9889bd987d36ff1a5b3392d1490fd06b92a12d3bfb0bb70caf5facb93f066e2ce8378ecfcf0ba72a4e41b652828355e0488d450485e837ee075cd8a1106c2c7a50e0731d4f386c2eaa0e0dea561e9fbff6e126d470f52e9d2dc515328e4b92022a57d7d8f8bd48c28653b6fd213370f1db910c23501e966de4363714e9f9c05be44ebf41ae752957999cb39bf226ce1c93697170be9c9086f9d9ab4affda2c3febaebf1bfc20652f011678",
         "p3p": "CP=\"This is not a P3P policy! See http://support.google.com/accounts/answer/151657?hl=en-GB for more info.\"",
         "permissions-policy": "ch-ua-arch=*, ch-ua-bitness=*, ch-ua-full-version=*, ch-ua-full-version-list=*, ch-ua-model=*, ch-ua-wow64=*, ch-ua-form-factors=*, ch-ua-platform=*, ch-ua-platform-version=*, browsing-topics=(), run-ad-auction=(), join-ad-interest-group=(), private-state-token-redemption=(), private-state-token-issuance=(), private-aggregation=(), attribution-reporting=(), keyboard-map=(), idle-detection=(), compute-pressure=()",
         "pragma": "no-cache",
         "report-to": "{\"group\":\"youtube_main\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://csp.withgoogle.com/csp/report-to/youtube_main\"}]}",
-        "reporting-endpoints": "default=\"/web-reports?context=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
+        "reporting-endpoints": "default=\"/web-reports?context=e922de76af937e78a06fbb2d79aeff27f2ba0daad159979105e105bc8eedf82f175f5c3a219ce31591a0ba0f9e9a84c2d2fb7ea2cb2c8f1a1c93f83227549c15b2b4f87e84911b2496e8b1ca7e1ec450480a42d34a97f5580117f320510dcfb8b6382aaba5fcb936fd851bebdd49122c5df5a516288b83a40353c0a91b5868ab3ae463aa4db9f4943f80e05ae955ac8733d2a528b73d024cfba06fac7acfb456b06a856a8ab653d49cb047f014838f51940cfd63b36ce7e798cfe098ff3de63494a8afb1650ec23f086dba38feed12c7ac538472e67dca5de63b3273a5a7f6d6e399e0ec8a9ab4715c1885a3ac66623f0919506a4cad8ee579233b4dd5365a5782e09aa0bae5c3f47de2e5e844aead4d7af6a6b171ac411a20d991f1f6398818eb8f422b775b377d8b2033724d062399657f6435cec465356ce600edaeda277d6df5f0e1ffb3925906354f364267fb6c67d6d66d3e6ac9f36df4a89f140e3d1fb6ed0cfd4f99fb9935ee703ae8da524182c48cecc132912f0063e28aafcb582066264ed36faa334a631a258be160f304754b8252c80a985c8c1da02babe90f3a55ef01d4d89f34df84a5b4fc71d56f089d3585e01c72e4594c82b449d7537cb6f6a909fd65d8946719\"",
         "server": "ESF",
         "strict-transport-security": "max-age=31536000",
         "vary": "Sec-CH-UA-Arch, Sec-CH-UA-Bitness, Sec-CH-UA-Full-Version, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Model, Sec-CH-UA-WoW64, Sec-CH-UA-Form-Factors, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version, Sec-CH-Viewport-Width, Sec-CH-DPR, Device-Memory",
@@ -1624,7 +1624,7 @@
         "expires": "Mon, 01 Jan 1990 00:00:00 GMT",
         "permissions-policy": "ch-ua-arch=*, ch-ua-bitness=*, ch-ua-full-version=*, ch-ua-full-version-list=*, ch-ua-model=*, ch-ua-wow64=*, ch-ua-form-factors=*, ch-ua-platform=*, ch-ua-platform-version=*",
         "pragma": "no-cache",
-        "reporting-endpoints": "default=\"/_/IdentityRotateCookiesHttp/web-reports?context=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
+        "reporting-endpoints": "default=\"/_/IdentityRotateCookiesHttp/web-reports?context=f3bd758eefcf2f1bb42f91b016099acfecfb9c7d20711dd2d16fc85836aa9192c9c74141da08f723d5a37632b67b6135ad9740ea1e41ea0d41fd530172aeeff4396dd80630b53e4d\"",
         "server": "ESF",
         "strict-transport-security": "max-age=31536000; includeSubDomains",
         "vary": "Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site",
@@ -1666,14 +1666,14 @@
         "content-security-policy": "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com github.githubassets.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/",
         "content-type": "text/html; charset=utf-8",
         "date": "Sat, 15 Nov 2025 17:15:54 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "619a165df3d7df54827ed0a1ce907470a825f6",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "server": "github.com",
         "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
         "vary": "X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With",
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
+        "x-github-request-id": "aceb:b951:27d9d7:c71f6:5440a05d",
         "x-xss-protection": "0"
       }
     }
@@ -1713,15 +1713,15 @@
         "content-security-policy": "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com github.githubassets.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/",
         "content-type": "text/html; charset=utf-8",
         "date": "Sat, 15 Nov 2025 17:15:45 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "cefed62e53f1e54c585742d336e66d809384e4",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "server": "github.com",
         "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
         "vary": "X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With",
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
-        "x-html-safe": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "x-github-request-id": "b965:c2ee:9e8542:84ce6:75be93d9",
+        "x-html-safe": "649c81909469a841adf43fecaae64f3ff4d13a2c6ec3793f44f86da5940a3414",
         "x-xss-protection": "0"
       }
     }
@@ -1761,15 +1761,15 @@
         "content-security-policy": "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com github.githubassets.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/",
         "content-type": "text/html; charset=utf-8",
         "date": "Sat, 15 Nov 2025 17:15:46 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "3be76daaf8f57821fc9353505b1d89e9a4c6e0",
         "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
         "server": "github.com",
         "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
         "vary": "X-Fetch-Nonce, X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With",
         "x-content-type-options": "nosniff",
         "x-frame-options": "deny",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
-        "x-html-safe": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "x-github-request-id": "1206:008a:e9bf4f:dac8c:fe4291e5",
+        "x-html-safe": "c5a297d5b76a56ba6af8dca2f6402425597c965b4440ef92daa8b4d7af79cedd",
         "x-xss-protection": "0"
       }
     }
@@ -1815,7 +1815,7 @@
         "expires": "Mon, 01 Jan 1990 00:00:00 GMT",
         "permissions-policy": "ch-ua-arch=*, ch-ua-bitness=*, ch-ua-full-version=*, ch-ua-full-version-list=*, ch-ua-model=*, ch-ua-wow64=*, ch-ua-form-factors=*, ch-ua-platform=*, ch-ua-platform-version=*",
         "pragma": "no-cache",
-        "reporting-endpoints": "default=\"/_/IdentityRotateCookiesHttp/web-reports?context=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
+        "reporting-endpoints": "default=\"/_/IdentityRotateCookiesHttp/web-reports?context=2c52484bdcc0a32b1fd20461496d9754adbf9e3d9b07ce42692ab10f3a137bbc445b706897e81ea4fee34e20d4ccd5e80016bc55e54448da45848a704bf31f9bda1fd6f39505963\"",
         "server": "ESF",
         "strict-transport-security": "max-age=31536000; includeSubDomains",
         "vary": "Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site",
@@ -1826,19 +1826,19 @@
     }
   },
   {
-    "name": "Request 40: GET /api/stats/watchtime?ns=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET www.youtube.com/api/stats/watchtime?ns=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 204",
+    "name": "Request 40: GET /api/stats/watchtime?ns=45a71112979f37cfb99892b09363763ba31243947e174a270ec2aaf1d24e36f810f35feb9796153c634f0213d6fb418095ff32f0bb40f56a232a1d68938acb06f08f1eb25c6d46cacea198a5054b368bfe9c789f071e66af673ae1aa66ae6c8c35bf1619d5abff8280e58a9cb1f9fd741500d32ebacb874a15d7adcc43a42f8f7aa0ace353effe60eee78e18cd2ac896b9b1dbaf47692c9660986251a343965c6ac6a99c1ede1ec4fc127b50d4d025472e42d3df1dd944df81f9f262262d989edb3c7f160ac5b7216eb4dd4d40364a83837e655e6ff3db9592cbbbfc8e79f404c146662baaa9be707e62b1dadc4b089d70f2d50e81cb37ad8dd05a305da8941cbefc96a5c259ffc37591c2cc90b7b72b030e2637e89cb2516380d368850741156db82ff5e321d603a72f03c92e55bda28ef04c8605e5dd7634d4a419097f8b147faf284660507af82f360a31d1a5629e6c8283f7a1b6b3bce3b5a7776eced335fd78cf617018cefcb532e326d52c2bae4",
+    "description": "GET www.youtube.com/api/stats/watchtime?ns=90db00b073242b5a3d528b36ea13b89fe10c67cc6e034c97fac663c23e462b87304b6e3be1ec25b125807b21d2ce9d9928c582896f47c0ded0ec5699736deca130de7dbf0184a0eb8d2894ef8cbbf4a2bb267e0052734b8c1368189d6dc64065ec2c40dd25246ccc751453a2848b31844565b83691ed73e47108eb74beb50ff0072f72c24a78211666334b833719752c6557c5fe71e9fd609a6e61ccd79c00b3247b2a220e56fcd95bd47b7adabd0b209b479ca95f0c31923f99edf3f0df794917613d8b6fd585918932d1f0fb4196fccd8adff449ace0fea624722ef946db3248c2fc370e1d124975f409602d339281fcdc6fbea0e3d91e9c0d26b675047363a17f7448efe93eab81e007e4d8354ff98056aecf3ea7033542d0658ad712028cba593cdeec9d62912b7f14f293416f4318409e269608bfe79de4c58b2ffe71fe546de78282b839f993f30899d0a2843562047fc977987e30e7ff6360445e737b4a3783169846479983a356b87ed264ace - Status 204",
     "request": {
       "method": "GET",
       "host": "www.youtube.com",
-      "path": "/api/stats/watchtime?ns=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/api/stats/watchtime?ns=f62a6f3ce98e3490189062d8b82b74ca0af3ecce9809a549b1f15e4093d7b8250b329601fd1f5278e01f0673963de91780862aaa31f232105b91f376b3685394dbfbddca5b539d885961c3c556214ae79c636ccc6d7955d0a8ff53385439cc85a2555eb789ae54320b5be9f2dafe7c5634fe15df95c5d7aec605a3cd4d1dd2df462b0352189d8fa02d1017c6f2de35c03bd92cbf51387e1eee3b118bd45754f9018d0ec9d5fffb6ee20f779bee920dcce8f485746ac98d4bf22ac17f12c7d4bc8dfe87caf0e0b2ea5e3af1e9f0dfcbf1bd9a09fab1b7603b5dd2a32a557e8699d7e405d409379828e9b34265c452a2226ff228a8b40256dde16c799a74f149e53ba8a42e14ad4406ae4c52c5e503ed41da572402158336711616ab0914cdefe7418ba2f7cfc392919a49d663248bd0cfc21d296cf02fe7984c4cf82dd1ddbdb90f1827ca0d93da46b135acc422036328b03e73de23f36c66ad0321117e942e62be23c3a57cf18cbbd63f832861b66eedf",
       "headers": {
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
         "accept-language": "en-GB,en;q=0.9",
         "device-memory": "8",
         "priority": "u=1, i",
-        "referer": "https://www.youtube.com/watch?v=aaaaaaaaaaa",
+        "referer": "https://www.youtube.com/watch?v=da47ae3a7b9",
         "sec-ch-dpr": "1",
         "sec-ch-ua": "\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"",
         "sec-ch-ua-arch": "\"x86\"",
@@ -1859,7 +1859,7 @@
         "x-goog-event-time": "1763227009995",
         "x-goog-request-time": "1763227009995",
         "x-goog-visitor-id": "ANONYMIZED_VISITOR_ID",
-        "x-youtube-ad-signals": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "x-youtube-ad-signals": "9de8681e3f7e3c68bcfac344f04f135e8cf2cb304442cd0d9c5c834b36b66a52881d2e928be6682511e494f2582f1c29686267cdc458d82301146777a05c4327eb6bbeda19d516105dfcb772681ce9356db193e76cfabdce6537e3395c6e437928e08535418ad3",
         "x-youtube-client-name": "1",
         "x-youtube-client-version": "ANONYMIZED_CLIENT_VERSION_10",
         "x-youtube-device": "cbr=Chrome&cbrand=apple&cbrver=142.0.0.0&ceng=WebKit&cengver=537.36&cos=Macintosh&cosver=10_15_7&cplatform=DESKTOP",
@@ -1920,7 +1920,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:45 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "b1d2fff6fdb566aade8a2",
         "last-modified": "Thu, 13 Nov 2025 20:08:10 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -1967,7 +1967,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:45 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "5642b354ca63a780ddf08",
         "last-modified": "Thu, 13 Nov 2025 20:08:11 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -1976,7 +1976,7 @@
         "x-cache": "HIT, HIT",
         "x-cache-hits": "69, 1778",
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_3",
-        "x-served-by": "cache-aaaaaaaaaaaaaaaaaaa, cache-aaaaaaaaaaaa"
+        "x-served-by": "cache-cebcccd3e618a68cddd, cache-518ba6004383"
       }
     }
   },
@@ -2002,7 +2002,7 @@
       "headers": {
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_4",
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "3fad2ed72bcdc6a3b7914",
         "age": "157773",
         "x-cache": "HIT, HIT",
         "date": "Sat, 15 Nov 2025 17:15:44 GMT",
@@ -2056,7 +2056,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:45 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "11f118d92536271597a57",
         "last-modified": "Thu, 13 Nov 2025 20:08:13 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -2103,7 +2103,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:54 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "123848d61267ddae2a383",
         "last-modified": "Thu, 13 Nov 2025 20:08:13 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -2138,7 +2138,7 @@
       "headers": {
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_7",
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "ebc12060df8aa4a418ec3",
         "age": "157772",
         "x-cache": "HIT, HIT",
         "date": "Sat, 15 Nov 2025 17:15:43 GMT",
@@ -2178,7 +2178,7 @@
       "statusCode": 200,
       "headers": {
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaa",
+        "etag": "d08ee3f38d1de8f63",
         "expect-ct": "max-age=0",
         "x-content-type-options": "nosniff",
         "expires": "Thu, 05 Nov 2026 12:52:13 GMT",
@@ -2231,7 +2231,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:46 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "2dbe29f9796276a28f856",
         "last-modified": "Thu, 13 Nov 2025 20:08:00 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -2313,7 +2313,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:43 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "78f19a1dba9dab05871ff",
         "last-modified": "Thu, 13 Nov 2025 20:08:02 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -2360,7 +2360,7 @@
         "content-length": "962",
         "content-type": "application/javascript; charset=UTF-8",
         "date": "Sat, 15 Nov 2025 17:16:31 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "3df26a723ff0b0a23bae053580088642822bae9eb35",
         "server": "Netlify",
         "strict-transport-security": "max-age=31536000",
         "vary": "Accept-Encoding",
@@ -2402,7 +2402,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:55 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "1843cf3247a2b6e68beae",
         "last-modified": "Fri, 14 Nov 2025 18:01:15 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -2437,7 +2437,7 @@
       "headers": {
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_12",
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "4ef48f1edfe71f8051d1a",
         "age": "96462",
         "x-cache": "HIT, HIT",
         "date": "Sat, 15 Nov 2025 17:15:46 GMT",
@@ -2491,7 +2491,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:45 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "3e5143fcfaa62ae13e14d",
         "last-modified": "Thu, 13 Nov 2025 20:08:22 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -2526,7 +2526,7 @@
       "headers": {
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_14",
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "bb7cc481609ea15a422aa",
         "age": "157773",
         "x-cache": "HIT, HIT",
         "date": "Sat, 15 Nov 2025 17:15:44 GMT",
@@ -2580,7 +2580,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:44 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "964de39a43d6bae778915",
         "last-modified": "Thu, 13 Nov 2025 20:08:12 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -2615,7 +2615,7 @@
       "headers": {
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_16",
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "a7004342be03c515780ee",
         "age": "157773",
         "x-cache": "HIT, HIT",
         "date": "Sat, 15 Nov 2025 17:15:45 GMT",
@@ -2669,7 +2669,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:46 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "9f4061107efb4b1411209",
         "last-modified": "Fri, 14 Nov 2025 19:28:18 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -2704,7 +2704,7 @@
         "cache-control": "public,max-age=31536000,immutable",
         "content-encoding": "br",
         "x-vercel-cache": "HIT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "035b6532eded923d49c980b7db749016d475",
         "age": "1358350",
         "x-matched-path": "/_next/static/qcPKpvHcKq6nT9zVikeiO/_buildManifest.js",
         "accept-ranges": "bytes",
@@ -2741,7 +2741,7 @@
         "cache-control": "public,max-age=31536000,immutable",
         "content-encoding": "br",
         "x-vercel-cache": "HIT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "b14b94af114ed56528ba7ab8ec0ceb4ef6a9",
         "age": "1341277",
         "x-matched-path": "/_next/static/chunks/framework-e54b663a2888b5de.js",
         "accept-ranges": "bytes",
@@ -2790,7 +2790,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:54 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "19dc67f941b96bf6a66fd",
         "last-modified": "Thu, 13 Nov 2025 20:08:04 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -2834,7 +2834,7 @@
         "content-security-policy": "default-src 'none' ; connect-src  https://duck.ai https://*.duck.ai https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com ; manifest-src  https://duck.ai https://*.duck.ai https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com ; media-src  https://duck.ai https://*.duck.ai https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com ; script-src blob:  https://duck.ai https://*.duck.ai https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com 'unsafe-inline' 'unsafe-eval' ; font-src data:  https://duck.ai https://*.duck.ai https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com ; img-src data:  https://duck.ai https://*.duck.ai https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com ; style-src  https://duck.ai https://*.duck.ai https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com 'unsafe-inline' ; object-src 'none' ; worker-src blob: ; child-src blob:  https://duck.ai https://*.duck.ai https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com ; frame-src blob:  https://duck.ai https://*.duck.ai https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com ; form-action  https://duck.ai https://*.duck.ai https://duckduckgo.com https://*.duckduckgo.com https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/ https://spreadprivacy.com ; frame-ancestors 'self' https://html.duckduckgo.com; base-uri 'self' ; block-all-mixed-content ;",
         "content-type": "application/x-javascript",
         "date": "Sat, 15 Nov 2025 17:16:07 GMT",
-        "etag": "aaaaaaaaaaaaaaaaa",
+        "etag": "822cf53354846148f",
         "expect-ct": "max-age=0",
         "expires": "Sun, 15 Nov 2026 17:16:07 GMT",
         "last-modified": "Thu, 13 Nov 2025 14:49:21 GMT",
@@ -2883,7 +2883,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:45 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "7984fe040f3ec95faeeeb",
         "last-modified": "Thu, 13 Nov 2025 20:08:06 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -2897,12 +2897,12 @@
     }
   },
   {
-    "name": "Request 64: GET /xjs/_/js/k=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET www.google.com/xjs/_/js/k=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 64: GET /xjs/_/js/k=66f1d1cedaaa390c9de86213877a871ab622551ad257955678487d414ff205103d178735a29935c983b94eff3cf9b8c7b4bf1d28ae71d625b2c519c01b96590723c011068671db4164da2bf029ca724ce4dc5f5016093604e2e7adcbfae06b2ee3527be0b7802305c8fe2958f14c175a15f3b402ce95fb6863154ad4a9620116b049a64078c59bf1d975d81a68ef608a43a77c57d8d6f1256b5509f6b82429fdaf41e41258566af3b8f40e442508946f6ff01d319fbfabfe45cebaa4624fc2909a02fa7aae0296e82d4317f31d3b223c7dcd428e152d2319c886e0ed785dd6fa80bb38c602086d6f50499425553b2c22ba6bba835c5ceb4589e0b0c2c4f328ab982b795e90d124dc45c172df9562161bd9f7cbc7da61d9f99e73fd66f829bab402ebfcae473a0be46eda6ecbf489a55e9565ac054481d47508036ee35cde7ee6f457d854bc8abb1c4321bf7f82b473331df76a0b1101658eb0032ed5d0662e9bc06b075b780a14c1af2f94777b919621015af02308947af7544a08dabebb57f4d27cba110d964091e5506702e0e15f90482ecb1c1bdad56a9b3649b218ba7c6d585c60fefe29443edf042da3022f6aaf49abbecf5dbb84f",
+    "description": "GET www.google.com/xjs/_/js/k=d6f1e15eed52559cceae3a9c3c6d58f826748c9a522f5728002cce0740da2c8eed92f4c5645dceb8d98bf7fd447ae6809e926dec8d7b9771a167254363ba3f141e3551d0e07c0d3ce4427a7b9a2d2d48741db444fc9991f7d0b6f7194eda77d645fc4612d9126e6b80e9dd006aaaad6e2f4ca2778c615dffd1e874b13de417e1a096d05b7706dc6029135a4b56561a1df963e6f2d31c40299dcb291f7ea3a52f26958dab7df3dd10ea3bc8a30c98eeac8df7c575075a396cab3b8e706333745a82b1b3de1c8277d9076204ff3a9a0ebdae9ffa5581cd6fd2698ebe9f3c9d1ce60894317ac9de21873aed0c622ea673a43dc7dd34a95d8a94700613202e4da13da6b5971ef19fb579f4d4bbf9de9be9df54008abc63c6784953a181bc802cf0f7ec5918caf6747e1fae479f877cd70f2a963c12908a2280740bd7cc4daa10e098c1dc8df39381128d575b50edc9228b488954fa8f084b1860e6c3c7f49d0db0682f4773c8d64e3b2cd79afa8fb596f08eb2b7fce088c40c214595bc756076ddab67bf0880952bba40ac517b17268ed610e25b8acb39c7ad6d381ad3799e3f9924865fb6c32fb067c1319655045ebdf828bb7567a08c7cfdc - Status 200",
     "request": {
       "method": "GET",
       "host": "www.google.com",
-      "path": "/xjs/_/js/k=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/xjs/_/js/k=cdeecb1fbe428dffd752cdc77cee75684fa0dd119c3c1abea52cec0f667176bd93d0e05435bb54a2849ee51a1261236fc84ca64ddee40660046a2ba348d227540a592e8c66f2012db84aaed40aba2385a119e6a08be2dd8fbcc5aaf61ad64776ca67e562d722643fd3f7b59b67bc710e65dd5ca7a0165eeb029b405ffc314d22ac7ee57f11403edf6bc9c8b8d7d376e47c4366b22c8eb68590306be2659dbcfaa4b5f4156a07fed59f2a01deacc346b570d114e3d144211cd3bb1af1afcf22f7bca421bd8739eda5dd20af6dca25f05924ec8033ac04e733d5405d07865d1d94b8a4f6f289cb8df9e3b647187acca0909ae28786442a4b3c1420b665228aec709ae713b0438cce7e4ee9e8a97f5af765bc09f0514bd2664927302e813e73565ce91591421d2f01ab9404da274a9b09408768eca0bc1c4bcd966a0f67696ddf11d600724c3c005872edc975899e008643776223bdb231e33deacfcd21c50a79914718f2f561cab7bf59c1d3ec84f3f88df9d6a40c0aed8492acda65479ba625262356a080dc0c0c7b423510b007a760998265029176ee94a213f9627a1adc494ef2d7c3e19dec3bbf7bb3ae2a0273ae4fc63129a9ce582ba",
       "headers": {
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -2987,7 +2987,7 @@
         "content-type": "application/javascript",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:44 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "42e10fa6841a473f89981",
         "last-modified": "Thu, 13 Nov 2025 20:08:10 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -3022,7 +3022,7 @@
       "headers": {
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_21",
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "af2381ae16eae6d81fcdc",
         "age": "541003",
         "x-cache": "HIT, HIT",
         "date": "Wed, 05 Nov 2025 12:52:29 GMT",
@@ -3132,7 +3132,7 @@
         "content-type": "text/css",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:49 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "b167771d503028b76ee64",
         "last-modified": "Thu, 13 Nov 2025 20:08:05 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -3167,7 +3167,7 @@
       "headers": {
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_23",
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "4e18fd7107f6874f1265c",
         "age": "6111748",
         "x-cache": "HIT, HIT",
         "date": "Wed, 05 Nov 2025 12:53:55 GMT",
@@ -3221,7 +3221,7 @@
         "content-type": "text/css",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:43 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "e610e9d36729f29cad081",
         "last-modified": "Thu, 13 Nov 2025 22:21:40 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -3269,7 +3269,7 @@
         "content-type": "text/css",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:43 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "b205168c1f3239d3d3ce8",
         "last-modified": "Thu, 13 Nov 2025 22:21:34 GMT",
         "server": "Windows-Azure-Web/1.0 Microsoft-HTTPAPI/2.0",
         "strict-transport-security": "max-age=31536000",
@@ -3304,7 +3304,7 @@
       "headers": {
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_26",
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "0ccf256136d00a6234f1f",
         "age": "157775",
         "x-cache": "HIT, HIT",
         "date": "Sat, 15 Nov 2025 17:15:46 GMT",
@@ -3346,7 +3346,7 @@
       "headers": {
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_27",
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "a974631901a7b1583673d",
         "age": "541003",
         "x-cache": "HIT, HIT",
         "date": "Wed, 05 Nov 2025 12:52:29 GMT",
@@ -3387,7 +3387,7 @@
       "headers": {
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_28",
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaaaaa",
+        "etag": "8fed010f81a1721341bca",
         "age": "157778",
         "x-cache": "HIT, HIT",
         "date": "Sat, 15 Nov 2025 17:15:49 GMT",
@@ -3458,12 +3458,12 @@
     }
   },
   {
-    "name": "Request 76: GET /vi/XXXXXXXXXXX/oardefault.jpg?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET i.ytimg.com/vi/XXXXXXXXXXX/oardefault.jpg?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 76: GET /vi/5e45f81bfe0/oardefault.jpg?c10e299717ce36add6d44c813560b0f30374a289e5f1ebfcdf2a430148e4caf31b4f2d9fa9b7de748532c514ec6f649f1ce8f1f0dc",
+    "description": "GET i.ytimg.com/vi/eb4ac18a0f0/oardefault.jpg?eca813e7adde23b51741eb1cdf245741503d51842f86f27c810b9e7b1ac7c3469f5389ca7f8ee521e39f28874e3816884341916614 - Status 200",
     "request": {
       "method": "GET",
       "host": "i.ytimg.com",
-      "path": "/vi/XXXXXXXXXXX/oardefault.jpg?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/vi/cc5750c8da6/oardefault.jpg?d49abbd50a6b93acc776517d14f17d9fe3bfa7710f26ed3debfba136cd553a44694f71d4087c18635b8301bd01e59a7956fc8b7148",
       "headers": {
         "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -3501,7 +3501,7 @@
         "cross-origin-opener-policy-report-only": "same-origin; report-to=\"youtube\"",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:12:47 GMT",
-        "etag": "aaaaaaaaaaaaaa",
+        "etag": "8fab41ed1a0bf5",
         "expires": "Sat, 15 Nov 2025 19:12:47 GMT",
         "report-to": "{\"group\":\"youtube\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://csp.withgoogle.com/csp/report-to/youtube\"}]}",
         "server": "sffe",
@@ -3531,7 +3531,7 @@
       "statusCode": 200,
       "headers": {
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaa",
+        "etag": "00c580da8f97643984",
         "expect-ct": "max-age=0",
         "x-content-type-options": "nosniff",
         "expires": "Thu, 05 Nov 2026 12:52:13 GMT",
@@ -3550,12 +3550,12 @@
     }
   },
   {
-    "name": "Request 78: GET /vi/YYYYYYYYYYY/oardefault.jpg?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET i.ytimg.com/vi/YYYYYYYYYYY/oardefault.jpg?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 78: GET /vi/YYYYYYYYYYY/oardefault.jpg?3b7a5fd02a2f325328dca5a5196331770d68f2f6a6fee74431a71491db0da6e3480d9f610b51c6f290a26ae9c078d9cefbdceedf7b",
+    "description": "GET i.ytimg.com/vi/YYYYYYYYYYY/oardefault.jpg?b33048024b8baceb3d0be0a4f118c0fcb9c0088d5466b68b64e9493927f41bb26020d937db191eae75b75c7dc3d966ad7c7c749aa0 - Status 200",
     "request": {
       "method": "GET",
       "host": "i.ytimg.com",
-      "path": "/vi/YYYYYYYYYYY/oardefault.jpg?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/vi/YYYYYYYYYYY/oardefault.jpg?6137cfc4c8fc7b161e8d5829c6e6f0c669ff7f6d17c3af70af7c50eb4f549d291f9d1381e4ff60b713fc1bbb4252a8be562c6ff100",
       "headers": {
         "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -3592,7 +3592,7 @@
         "cross-origin-opener-policy-report-only": "same-origin; report-to=\"youtube\"",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:16:43 GMT",
-        "etag": "aaaaaaaaaaaaaa",
+        "etag": "f4a7b4d9520119",
         "expires": "Sat, 15 Nov 2025 19:16:43 GMT",
         "report-to": "{\"group\":\"youtube\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://csp.withgoogle.com/csp/report-to/youtube\"}]}",
         "server": "sffe",
@@ -3603,12 +3603,12 @@
     }
   },
   {
-    "name": "Request 79: GET /vi/ZZZZZZZZZZZ/oardefault.jpg?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET i.ytimg.com/vi/ZZZZZZZZZZZ/oardefault.jpg?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 79: GET /vi/ZZZZZZZZZZZ/oardefault.jpg?96e6d8bf5e7773ac115dec4ce569a557160d47fba92649ec8d7d452636b443cb4c66d35a310b10ee3b33fdf627089fbac45f4e8d6d",
+    "description": "GET i.ytimg.com/vi/ZZZZZZZZZZZ/oardefault.jpg?be8b4bf68664581ea9779e96987f914af75d1d6fff05504829453037e706705ca851d997e332287bbdb40453395176bc58a141c44b - Status 200",
     "request": {
       "method": "GET",
       "host": "i.ytimg.com",
-      "path": "/vi/ZZZZZZZZZZZ/oardefault.jpg?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/vi/ZZZZZZZZZZZ/oardefault.jpg?7ce1a671434ce40c9d7744e85e461def9bb8826840c696ee0f47de675294d792c89ed50c8a9acb8855c515e7ef62eef1f77374b32b",
       "headers": {
         "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -3646,7 +3646,7 @@
         "cross-origin-opener-policy-report-only": "same-origin; report-to=\"youtube\"",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 16:57:34 GMT",
-        "etag": "aaaaaaaaaaaaaa",
+        "etag": "ed0bb2349d5cda",
         "expires": "Sat, 15 Nov 2025 18:57:34 GMT",
         "report-to": "{\"group\":\"youtube\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://csp.withgoogle.com/csp/report-to/youtube\"}]}",
         "server": "sffe",
@@ -3657,12 +3657,12 @@
     }
   },
   {
-    "name": "Request 80: GET /ogw/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET lh3.googleusercontent.com/ogw/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 80: GET /ogw/1c14c8d14fa8b6adef8073d7b919c895d80375e0f647179b349f582ce025",
+    "description": "GET lh3.googleusercontent.com/ogw/9d2895d5efcee492f58c0431b7ce309b60c1f4d15b5bdb491ac853805983 - Status 200",
     "request": {
       "method": "GET",
       "host": "lh3.googleusercontent.com",
-      "path": "/ogw/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/ogw/4d64d8b80e72a3667ab8c8a3eb18a61c78a23db972d9d31b76527098185c",
       "headers": {
         "sec-ch-ua-platform": "\"macOS\"",
         "referer": "https://www.google.com/",
@@ -3713,7 +3713,7 @@
         "sec-ch-ua-arch": "\"x86\"",
         "sec-ch-ua-full-version": "\"142.0.7444.162\"",
         "downlink": "10",
-        "referer": "https://www.google.com/search?q=astro+docs&aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "referer": "https://www.google.com/search?q=astro+docs&719c74c14c80047a8498d505b069da24b8252c62c9f4c547e758b676fd79022af1fd19db054f75139ef9d96a30e8416773e82473298726477d50705731455b0f3e46884335c460aa77c537ad465613ca6e14ef11eb797a84f86a352e1af1ee1e245bb57225c73d21ae6f91bd0e22d19e8b5fec1fbcbeb4d483bb4060294b4a59307aa2ed33eb62b558ea17c374ef4adc33ee851b0be9006831cfa12e56c1ca4e3204ec7c30d5fe2021b58e5805b5e89d6d3b64f201c2ed0f9933bcdcc608c6437cb38ab6e75a9ea3f6838c5c21b5a9be28c2ede43f878e59fd4649f3dc6a2d5428e2394cdc730f8a4d59ee70ee0c2dd3f88b50262f368c18fa0b6ea63f81f9ac8d7bd3ab5512d474dbfa8e592b1d36238191bef097602a313309afd570bcb4fb163dc3bf79f9da3e386c96a2ffde515360ef3a6f0f268dd2a438fb96de33b557fcd9e1db5dd9be74550a45cab01f",
         "accept-language": "en-GB,en;q=0.9",
         "sec-ch-prefers-color-scheme": "dark",
         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
@@ -3775,7 +3775,7 @@
         "content-type": "image/png",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:48 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "72b566113f67cfdc79614a3ca2a02029238e4ba40b146ab3bf865c34d0a6edc40b15",
         "expires": "Sat, 15 Nov 2025 17:20:48 GMT",
         "last-modified": "Tue, 18 Apr 2017 11:12:12 GMT",
         "source-age": "1632",
@@ -3788,7 +3788,7 @@
         "x-content-type-options": "nosniff",
         "x-fastly-request-id": "ANONYMIZED_REQUEST_ID_29",
         "x-frame-options": "deny",
-        "x-github-request-id": "XXXX:XXXX:XXXXXX:XXXXX:XXXXXXXX",
+        "x-github-request-id": "f290:ce31:62e945:92de9:a0bb8cbf",
         "x-github-tenant": "",
         "x-served-by": "cache-muc13937-MUC",
         "x-timer": "S1763226948.019649,VS0,VE1",
@@ -3816,7 +3816,7 @@
       "statusCode": 200,
       "headers": {
         "content-encoding": "br",
-        "etag": "aaaaaaaaaaaaaaaaaa",
+        "etag": "ce0e91174b93787aa4",
         "expect-ct": "max-age=0",
         "x-content-type-options": "nosniff",
         "expires": "Thu, 05 Nov 2026 12:52:13 GMT",
@@ -3835,12 +3835,12 @@
     }
   },
   {
-    "name": "Request 84: GET /images?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET encrypted-tbn0.gstatic.com/images?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 84: GET /images?q=2e777628399f6ee83f301c189d60af645da162b6cb2f752f99366a99",
+    "description": "GET encrypted-tbn0.gstatic.com/images?q=9dec2807305f1d78111581695d642632e102b0723bde35d306f68bad - Status 200",
     "request": {
       "method": "GET",
       "host": "encrypted-tbn0.gstatic.com",
-      "path": "/images?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/images?q=b9e1b92de30eeeaa7c09ac33e5e3fa64d68d2252f7a842f10bc53701",
       "headers": {
         "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -3881,12 +3881,12 @@
     }
   },
   {
-    "name": "Request 85: GET /vi/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET i.ytimg.com/vi/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 85: GET /vi/2fdf88c247df9e5c21c868efb1671f246f5cd75d5c106145334474eb7dc71d1d18a98f55d612c7b4af0b13a9359988902b8ca36163cc417e99c96472398c61ea",
+    "description": "GET i.ytimg.com/vi/8fcfa7c5c69b84a06c07485ebf8cca714b27c45b508cf06d90eed456f1e355a1ff472b0ed5263ca48842bf078c2d17ed35dbc3b9b9294f1a9abd7eb2f64b401c - Status 200",
     "request": {
       "method": "GET",
       "host": "i.ytimg.com",
-      "path": "/vi/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/vi/81a679dbbd2aa275c708ff1a11ed310b690fb9ac0529b4476d946804dfefb38524520d42093b3de18d063863741c960071969879e973aa849dde9286535acfff",
       "headers": {
         "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -3924,7 +3924,7 @@
         "cross-origin-opener-policy-report-only": "same-origin; report-to=\"youtube\"",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:16:48 GMT",
-        "etag": "aaaaaaaaaaaaaa",
+        "etag": "7c1674938f8d2a",
         "expires": "Sat, 15 Nov 2025 19:16:48 GMT",
         "report-to": "{\"group\":\"youtube\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://csp.withgoogle.com/csp/report-to/youtube\"}]}",
         "server": "sffe",
@@ -3935,12 +3935,12 @@
     }
   },
   {
-    "name": "Request 86: GET /vi/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET i.ytimg.com/vi/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 86: GET /vi/67a0551f3e43f792d01f40adb46dcd2dafe76c7c19e78d27c1191460a5d6bb5a6b60e859daf68ebc5a5388632f2412d7966fed87e6dceee59c700d1d7fd2",
+    "description": "GET i.ytimg.com/vi/ff5c97002b49386c8423e2e3c68cbe2ee9c6feba10e62cd0838de6b12668ffe0094403199561fcb864bf7dcf7835603625a72337c38be0c004ffcaff8956 - Status 200",
     "request": {
       "method": "GET",
       "host": "i.ytimg.com",
-      "path": "/vi/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/vi/735c94197487e905e1db82798bd58d194b7b11a1af2df9d041be6fc80779262560e3d8ca5faf37f8cec736d7c169927c2ca7ac27faaedf52c5ca178df234",
       "headers": {
         "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -3978,7 +3978,7 @@
         "cross-origin-opener-policy-report-only": "same-origin; report-to=\"youtube\"",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 16:21:18 GMT",
-        "etag": "aaaaaaaaaaaaaa",
+        "etag": "b274dbe58895e0",
         "expires": "Sat, 15 Nov 2025 18:21:18 GMT",
         "report-to": "{\"group\":\"youtube\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://csp.withgoogle.com/csp/report-to/youtube\"}]}",
         "server": "sffe",
@@ -4001,7 +4001,7 @@
         "accept-language": "en-GB,en;q=0.9",
         "downlink": "10",
         "priority": "i",
-        "referer": "https://www.google.com/search?q=astro+docs&aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "referer": "https://www.google.com/search?q=astro+docs&eed130b005cc154390b03dce66a2077f31eecaa624c91bf9f2c8a4618b6d5f40ebf13f378e6663887b555f97e121601048fed75650fd8babd489e7f682ec939be38daa7eb3f8b735d018c553e16215ad13e7ccdf57945fcc00de8a460e7dc69bc15599eb17fd0dba46ad6905fa3c98d19c2c2a7d297cd636386bbb0812205fcf3b9fc5bc37348a27e62bb6c63a3a3c5f961852ea03b4a632a761af41f828f66a9af6f817ea889067cb508f9d665ef63635b6dce8ef6b08a5607fab4b9255b5dd67259a695fa82772da48597d627e59b02cc6599bf10a1548cfb89838df7f80eb1c813cca871ba7e86970ca01588fc6478709d182ff5144653b4921aaf3715f660d18f7076015d1a60d7f1390e1e2ced897fab3b1bcfc5f5ea6d3c122641b9f3bcb8abe9360b67e3da80caa9b071d06eca3a65efb8d01dbbadb40000e50741e941e6f15d20c89fc7da96511d179c6",
         "rtt": "50",
         "sec-ch-prefers-color-scheme": "dark",
         "sec-ch-ua": "\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"",
@@ -4042,12 +4042,12 @@
     }
   },
   {
-    "name": "Request 88: GET /images?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET encrypted-tbn0.gstatic.com/images?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 200",
+    "name": "Request 88: GET /images?q=d8d1fc1286298a626c7e23245a8069c9341d504f5aeb98895fda42c13efeb12123abf",
+    "description": "GET encrypted-tbn0.gstatic.com/images?q=4f85a7e2308c5235b23c8f29120f567f4bc433b4e15e3ecebb81e585da8f6727aa582 - Status 200",
     "request": {
       "method": "GET",
       "host": "encrypted-tbn0.gstatic.com",
-      "path": "/images?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/images?q=f8a271a1942212ba97910d1d1ee97b61fd15ecde6d4ebceee60a422db25f64e5c0d96",
       "headers": {
         "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -4088,12 +4088,12 @@
     }
   },
   {
-    "name": "Request 89: GET /ytc/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET yt3.ggpht.com/ytc/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 304",
+    "name": "Request 89: GET /ytc/d2fb0a777121cc4b8aafb35d99749c4240a3a79a745569f643eb290469ca6c3882f55b34f7f9d",
+    "description": "GET yt3.ggpht.com/ytc/27a0793f9bf6c6f9bd0865720fb321b10016c8b5c1a37d9dfa6f6e7de4ea5be441c4ccb1dc5d5 - Status 304",
     "request": {
       "method": "GET",
       "host": "yt3.ggpht.com",
-      "path": "/ytc/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/ytc/d892f06b3ebec5de5f3a222c443c9eb67f6b797b4bdf016607b8f48aaa61e1c8747bfdb39d1cb",
       "headers": {
         "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -4167,7 +4167,7 @@
         "content-type": "image/jpeg",
         "cross-origin-resource-policy": "cross-origin",
         "date": "Sat, 15 Nov 2025 17:15:48 GMT",
-        "etag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "etag": "e7e169ce36fc2ea83268a5f6c18868e68fd1e177bfe6de78faf37fefa7dc5fef8aab",
         "expires": "Sat, 15 Nov 2025 17:20:48 GMT",
         "last-modified": "Fri, 19 Feb 2021 18:01:39 GMT",
         "source-age": "91416",
@@ -4183,18 +4183,18 @@
         "x-github-request-id": "ANONYMIZED_REQUEST_ID_31",
         "x-github-tenant": "",
         "x-served-by": "cache-muc13937-MUC",
-        "x-timer": "aaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "x-timer": "1b7d1e89ab50d9f0f318fd02b3",
         "x-xss-protection": "1; mode=block"
       }
     }
   },
   {
-    "name": "Request 91: POST /t/ias_videos?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "POST improving.duckduckgo.com/t/ias_videos?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 0",
+    "name": "Request 91: POST /t/ias_videos?9a79c66252a723e833e8dc11c054da8f2884b713dee814f4ca6c2e37a179c8b1043d9df1ba0ecfb1c901c3da298d30bf77f0396267313d5f9dbbc614201874121b174b7a4d93b9aab97e8052715f3e085bcfd9e02ba10b927364beff89f3d729aa7e3c8262b1a08792eb068dc227745f03ce5f298a5c4b524c9c3e7485a0e2448ae94de763843ec8830b94fb4e4763bc91b3b66b443c1f5c762ab41fc2030caf3365479eac710bc5d5706e8a82f8044bf0b0323d51a42fe5faca380e7fdb950cf62a52bc5b522010febbd161758f534477b648c3a87e52cc0897fd5833558c2ba2ee2d897ee4902bdec6d3f95c19ec719b4362de3dba70d93632c8d0c47cdaf215dc66026a101c2d90042fd254a03993d6707b2b0967bb4211e1d6107cf2432c05e4a62",
+    "description": "POST improving.duckduckgo.com/t/ias_videos?0fa7cfbeecccd9862151e0240932a257bbe914cb098b528aacfe48d9d578c8f0d5ca53fe6e03db05afc24e71852dcb0fc3aaed22a54cb02fd0a39d17f5122507f13007569d5e9b0de6be49832b7755fa4e2396a3c37c17a0781d0741cbe2d51ea982197ca5867a6e01ae52170df612f3c9f7a9131caefafee8a27e150efbbcd7a247e5a94392a21558834d8aac73664ff33976681207e531da8ff80e13cbf3922f5eb2e43e0b10f11d62eca0acc22bcb899765887fff4a747f50595ede659dadf0dbeebd4bc68c991844b6195777843d3d97d9e1c07ae30cf8852b0eccfeec46e6931e25d1965c581d83d3a654d64c6998154a79d699a93296fa90491b6a002d2fa4a2b5dab448964cecaf343e7eff76e79c02c6c1272858734ffe3b99f3fc60871098c - Status 0",
     "request": {
       "method": "POST",
       "host": "improving.duckduckgo.com",
-      "path": "/t/ias_videos?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/t/ias_videos?9522fe57ed9fca79e2c9c131b20a53837202c34c614340c2fb633981d7e5e0b04e8607a5af5588ed69a1f786f6d5759c75cb35d1abb174b8880195049d94a3ac3fcf455c73e610dbc8ae757aea88e6a9b327ba3b391fdbf4f1520d045933f5011285aeb76dd89d8df0b1d74d04c8ce486646170daf5325caccf51d266f728e0196fe0afbcceecc96fd6e50d80f196c76c4d48ad2db6f06fcbf495907ee4095ea55e1e15b954a583d721e3327c187d47d1689a3d9f37b3aa44a0d40a16074ecf1d3eef8bb4faeac8766dc8f3aa64624e9c2f9a70f839e58b502689a973a4db2436823bf26826feda8301d2b1dd51dc83d7aa0510849e9b4ea1300357698016b7d2e943c4b65bbf4ca1e164521560ccf7db8d6609416a1d8549c483c8031cdcb6568ce755",
       "headers": {
         "sec-ch-ua-platform": "\"macOS\"",
         "referer": "https://duckduckgo.com/",
@@ -4287,12 +4287,12 @@
     }
   },
   {
-    "name": "Request 94: GET /api/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET www.youtube.com/api/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 0",
+    "name": "Request 94: GET /api/16f63772b109e55e1fbc3a64e8f510bf7561f393d5b6621eb84e1075683146b45b61b2bc015ad795d2c58462b85e39fe4179073c1f51a2c1f8cbfbad43d6c04f670d2299e6ee2884833dc2e4bd2e37ff338a44d22a2c0380cd5ff9494060de48f5a6df1d3fe4c32857f2f54055fce7e14345a46c68db639543906b661464f0e53a8573a04d51ae919708c1056abac18c388ece3eff5038f9136ee7c7e72b3fe16789e6f1827ec3ff52e3a7e38bcb7231b7f6a8cc6834602932873029934d15698d86759efb34756d04b4e8c1d5824840e6c0c9d68dd5e7c82604fc2f2d3280c729018ef66f53795ab381b10f17d365e1a7c42fae891a93d88232d70f0bd4714ef2d957ce0e8dc19303ee63176fe700af046de67ff5a360e9a41f2430d79cae8ecf05684232eee029137b7116e577254e556b57d780ca7c696d",
+    "description": "GET www.youtube.com/api/ece0c8d652b1ce31cc31844aeff4383da72afbc37e9b528f20b1a7efd8a229829d948f7c564ca762e585cf1358d904b065ce5439428d575a20f3840a9a465bc9de3028020edc1865ca23ba99bbd03ebe7ef47bda756cb4fb54631facc727eacb4b31777c71d7af16f720b3a78c5171bc34b79b6665b6e68d51db862f755275ebb7e6f436d173664dcb3d4ea0e9ba75f9e0abb5eaaefa5a28bc54c813cdbc4ed18b16e495c2aadfe78c6b0351621c1be80e350cd8f7e8b509528258f66494520612e44c7a48b6d4f9abd8726786bf17ae0e41f73f13840fd91cb0decec7a454ed0b0e6affd1e0752d0baa64ba9432733438dfd00bd5c5a7df53775bc08e6320e4e5e1d9c588a2aee7e4f6730d498ff771b61b32fba361d02c71656a498a4d944c249eebdd21c72e17b24c991de46b23a932910155fcdfb86001 - Status 0",
     "request": {
       "method": "GET",
       "host": "www.youtube.com",
-      "path": "/api/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/api/64e89c43b3a298436c2a2e7e9646d35a0a872599da26d2541fb3438a321be9ddaafb33b6bfd115cceb4de33e14f1db3345a09c7388284217313c992c747bddc67ab296847cde73b1fbaaedf2e9b766efab2d5e410f7c20655001e1493480fc2ca385a4333ba6ac8fc46ca83e8efab393dd7497559baff8a26295d67c7aa51b78f9ad9cec83b1a842a6a5f3cf9a75ea33e4e46b62b374e9a8fcb5af72551ab591b4db4da0f32b24696d7fe90d11a697c7e0fc8ef8455df157d8578b363d7bbf0b2cb418017f871936ad0ae0bff2c4045ce5847c4530f2799ab2a48c52632ac7714d0bff6435598a495c94cc771f6bddb7336a68d95896434f5bdaa5554615d0e3fcea739ae0c167c52699eaf4128359fea4ffba337c7920356be6d224f15c2b38fab0a2a4ebab8622f18c2a1b896fcd8415df5bf9e15a17f01e",
       "headers": {
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -4318,7 +4318,7 @@
         "sec-fetch-site": "same-origin",
         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
         "x-goog-visitor-id": "ANONYMIZED_VISITOR_ID",
-        "x-youtube-ad-signals": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "x-youtube-ad-signals": "88123c380c948f2070b7c7cd9945f077e6c465719f9b0cc6d49bc44a011091bf2d587cd9f3370aa7bee1de817d1484182af3deb17ac05620fd80a7b5386e452dac543496a4e0a8af9155fe67f3427901ef4ddf120d007d7caf772c118b3d86aeb43db98922982b",
         "x-youtube-client-name": "1",
         "x-youtube-client-version": "ANONYMIZED_CLIENT_VERSION_11",
         "x-youtube-device": "cbr=Chrome&cbrand=apple&cbrver=142.0.0.0&ceng=WebKit&cengver=537.36&cos=Macintosh&cosver=10_15_7&cplatform=DESKTOP",
@@ -4334,12 +4334,12 @@
     }
   },
   {
-    "name": "Request 95: POST /t/perf?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "POST improving.duckduckgo.com/t/perf?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 0",
+    "name": "Request 95: POST /t/perf?5589691f8418a49d1b11f09d6c23b94c7d2927687be131f2fd162376844be0ba1f1c200ec351e7f2ba0bd5de43f82f148846fcf7a6dae1a021736f7a05e00c7902d2e9eb4b5840a3e6713f774dcd62c429cdc9a20a35fef42ddcc9253f83e1547293b2db91695ce738584576454daf20446b3f1b5c1dc3eae21290818c0677ddb24bd7a4196d78569f29a3559b72f4263e3e2441077cdacb80825c867d4fddd4f7cfbc6ce9b727507cc31ebc9977a56247dc40da15d7620947a472faa93ecb2a3169d19a607cd9ef0bde5449dfb73c7ab2541d395370bd56c008474a34d133da95447325854eb07266eaee0a4bb9d63b015e17123f9d25ae73cf72ab10bd166940444c59af46ffb20b0553f9a59a117a25b9f2a808ce65e1440f997c8ddab1b81b8914dbc890ba7336159570cd168a4f336ba6ba97d4361d960e4b2cf8daf276688559ffa7c2bf5",
+    "description": "POST improving.duckduckgo.com/t/perf?43388dad7905d5a00869c9b6737c5a72137b10cbfa60a29402284615a80b7a5972286e9364bb05e6fb43d15eaea653d231c91eabdddb2c7937a00416656449d6708ed131586cd74836694bfcc8d68318ecb6134985b8fc4aa06984cff1e466e1ef6ba16a817b837565d4bc4b1e288233ffa121cb311906f8dc7757d0cd04731fd34fefb473f68320d02d4f01e486bc456615f991289f6d6c2d48143e596c89f36ab4f3757bd9dc367ba7b080ca3a69a771d05eccfd42bd67942d178f56e892e07bcbd8743089a8b7ac1c2c272eba5bb51c8b5eb4c001be2336e505816f9b2439058148629a88848a973988be07984672409e32a0711a5677cef709dfd1ac56359d5b09a0551ce81975beb82abce0a532d400c3718ceda06193e76b1157b0e23cb1f91e705ffa8528ceefb48e542bb9cf34edc722e7bedd5b617c09074b304bc2fcca938ac96f79e - Status 0",
     "request": {
       "method": "POST",
       "host": "improving.duckduckgo.com",
-      "path": "/t/perf?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/t/perf?f323934d60a409931e1c643a79f948e05a81ba37c472dd47cd731c4b44f186e1cc37e9c04353445c33feffdd9e1a76a8b4e49ef8a5326dcb9202f6a098a0444220584a67457db1e05b8814380756e962a6411f00b960a19f946852b3e316eabe5d22f8b794031fe74a6b9ab94376d46a2c90c8faf1c9c8b397a5422b16b77958ecd408a71dea12cef02fce35af42ad85e0f7e6fe51b090c943f3af0deae0fb31d8c97ef7d48a3120546430ae1ec7bf4ee0d9c934f2a467493d055ff6117cf4b84e3ca629b1e4c89cb90291488fb3ce9b1667d51fdbcdd7bd758ae6ddf1a4e077dedb7a28b63429415a7902d7fad5caecca6d91ebca4347e0671a6fd9e9cd4bc3d532045d79621435b3935ef4403db7e8713e2107c99efb5a9382f49e0dbd346d0bf0778767aab324edf3e6d959c5f8d7df369c3e8ed2d735ed0ce383d3a814b4281c0a5f191a427",
       "headers": {
         "sec-ch-ua-platform": "\"macOS\"",
         "referer": "https://duckduckgo.com/",
@@ -4355,12 +4355,12 @@
     }
   },
   {
-    "name": "Request 96: GET /gen_204?s=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "GET www.google.com/gen_204?s=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 0",
+    "name": "Request 96: GET /gen_204?s=64596b3a165f43c57c9fbe9f44bb550888222a667b55ea16bb4ec79b9f55e34578f337ed2639f1e9233502a8ff482011ff6a2670b2b324603be636e3d272449719fc5aff6d0d3431deaeb0de7f4cc3aebcd5e1a0df7cc87aa406cf21f084b0ccd",
+    "description": "GET www.google.com/gen_204?s=827b655de9b01dee379fb6c644ae620b4588b4d4772f7d88d8f13e2beb4789ed472e26e067c6dc9238894807624e53a05fc16546e81c37fc236812281f45bc0418503558788b170c1233d70db2a9bca96f49a99d04b3cb15aa2a4c2c59d19b360 - Status 0",
     "request": {
       "method": "GET",
       "host": "www.google.com",
-      "path": "/gen_204?s=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/gen_204?s=e6c2fa14fe19a562840de1f5f6e480cee7595688d30176242c099811bd6369a25b0661353bd8509747236846976091b2d5b8a134bb7136a201b6a22c4185e27862c4d01f7a51ec833ba13691a5b3d799049acbae121f53dfa870bf60856178797",
       "headers": {
         "sec-ch-ua-full-version-list": "\"Chromium\";v=\"142.0.7444.162\", \"Google Chrome\";v=\"142.0.7444.162\", \"Not_A Brand\";v=\"99.0.0.0\"",
         "sec-ch-ua-platform": "\"macOS\"",
@@ -4387,12 +4387,12 @@
     }
   },
   {
-    "name": "Request 97: POST /t/ias_wikinlp?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "POST improving.duckduckgo.com/t/ias_wikinlpaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 0",
+    "name": "Request 97: POST /t/ias_wikinlp?8e7cc8c83c5e3aeac71b79807b426f75e8f81f5a9452b12f7a6d45ddf95bf516400278d1235472d97a0ca2f93cc5df3b271e9eb114d0023c494cc9f348408958ae7046dcabc2b3ca9110d1aa3bf60552dfe099b308ab789f994a08699599640175285952e92b4a4e179081ac6d6e19078c61c2a2840a292b8ce4f896a3fa5601c718270c297418dfadbda2612bc3df3df7ca174ba58c5211f8bfa5ec6ccac1cdf6dd24051c94bba58a1c15e7a24957a6ff70259533197489b537344d81bcc53864c5a1b5afe051d37a985cd8faf6e3c68e40a9b040e0b701e2e6fb371545147fa02895ad15f4a4a28323f670dd3f4e8c991467840e6b355bebd870a73b7c1dde869188c562917b8bcb555f1a0af0483cc2a045289f428a2bb43134d91908c19435d05e9ea8aea58d84045273e715bac37db6024436b4ed760c67",
+    "description": "POST improving.duckduckgo.com/t/ias_wikinlp46604204500b2e16b5d82ac5e600ecb4325eb5c59402b39a35e9ad529c4b5d04ff4cdce8111cace64b6ff3fe09e38746e3f04c6c45e22232aa4c199fb18caddbde24ffb3cbd733dfb84363564f6b888df1c66d13d48ae8dc6bd9420eb37ff0d5d221fc8510eb52bf5e9a1739c2e27cccbb45fccdc8bd80ccdc214719196bc66e8884ac13e86c38175d5b008fcf3eba06a4d866f0242d244a96c54f43f5eb599f141ba54e20542304bcc2ea884a20e9a4bd0c42300007c4694da8c7dfe7f8a44dbbaf68e54e9e9b7dcfdccfd349491999c484a842a15992132c35bee2976138f0e5dcdd423ac3669d5af2546797800fa463a945c1f794cae4eae55a9f8d94a9da2674bb275f1876371ea2a5595d6c63337e8b001c41ad0bc525f2beb2468d7fd85aee5d4715bdaaab70af63c6bd5403aab21d7c3df4e2f49b9cb37 - Status 0",
     "request": {
       "method": "POST",
       "host": "improving.duckduckgo.com",
-      "path": "/t/ias_wikinlpaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/t/ias_wikinlpfccaca04dda4bf11082c34e3b1b9e75ea5f65b31e40b088f96c8a6f95d84bc62dfce520be3515baaeb476b0a596bd9f1c3f335b25abe2a014af1a22e2214a2463418455ff0f648a3fc54b79de17eaf2153537bad2b056d86b5baed420917bcd06e6d1fff5bf646066b2c7148b2f7a7dc34b08b147c943376682875e74b2b7e0410ce2dada61275b30786c91536ca669f44027e09be6a564ab1d26f93dad946615cdaa7bbe1c1523643cc2afa5ce828ebad4aceefb98846ec075e56eacd809c85cbfc89ba02bb38b4052821dfa99a0f1e3ced32dc5ac9e104c09d2c9d9c5ab89f3a749d94dfb1f0d47eeb3bd780de63361ee42734222f40cc82e9863603c3a214ebe5890fc02114656492ba19db7eb73aa8f71854372e87ef323243b98845b5530b1c0b191cced94605242b5f74e4d684d1994f039ed9092e0bace",
       "headers": {
         "sec-ch-ua-platform": "\"macOS\"",
         "referer": "https://duckduckgo.com/",
@@ -4430,12 +4430,12 @@
     }
   },
   {
-    "name": "Request 99: POST /t/ias_web?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "description": "POST improving.duckduckgo.com/t/ias_web?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - Status 0",
+    "name": "Request 99: POST /t/ias_web?73b68379d935dc1b2edf6e47e7a8858b3455a4896768c098e0a3f6f2d84af7d7a39c50098e08414a73570894aaac30004593a2c82591e38dbf074e9b24881f422773290418b0662d14a8781499cb2ebd27c1dc0e3e813af7c59492655bc1fc98cb8067eca5ae3ee7b02a364859ce775d5adb9a63cfc67ecfaf0130d9070e99ce39ffcc74716144b4382fc52d49aeb6e9a842c0a93f1ac22c8bccc36f4a71937ba2a37139bc8cff91bc611064cac4db08f0dba5202259b227255bb0cf827a55e4b431da65ebda79556ea32ee495234a87db0be8c2e6194fc1d8f1fc4b238073b75d98d1d871326bc6d266aad62b5fde125f341ce226a84de096cab3b4862266afb57d70c694c1c7c2a146df4ecadefa35363750535d796856fa032ac408f1da0fca2ef",
+    "description": "POST improving.duckduckgo.com/t/ias_web?475e5ada777aceaa4ca941d7d9d2c61d38822d8af0e33a15fdcb2fc589e21831b5a125603e3df412c2414d7a930275b8a1d9e36aea66a1b5d58a76f19c476bbdd56af7e940f1e2a70ce3e851da797ec5a1232c3def3d38fd7a4a8c78fcb846b170e5eabab8d4f5848a5ebe0ba1186537aeec41952a9acae3802290d4f0211e150e62e1186653fd2b9062a60eb537dfb17315d6eeb6f2e4f7ab0fc7cea81b4b8d2708695d5a50a971b190e30ab4ad50da83f6cf444dfe01133037187944b412b7fb2d7587af2f96b4ca6deb35d8ffb99a3312124e57386141c40df8ca77eb25292eb615788a91c5fb06c61abebeb962ff1de5c25968de2e018513a00e416b0722fd87a4ea6bb682f51a6c4dda0987304eb91c639f4b72121d50220b328f3cb8a8762b4 - Status 0",
     "request": {
       "method": "POST",
       "host": "improving.duckduckgo.com",
-      "path": "/t/ias_web?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "/t/ias_web?ca79ebe7f7de5f66b82917a83a736a896fd1cc0b9050cd376ba3c324058581fad637107ba68dc8ee310ce4a2e33d936496494933b1b8f2d3335d48b5aa42b2d9f6747550f553161287965114108f9e0de53fedbc9d72e7b4f36396b99b5a562d6fb480fc3b184e51ef6ee7d8a499154fd9d7edf902fb7506c355541bdddafe76f20ce6412bbcbfa1cd96e94f6daef12fa5b8686531cc74c3ca31c9d43f7c98b98652e96c58e98521a03142580a621d121719058531654c497c842d83e9b0af61d9d990393e43e48a536dc0ef073486751131ba713c6d57eb2f0536614d2f9ebf58b7a2d0e6d695f1584516ec66e787167ab13834e2ee210495f47a4caf4164755c67d95a48ccc502a4f3b7cda36acdeef897b496cb0b380ce4249ae3a2b195845afc1",
       "headers": {
         "sec-ch-ua-platform": "\"macOS\"",
         "referer": "https://duckduckgo.com/",
@@ -4463,7 +4463,7 @@
         "accept-language": "en-GB,en;q=0.9",
         "device-memory": "8",
         "priority": "u=1, i",
-        "referer": "https://www.youtube.com/watch?v=aaaaaaaaaaa",
+        "referer": "https://www.youtube.com/watch?v=fee38c7c978",
         "sec-ch-dpr": "1",
         "sec-ch-ua": "\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"",
         "sec-ch-ua-arch": "\"x86\"",

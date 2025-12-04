@@ -67,7 +67,7 @@ var StatusToCompact = map[int]uint8{
 	103: 13, // Early Hints
 
 	// 2xx Success
-	200: 20,  // OK
+	200: 20, // OK
 	201: 21, // Created
 	202: 22, // Accepted
 	204: 24, // No Content
@@ -79,20 +79,20 @@ var StatusToCompact = map[int]uint8{
 
 	// 3xx Redirection
 	300: 30, // Multiple Choices
-	301: 31,  // Moved Permanently
-	302: 32,  // Found (redirect)
+	301: 31, // Moved Permanently
+	302: 32, // Found (redirect)
 	303: 33, // See Other
-	304: 34,  // Not Modified
+	304: 34, // Not Modified
 	305: 35, // Use Proxy
 	307: 37, // Temporary Redirect
 	308: 38, // Permanent Redirect
 
 	// 4xx Client Error
-	400: 40,  // Bad Request
-	401: 41,  // Unauthorized
+	400: 40, // Bad Request
+	401: 41, // Unauthorized
 	402: 42, // Payment Required
-	403: 43,  // Forbidden
-	404: 44,  // Not Found
+	403: 43, // Forbidden
+	404: 44, // Not Found
 	405: 45, // Method Not Allowed
 	406: 46, // Not Acceptable
 	407: 47, // Proxy Authentication Required
@@ -110,9 +110,9 @@ var StatusToCompact = map[int]uint8{
 	429: 89, // Too Many Requests
 
 	// 5xx Server Error
-	500: 50,  // Internal Server Error
+	500: 50, // Internal Server Error
 	502: 52, // Bad Gateway
-	503: 53,  // Service Unavailable
+	503: 53, // Service Unavailable
 	504: 54, // Gateway Timeout
 	505: 55, // QH Version Not Supported
 	// room for additional codes up until 63

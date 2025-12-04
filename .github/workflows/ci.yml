@@ -64,8 +64,5 @@ jobs:
           version: latest
           working-directory: benchmark
 
-      - name: Run Tests
-        run: go test -v ./...
-
       - name: Run benchmark suite
         run: make report

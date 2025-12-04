@@ -1,5 +1,7 @@
 ## Request Headers
 
+This file was generated using the `generate_outputs.py` CLI: https://github.com/Erl-koenig/http-header-tracker
+
 **Slot usage: 100/255**
 
 Complete key-value pairs (Format 1) use a single byte. Name-only headers (Format 2) include the value after the header ID.
