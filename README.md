@@ -1,8 +1,19 @@
 # qh:// - The Quite Ok HTTP Protocol
 
-**qh://** is a simplified HTTP-like protocol. Built on top of [QOTP (Quite Ok Transport Protocol)](https://github.com/qo-proto/qotp), it provides 0-RTT connections, built-in encryption and uses DNS TXT records for key distribution. The protocol uses a compact binary format which eliminates the use of header compression schemes like HPACK or QPACK.
+**qh://** is a simplified HTTP-like protocol. Built on top of [QOTP (Quite Ok Transport Protocol)](https://github.com/qo-proto/qotp), it provides 0-RTT connections, built-in encryption, stream multiplexing, and uses DNS TXT records for key distribution. The protocol uses a compact binary format which eliminates the use of header compression schemes like HPACK or QPACK.
 
-**STATUS:** Experimental - Under active development
+**STATUS:** Experimental
+
+## Comparison
+
+| Feature          | HTTP/1.1       | HTTP/2         | HTTP/3         | QH                                    |
+| ---------------- | -------------- | -------------- | -------------- | ------------------------------------- |
+| Transport        | TCP            | TCP            | UDP (QUIC)     | UDP (QOTP)                            |
+| Encryption       | Optional (TLS) | Optional (TLS) | Built-in       | Built-in                              |
+| 0-RTT            | No             | With TLS 1.3   | Yes            | Yes                                   |
+| Multiplexing     | No             | Yes            | Yes            | Yes                                   |
+| Header Format    | Text           | Binary (HPACK) | Binary (QPACK) | Binary (static table, no compression) |
+| Key Distribution | CAs            | CAs            | CAs            | DNS TXT                               |
 
 ## Documentation
 
@@ -10,6 +21,12 @@
 - **[Headers Reference](./docs/headers.md)** - Header format
   - [Static header table](./docs/static-tables.md)
 - **[API Documentation](./docs/api.md)** - API reference of the Go implementation
+
+## Installation
+
+```bash
+go get github.com/qo-proto/qh
+```
 
 ## Run example
 
