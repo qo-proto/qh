@@ -39,6 +39,8 @@ jobs:
         run: |
           go build -v ./examples/server
           go build -v ./examples/client
+          go build -v ./examples/server-concurrent
+          go build -v ./examples/client-concurrent
 
       - name: Run Tests
         run: go test -v ./...
