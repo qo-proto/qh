@@ -7,7 +7,7 @@ import (
 )
 
 func EncodeQH(tc TestCase) EncodedResult {
-	method := parseMethod(tc.Request.Method)
+	method := methodFromString(tc.Request.Method)
 	req := &qh.Request{
 		Method:  method,
 		Host:    tc.Request.Host,
@@ -37,7 +37,7 @@ func EncodeQH(tc TestCase) EncodedResult {
 	}
 }
 
-func parseMethod(method string) qh.Method {
+func methodFromString(method string) qh.Method {
 	switch method {
 	case "GET":
 		return qh.GET
