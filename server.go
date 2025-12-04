@@ -55,9 +55,9 @@ func WithMinCompressionSize(size int) ServerOption {
 	}
 }
 
-// WithSupportedEncodings sets the compression encodings the server supports,
-// in order of preference. The server will use the first encoding that the
-// client also supports. Default is [Zstd, Brotli, Gzip].
+// WithSupportedEncodings sets the compression encodings the server supports.
+// The server will use the first client-preferred encoding that the server
+// also supports. Default is [Zstd, Brotli, Gzip].
 func WithSupportedEncodings(encodings []Encoding) ServerOption {
 	return func(s *Server) {
 		s.supportedEncodings = encodings

@@ -1,8 +1,7 @@
 package qh
 
-// HTTP status code constants.
+// Status code constants.
 // These mirror standard HTTP status codes and are used in QH responses.
-// The wire format uses a compact 6-bit encoding for common status codes.
 const (
 	// 1xx Informational responses
 	StatusContinue           = 100
@@ -61,7 +60,7 @@ const (
 	StatusQHVersionNotSupported = 505
 )
 
-// map common HTTP status codes to a compact wire format, ordered by frequency
+// statusToCompact maps HTTP status codes to compact wire format values.
 var statusToCompact = map[int]uint8{
 	// 1xx Informational
 	100: 10, // Continue

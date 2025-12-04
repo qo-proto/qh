@@ -41,7 +41,7 @@ const (
 	OPTIONS               // OPTIONS describes communication options
 )
 
-// String returns the HTTP method name as a string (e.g., "GET", "POST").
+// String returns the QH method name as a string (e.g., "GET", "POST").
 func (m Method) String() string {
 	switch m {
 	case GET:
@@ -68,6 +68,7 @@ func (m Method) String() string {
 type ContentType int
 
 // Content type constants for use in QH headers.
+// A maximum of 16 content types are supported.
 const (
 	Custom      ContentType = iota // Custom allows for a custom string content type
 	TextPlain                      // TextPlain represents "text/plain"
@@ -218,7 +219,7 @@ func (r *Request) Format() []byte {
 // Format encodes a QH response into wire format bytes using varint length prefixes.
 //
 // Wire format structure:
-//   - 1 byte: Version (2 bits) | Status code (6 bits)
+//   - 1 byte: Version (2 bits) | Compact status code (6 bits)
 //   - varint: headers length, followed by encoded headers
 //   - varint: body length, followed by body bytes
 func (r *Response) Format() []byte {
