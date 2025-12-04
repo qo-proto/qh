@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"strconv"
 
 	"github.com/qo-proto/qotp"
@@ -314,9 +315,7 @@ func NewResponse(statusCode int, body []byte, headers map[string]string) *Respon
 	headerMap := make(map[string]string)
 	headerMap["content-length"] = strconv.Itoa(len(body))
 
-	for key, value := range headers {
-		headerMap[key] = value
-	}
+	maps.Copy(headerMap, headers)
 
 	return &Response{
 		Version:    Version,
