@@ -59,7 +59,7 @@ const (
 )
 
 // map common HTTP status codes to a compact wire format, ordered by frequency
-var StatusToCompact = map[int]uint8{
+var statusToCompact = map[int]uint8{
 	// 1xx Informational
 	100: 10, // Continue
 	101: 11, // Switching Protocols
@@ -100,7 +100,7 @@ var StatusToCompact = map[int]uint8{
 	409: 49, // Conflict
 	410: 80, // Gone
 	411: 81, // Length Required
-	412: 81, // Precondition Failed
+	412: 82, // Precondition Failed
 	413: 83, // Payload Too Large
 	414: 84, // URI Too Long
 	415: 85, // Unsupported Media Type
@@ -118,27 +118,27 @@ var StatusToCompact = map[int]uint8{
 	// room for additional codes up until 63
 }
 
-var CompactToStatus map[uint8]int // reverse mapping for decoding
+var compactToStatus map[uint8]int // reverse mapping for decoding
 
 func init() {
-	CompactToStatus = make(map[uint8]int, len(StatusToCompact))
-	for httpCode, compactCode := range StatusToCompact {
-		CompactToStatus[compactCode] = httpCode
+	compactToStatus = make(map[uint8]int, len(statusToCompact))
+	for httpCode, compactCode := range statusToCompact {
+		compactToStatus[compactCode] = httpCode
 	}
 }
 
 // convert HTTP status code to compact format
-func EncodeStatusCode(httpCode int) uint8 {
-	if compact, exists := StatusToCompact[httpCode]; exists {
+func encodeStatusCode(httpCode int) uint8 {
+	if compact, exists := statusToCompact[httpCode]; exists {
 		return compact
 	}
 	// Fallback: use compact code for 500 Internal Server Error for unmapped codes
-	return StatusToCompact[StatusInternalServerError]
+	return statusToCompact[StatusInternalServerError]
 }
 
 // convert compact format to HTTP status code
-func DecodeStatusCode(compact uint8) int {
-	if httpCode, exists := CompactToStatus[compact]; exists {
+func decodeStatusCode(compact uint8) int {
+	if httpCode, exists := compactToStatus[compact]; exists {
 		return httpCode
 	}
 	// Fallback: if the compact code is not in our map, it's an unknown or custom code.

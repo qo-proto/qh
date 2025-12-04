@@ -76,7 +76,7 @@ func DebugResponse(data []byte) string {
 		firstByte := data[offset]
 		version := firstByte >> versionBitShift
 		statusCompact := firstByte & statusCodeMask
-		statusDecoded := DecodeStatusCode(statusCompact)
+		statusDecoded := decodeStatusCode(statusCompact)
 		writeTableRow(&sb, offset, data[offset:offset+1],
 			fmt.Sprintf("First byte (Version=%d, Status=%d)", version, statusDecoded))
 		offset++
@@ -167,7 +167,7 @@ func annotateVarint(sb *strings.Builder, data []byte, offset *int, label string)
 	if *offset >= len(data) {
 		return 0
 	}
-	value, n, _ := ReadUvarint(data, *offset)
+	value, n, _ := readUvarint(data, *offset)
 
 	writeTableRow(sb, *offset, data[*offset:*offset+n], fmt.Sprintf("%s: %d", label, value))
 

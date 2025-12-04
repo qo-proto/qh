@@ -256,7 +256,7 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 
 		responseBuffer = append(responseBuffer, chunk...)
 
-		complete, checkErr := IsResponseComplete(responseBuffer)
+		complete, checkErr := isResponseComplete(responseBuffer)
 		if checkErr != nil {
 			slog.Error("Error checking response completeness", "error", checkErr)
 			return false, nil
@@ -269,7 +269,7 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 		return true, nil
 	})
 
-	resp, parseErr := ParseResponse(responseBuffer)
+	resp, parseErr := parseResponse(responseBuffer)
 	if parseErr != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", parseErr)
 	}
@@ -358,7 +358,7 @@ func (c *Client) decompressResponse(resp *Response) error {
 	originalSize := len(resp.Body)
 	slog.Debug("Decompressing response", "encoding", contentEncoding, "compressed_bytes", originalSize)
 
-	decompressed, err := Decompress(resp.Body, Encoding(contentEncoding), c.maxResponseSize)
+	decompressed, err := decompress(resp.Body, Encoding(contentEncoding), c.maxResponseSize)
 	if err != nil {
 		return fmt.Errorf("failed to decompress with %s: %w", contentEncoding, err)
 	}
