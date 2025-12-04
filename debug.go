@@ -1,4 +1,3 @@
-//nolint:gosec // G115: Ignore integer overflow warnings for this file
 package qh
 
 import (
