@@ -33,14 +33,18 @@ go get github.com/qo-proto/qh
 - Prerequisites: Go 1.25 or higher
 
 ```bash
-# Start the server
+# Terminal 1: Start the server
 go run ./examples/server/main.go
 
-# In another terminal, run the client
+# Terminal 2: Run the client
 go run ./examples/client/main.go
 
-# Or directly in tmux with a shell script
+# Or directly in tmux with a shell script (basic client)
 ./run-demo-tmux.sh
+
+# Or run concurrent examples (multiplexing)
+go run ./examples/server-concurrent/main.go
+go run ./examples/client-concurrent/main.go
 ```
 
 ### Keylog Support (for Wireshark Decryption)
