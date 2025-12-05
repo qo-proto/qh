@@ -277,6 +277,11 @@ func parseHeaders(
 		if err != nil {
 			return nil, offset, err
 		}
+
+		if newOffset > endOffset {
+			return nil, offset, errors.New("header value extends beyond headers section boundary")
+		}
+
 		offset = newOffset
 
 		key = strings.ToLower(key)
@@ -287,23 +292,23 @@ func parseHeaders(
 }
 
 // validate and skip over a length-prefixed field
-func checkField(data []byte, offset *int, fieldName string) (bool, error) {
+func checkField(data []byte, offset *int, fieldName string) (complete bool, length uint64, err error) {
 	length, n, err := ReadUvarint(data, *offset)
 	if errors.Is(err, errVarintIncomplete) {
-		return false, nil
+		return false, 0, nil
 	}
 	if err != nil {
-		return false, fmt.Errorf("reading %s length: %w", fieldName, err)
+		return false, 0, fmt.Errorf("reading %s length: %w", fieldName, err)
 	}
 
 	*offset += n
 	remaining := len(data) - *offset
 	if remaining < 0 || length > uint64(remaining) {
-		return false, nil // Need more data
+		return false, 0, nil // Need more data
 	}
 
 	*offset += int(length)
-	return true, nil
+	return true, length, nil
 }
 
 func IsRequestComplete(data []byte) (bool, error) {
@@ -313,20 +318,24 @@ func IsRequestComplete(data []byte) (bool, error) {
 
 	offset := firstByteOffset // Skip first byte (version + method)
 
-	if complete, err := checkField(data, &offset, "host"); !complete {
+	complete, hostLen, err := checkField(data, &offset, "host")
+	if !complete {
 		return false, err
 	}
+	if hostLen == 0 {
+		return false, errors.New("invalid request: empty host")
+	}
 
-	if complete, err := checkField(data, &offset, "path"); !complete {
+	if complete, _, err := checkField(data, &offset, "path"); !complete {
 		return false, err
 	}
 
 	// Check headers length field and skip headers section
-	if complete, err := checkField(data, &offset, "headers"); !complete {
+	if complete, _, err := checkField(data, &offset, "headers"); !complete {
 		return false, err
 	}
 
-	if complete, err := checkField(data, &offset, "body"); !complete {
+	if complete, _, err := checkField(data, &offset, "body"); !complete {
 		return false, err
 	}
 
@@ -341,11 +350,11 @@ func IsResponseComplete(data []byte) (bool, error) {
 	offset := firstByteOffset // Skip first byte (version + status)
 
 	// Check headers length field and skip headers section
-	if complete, err := checkField(data, &offset, "headers"); !complete {
+	if complete, _, err := checkField(data, &offset, "headers"); !complete {
 		return false, err
 	}
 
-	if complete, err := checkField(data, &offset, "body"); !complete {
+	if complete, _, err := checkField(data, &offset, "body"); !complete {
 		return false, err
 	}
 
