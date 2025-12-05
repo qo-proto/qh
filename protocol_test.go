@@ -361,6 +361,199 @@ func TestMethodString(t *testing.T) {
 	}
 }
 
+func TestPathWithQueryParams(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+	}{
+		{"Simple query", "/api/data?key=value"},
+		{"Multiple params", "/search?q=test&limit=10&offset=0"},
+		{"Special chars", "/api?name=John%20Doe&email=test%40example.com"},
+		{"Empty value", "/api?key="},
+		{"No value", "/api?flag"},
+		{"Fragment", "/page?section=intro#top"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &Request{
+				Method:  GET,
+				Host:    "example.com",
+				Path:    tt.path,
+				Version: 0,
+				Headers: map[string]string{},
+			}
+
+			data := req.Format()
+			parsed, err := ParseRequest(data)
+			require.NoError(t, err)
+			require.Equal(t, tt.path, parsed.Path, "Query params should be preserved in path")
+		})
+	}
+}
+
+func TestIsRequestComplete(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     []byte
+		complete bool
+		hasError bool
+	}{
+		{
+			name:     "Empty data",
+			data:     []byte{},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Only first byte",
+			data:     []byte{0x00},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "First byte + partial host length varint",
+			data:     []byte{0x00, 0x0B},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "First byte + host length + partial host",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm'},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Complete host, missing path",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm'},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Complete minimal request",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm', 0x01, '/', 0x00, 0x00},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Complete request with extra data",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm', 0x01, '/', 0x00, 0x00, 0xFF, 0xFF},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Request with body length but missing body",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm', 0x01, '/', 0x00, 0x04},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Complete request with body",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm', 0x01, '/', 0x00, 0x04, 't', 'e', 's', 't'},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Empty host (invalid)",
+			data:     []byte{0x00, 0x00, 0x01, '/', 0x00, 0x00},
+			complete: false,
+			hasError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			complete, err := IsRequestComplete(tt.data)
+			if tt.hasError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tt.complete, complete)
+
+			if complete && !tt.hasError {
+				_, parseErr := ParseRequest(tt.data)
+				require.NoError(t, parseErr, "IsRequestComplete returned true but ParseRequest failed")
+			}
+		})
+	}
+}
+
+func TestIsResponseComplete(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     []byte
+		complete bool
+		hasError bool
+	}{
+		{
+			name:     "Empty data",
+			data:     []byte{},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Only first byte",
+			data:     []byte{0x14}, // Status 200
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "First byte + headers length",
+			data:     []byte{0x14, 0x00},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Complete headers and body length, missing body",
+			data:     []byte{0x14, 0x00, 0x04},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Complete minimal response (no body)",
+			data:     []byte{0x14, 0x00, 0x00},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Complete response with body",
+			data:     []byte{0x14, 0x00, 0x02, 'O', 'K'},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Complete response with extra data",
+			data:     []byte{0x14, 0x00, 0x02, 'O', 'K', 0xFF, 0xFF},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Response with body length but partial body",
+			data:     []byte{0x14, 0x00, 0x04, 't', 'e'},
+			complete: false,
+			hasError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			complete, err := IsResponseComplete(tt.data)
+			if tt.hasError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tt.complete, complete)
+
+			if complete && !tt.hasError {
+				_, parseErr := ParseResponse(tt.data)
+				require.NoError(t, parseErr, "IsResponseComplete returned true but ParseResponse failed")
+			}
+		})
+	}
+}
+
 func assertRequestEqual(t *testing.T, expected, actual *Request) {
 	t.Helper()
 	require.Equal(t, expected.Method, actual.Method)

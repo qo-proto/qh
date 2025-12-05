@@ -120,19 +120,19 @@ func FuzzIsRequestComplete(f *testing.F) {
 	f.Add([]byte("\x00\x0Bexample.com\x06/hello\x00\x00")) // Complete request
 
 	f.Fuzz(func(t *testing.T, data []byte) {
-		complete, err := IsRequestComplete(data)
-		if err != nil {
-			return
+		complete, completeErr := IsRequestComplete(data)
+		req, parseErr := ParseRequest(data)
+
+		if parseErr == nil && !complete {
+			t.Error("ParseRequest succeeded but IsRequestComplete said incomplete")
 		}
 
-		if complete {
-			req, parseErr := ParseRequest(data)
-			if parseErr != nil {
-				t.Errorf("IsRequestComplete returned true but ParseRequest failed: %v", parseErr)
-			}
-			if req == nil {
-				t.Error("IsRequestComplete returned true but ParseRequest returned nil")
-			}
+		if completeErr != nil && parseErr == nil {
+			t.Errorf("IsRequestComplete errored (%v) but ParseRequest succeeded", completeErr)
+		}
+
+		if parseErr == nil && req == nil {
+			t.Error("ParseRequest returned no error but returned nil request")
 		}
 	})
 }
@@ -144,19 +144,19 @@ func FuzzIsResponseComplete(f *testing.F) {
 	f.Add([]byte("\x00\x00\x04OK!!")) // Complete response
 
 	f.Fuzz(func(t *testing.T, data []byte) {
-		complete, err := IsResponseComplete(data)
-		if err != nil {
-			return
+		complete, completeErr := IsResponseComplete(data)
+		resp, parseErr := ParseResponse(data)
+
+		if parseErr == nil && !complete {
+			t.Error("ParseResponse succeeded but IsResponseComplete said incomplete")
 		}
 
-		if complete {
-			resp, parseErr := ParseResponse(data)
-			if parseErr != nil {
-				t.Errorf("IsResponseComplete returned true but ParseResponse failed: %v", parseErr)
-			}
-			if resp == nil {
-				t.Error("IsResponseComplete returned true but ParseResponse returned nil")
-			}
+		if completeErr != nil && parseErr == nil {
+			t.Errorf("IsResponseComplete errored (%v) but ParseResponse succeeded", completeErr)
+		}
+
+		if parseErr == nil && resp == nil {
+			t.Error("ParseResponse returned no error but returned nil response")
 		}
 	})
 }
