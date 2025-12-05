@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-//nolint:gocognit,nestif // intentional flat structure
+//nolint:gocognit,nestif,cyclop // intentional flat structure
 func FuzzParseRequest(f *testing.F) {
 	f.Add([]byte("\x00\x0Bexample.com\x06/hello\x00\x00"))                       // Minimal GET
 	f.Add([]byte("\x08\x0Bexample.com\x05/echo\x00\x04test"))                    // POST with body
@@ -89,7 +89,7 @@ func FuzzParseRequest(f *testing.F) {
 	})
 }
 
-//nolint:nestif // intentional flat structure
+//nolint:gocognit,nestif,cyclop // intentional flat structure
 func FuzzParseResponse(f *testing.F) {
 	f.Add([]byte("\x00\x00\x04OK!"))                      // 200 OK minimal
 	f.Add([]byte("\x01\x00\x09Not Found"))                // 404 Not Found
