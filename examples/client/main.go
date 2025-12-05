@@ -63,25 +63,25 @@ func main() {
 		switch req.method {
 		case "GET":
 			headers := map[string]string{
-				"Accept": qh.AcceptHeader(qh.HTML, qh.JSON, qh.TextPlain),
+				"Accept": "text/html,application/json,text/plain",
 			}
 			resp, err = c.GET(hostname, req.path, headers)
 		case "POST":
 			headers := map[string]string{
-				"Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
-				"Content-Type": qh.TextPlain.HeaderValue(),
+				"Accept":       "application/json,text/plain",
+				"Content-Type": "text/plain",
 			}
 			resp, err = c.POST(hostname, req.path, []byte(req.body), headers)
 		case "PUT":
 			headers := map[string]string{
-				"Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
-				"Content-Type": qh.JSON.HeaderValue(),
+				"Accept":       "application/json,text/plain",
+				"Content-Type": "application/json",
 			}
 			resp, err = c.PUT(hostname, req.path, []byte(req.body), headers)
 		case "PATCH":
 			headers := map[string]string{
-				"Accept":       qh.AcceptHeader(qh.JSON),
-				"Content-Type": qh.JSON.HeaderValue(),
+				"Accept":       "application/json",
+				"Content-Type": "application/json",
 			}
 			resp, err = c.PATCH(hostname, req.path, []byte(req.body), headers)
 		case "DELETE":
@@ -133,12 +133,7 @@ func logResponse(method, path string, response *qh.Response) {
 	sb.WriteString(fmt.Sprintf("StatusCode: %d\n", response.StatusCode))
 
 	if contentTypeStr, ok := response.Headers["Content-Type"]; ok && contentTypeStr != "" {
-		contentTypeCode, err := strconv.Atoi(contentTypeStr)
-		if err == nil {
-			sb.WriteString(
-				fmt.Sprintf("Content:    %s\n", qh.ContentType(contentTypeCode).String()),
-			)
-		}
+		sb.WriteString(fmt.Sprintf("Content:    %s\n", contentTypeStr))
 	}
 
 	if dateStr, ok := response.Headers["Date"]; ok && dateStr != "" {

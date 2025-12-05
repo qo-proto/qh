@@ -21,6 +21,8 @@ jobs:
   lint-build-test:
     name: "Lint, Build & Test"
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -31,7 +33,7 @@ jobs:
           go-version: "1.25.1"
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
 
@@ -42,8 +44,71 @@ jobs:
           go build -v ./examples/server-concurrent
           go build -v ./examples/client-concurrent
 
-      - name: Run Tests
-        run: go test -v ./...
+      - name: Run Tests with Coverage
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Generate Coverage Report for PR
+        if: github.event_name == 'pull_request'
+        id: coverage
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}')
+          echo "total=$COVERAGE" >> $GITHUB_OUTPUT
+          COVERAGE_BY_FILE=$(go tool cover -func=coverage.out | grep -v "total:" | sort -t: -k2 -n)
+          echo "by_file<<EOF" >> $GITHUB_OUTPUT
+          echo "$COVERAGE_BY_FILE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "## Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Overall Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Coverage: $COVERAGE**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Coverage by File (sorted by coverage %)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=coverage.out | grep -v "total:" | sort -t: -k2 -n >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment Coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          recreate: true
+          skip_unchanged: true
+          message: |
+            ## 📊 Test Coverage Report
+
+            **Overall Coverage:** ${{ steps.coverage.outputs.total }}
+
+            <details>
+            <summary>📁 Coverage by File</summary>
+
+            ```
+            ${{ steps.coverage.outputs.by_file }}
+            ```
+            </details>
+
+  fuzz-tests:
+    name: "Fuzz Tests"
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        fuzz-target:
+          - FuzzParseRequest
+          - FuzzParseResponse
+          - FuzzIsRequestComplete
+          - FuzzIsResponseComplete
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.1"
+
+      - name: Run Fuzz Test - ${{ matrix.fuzz-target }}
+        run: go test -fuzz=${{ matrix.fuzz-target }} -fuzztime=2m .
 
   benchmark:
     name: "Benchmark"

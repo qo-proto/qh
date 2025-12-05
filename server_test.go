@@ -150,7 +150,7 @@ func TestServerNoCompressionForBinary(t *testing.T) {
 	}
 
 	resp := NewResponse(200, []byte(strings.Repeat("binary", 200)), map[string]string{
-		"content-type": "4", // OctetStream = 4
+		"content-type": "application/octet-stream",
 	})
 
 	server.applyCompression(req, resp)

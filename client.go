@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"maps"
 	"net"
 	"net/url"
 	"strconv"
@@ -280,7 +279,7 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 
 		responseBuffer = append(responseBuffer, chunk...)
 
-		complete, checkErr := isResponseComplete(responseBuffer)
+		complete, checkErr := IsResponseComplete(responseBuffer)
 		if checkErr != nil {
 			slog.Error("Error checking response completeness", "error", checkErr)
 			return false, nil
@@ -293,7 +292,7 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 		return true, nil
 	})
 
-	resp, parseErr := parseResponse(responseBuffer)
+	resp, parseErr := ParseResponse(responseBuffer)
 	if parseErr != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", parseErr)
 	}
@@ -366,14 +365,10 @@ func (c *Client) do(method Method, host, path string, headers map[string]string,
 		headers = map[string]string{}
 	}
 
-	// Normalize body and Content-Length based on method
-	if method == POST || method == PUT || method == PATCH {
-		if _, ok := headers["content-length"]; !ok {
-			headers["content-length"] = strconv.Itoa(len(body))
-		}
-	} else {
+	// Normalize body based on method - body is only allowed for POST, PUT, PATCH
+	// NOTE: content-length header is not needed in QH - body length is determined by varint prefix
+	if method != POST && method != PUT && method != PATCH {
 		body = nil // ensure no body for non-body methods
-		delete(headers, "content-length")
 	}
 
 	req := &Request{
@@ -396,14 +391,13 @@ func (c *Client) decompressResponse(resp *Response) error {
 	originalSize := len(resp.Body)
 	slog.Debug("Decompressing response", "encoding", contentEncoding, "compressed_bytes", originalSize)
 
-	decompressed, err := decompress(resp.Body, Encoding(contentEncoding), c.maxResponseSize)
+	decompressed, err := Decompress(resp.Body, Encoding(contentEncoding), c.maxResponseSize)
 	if err != nil {
 		return fmt.Errorf("failed to decompress with %s: %w", contentEncoding, err)
 	}
 
 	resp.Body = decompressed
 	delete(resp.Headers, "content-encoding") // Remove encoding header after decompression
-	resp.Headers["content-length"] = strconv.Itoa(len(decompressed))
 
 	slog.Info("Response decompressed", "encoding", contentEncoding,
 		"compressed_bytes", originalSize, "decompressed_bytes", len(decompressed))
@@ -463,13 +457,6 @@ func (c *Client) handleRedirect(req *Request, resp *Response, redirectCount int)
 	if preserve {
 		newMethod = req.Method
 		newBody = req.Body
-	} else if headers != nil {
-		// When switching to GET, ensure Content-Length is not carried over
-		// copy headers to avoid mutating the original map
-		copied := make(map[string]string, len(headers))
-		maps.Copy(copied, headers)
-		delete(copied, "content-length")
-		headers = copied
 	}
 	newReq := &Request{
 		Method:  newMethod,

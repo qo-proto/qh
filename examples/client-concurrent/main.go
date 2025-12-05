@@ -59,7 +59,7 @@ func main() {
 				resp, err = c.GET(hostname, req.path, nil)
 			case "POST":
 				headers := map[string]string{
-					"Content-Type": qh.TextPlain.HeaderValue(),
+					"Content-Type": "text/plain",
 				}
 				resp, err = c.POST(hostname, req.path, []byte(req.body), headers)
 			}

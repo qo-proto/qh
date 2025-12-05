@@ -11,20 +11,13 @@ This document covers usage examples and configuration guides.
 ```go
 // Response with headers
 qh.NewResponse(200, []byte(`{"message": "success"}`), map[string]string{
-    "Content-Type":  qh.JSON.HeaderValue(),
+    "Content-Type":  "application/json",
     "Cache-Control": "max-age=3600",
 })
 
 // Convenience methods
 qh.TextResponse(200, "Hello, World!")
 qh.JSONResponse(200, `{"data": "value"}`)
-```
-
-### Content Type Helpers
-
-```go
-headers["Content-Type"] = qh.JSON.HeaderValue()      // Returns "2"
-headers["Content-Type"] = qh.TextPlain.HeaderValue() // Returns "1"
 ```
 
 ## Client
@@ -40,8 +33,8 @@ response, err := client.DELETE("example.com", "/api/data", headers)
 // POST, PUT, PATCH - with body
 body := []byte(`{"name": "test"}`)
 headers := map[string]string{
-    "Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
-    "Content-Type": qh.JSON.HeaderValue(),
+    "Accept":       "application/json,text/plain",
+    "Content-Type": "application/json",
 }
 response, err := client.POST("example.com", "/submit", body, headers)
 response, err := client.PUT("example.com", "/api/user", body, headers)

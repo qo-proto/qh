@@ -1,4 +1,3 @@
-//nolint:gosec // G115: false warnings
 package qh
 
 import (
@@ -173,7 +172,7 @@ func annotateVarint(sb *strings.Builder, data []byte, offset *int, label string)
 	if *offset >= len(data) {
 		return 0
 	}
-	value, n, _ := readUvarint(data, *offset)
+	value, n, _ := ReadUvarint(data, *offset)
 
 	writeTableRow(sb, *offset, data[*offset:*offset+n], fmt.Sprintf("%s: %d", label, value))
 

@@ -46,7 +46,7 @@ func TestRequestFormat(t *testing.T) {
 				Path:    "/api",
 				Version: 0,
 				Headers: map[string]string{
-					"accept": JSON.HeaderValue(),
+					"accept": "application/json",
 				},
 			},
 		},
@@ -58,7 +58,7 @@ func TestRequestFormat(t *testing.T) {
 				Path:    "/submit",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type": JSON.HeaderValue(),
+					"content-type": "application/json",
 				},
 				Body: []byte(`{"key":"val"}`),
 			},
@@ -68,7 +68,7 @@ func TestRequestFormat(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			wire := tt.request.Format()
-			parsed, err := parseRequest(wire)
+			parsed, err := ParseRequest(wire)
 			require.NoError(t, err, "Failed to parse formatted request")
 
 			// Verify round-trip
@@ -120,7 +120,7 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type": TextPlain.HeaderValue(),
+					"content-type": "text/plain",
 				},
 				Body: []byte("Hello"),
 			},
@@ -131,7 +131,7 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 404,
 				Headers: map[string]string{
-					"content-type": TextPlain.HeaderValue(),
+					"content-type": "text/plain",
 				},
 				Body: []byte("Not Found"),
 			},
@@ -142,7 +142,7 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 204,
 				Headers: map[string]string{
-					"content-type": Custom.HeaderValue(),
+					"content-type": "custom",
 				},
 				Body: []byte{},
 			},
@@ -152,7 +152,7 @@ func TestResponseFormat(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			wire := tt.response.Format()
-			parsed, err := parseResponse(wire)
+			parsed, err := ParseResponse(wire)
 			require.NoError(t, err, "Failed to parse formatted response")
 			require.Equal(t, tt.response.Version, parsed.Version)
 			require.Equal(t, tt.response.StatusCode, parsed.StatusCode)
@@ -176,7 +176,7 @@ func TestParseRequestBasic(t *testing.T) {
 	}
 
 	data := original.Format()
-	req, err := parseRequest(data)
+	req, err := ParseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Method, req.Method)
 	require.Equal(t, original.Host, req.Host)
@@ -193,14 +193,13 @@ func TestParseRequestWithBody(t *testing.T) {
 		Path:    "/submit",
 		Version: 0,
 		Headers: map[string]string{
-			"content-type":   JSON.HeaderValue(),
-			"content-length": "16",
+			"content-type": "application/json",
 		},
 		Body: []byte(`{"name": "test"}`),
 	}
 
 	data := original.Format()
-	req, err := parseRequest(data)
+	req, err := ParseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Method, req.Method)
 	require.Equal(t, original.Host, req.Host)
@@ -221,7 +220,7 @@ func TestParseRequestWithMultilineBody(t *testing.T) {
 	}
 
 	data := original.Format()
-	req, err := parseRequest(data)
+	req, err := ParseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Method, req.Method)
 	require.Equal(t, original.Body, req.Body)
@@ -238,7 +237,7 @@ func TestParseRequestNoHeaders(t *testing.T) {
 	}
 
 	data := original.Format()
-	req, err := parseRequest(data)
+	req, err := ParseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Method, req.Method)
 	require.Empty(t, req.Headers)
@@ -256,7 +255,7 @@ func TestParseRequestEmptyPathDefaultsToRoot(t *testing.T) {
 	}
 
 	data := original.Format()
-	req, err := parseRequest(data)
+	req, err := ParseRequest(data)
 	require.NoError(t, err)
 	require.Equal(t, GET, req.Method)
 	require.Equal(t, "example.com", req.Host)
@@ -279,7 +278,7 @@ func TestParseRequestErrors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := parseRequest(tt.data)
+			_, err := ParseRequest(tt.data)
 			require.Error(t, err)
 		})
 	}
@@ -290,15 +289,14 @@ func TestParseResponseBasic(t *testing.T) {
 		Version:    0,
 		StatusCode: 200,
 		Headers: map[string]string{
-			"content-type":   TextPlain.HeaderValue(),
-			"content-length": "13",
-			"date":           "1758784800",
+			"content-type": "text/plain",
+			"date":         "1758784800",
 		},
 		Body: []byte("Hello, world!"),
 	}
 
 	data := original.Format()
-	resp, err := parseResponse(data)
+	resp, err := ParseResponse(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Version, resp.Version)
 	require.Equal(t, original.StatusCode, resp.StatusCode)
@@ -311,13 +309,13 @@ func TestParseResponseSingleHeader(t *testing.T) {
 		Version:    0,
 		StatusCode: 200,
 		Headers: map[string]string{
-			"content-type": TextPlain.HeaderValue(),
+			"content-type": "text/plain",
 		},
 		Body: []byte("Response body"),
 	}
 
 	data := original.Format()
-	resp, err := parseResponse(data)
+	resp, err := ParseResponse(data)
 	require.NoError(t, err)
 	require.Equal(t, original.Version, resp.Version)
 	require.Equal(t, original.StatusCode, resp.StatusCode)
@@ -336,7 +334,7 @@ func TestParseResponseErrors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := parseResponse(tt.data)
+			_, err := ParseResponse(tt.data)
 			require.Error(t, err)
 		})
 	}
@@ -359,51 +357,6 @@ func TestMethodString(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.expected, func(t *testing.T) {
 			require.Equal(t, tt.expected, tt.method.String())
-		})
-	}
-}
-
-func TestIsValidContentType(t *testing.T) {
-	tests := []struct {
-		name  string
-		code  int
-		valid bool
-	}{
-		{"Custom", 0, true},
-		{"TextPlain", 1, true},
-		{"JSON", 2, true},
-		{"HTML", 3, true},
-		{"OctetStream", 4, true},
-		{"MaxValid", 15, true},
-		{"TooHigh", 16, false},
-		{"Invalid99", 99, false},
-		{"Negative", -1, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.valid, isValidContentType(tt.code))
-		})
-	}
-}
-
-func TestContentTypeHeaderValue(t *testing.T) {
-	tests := []struct {
-		name        string
-		contentType ContentType
-		expected    string
-	}{
-		{"Custom", Custom, "0"},
-		{"TextPlain", TextPlain, "1"},
-		{"JSON", JSON, "2"},
-		{"HTML", HTML, "3"},
-		{"OctetStream", OctetStream, "4"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := tt.contentType.HeaderValue()
-			require.Equal(t, tt.expected, actual)
 		})
 	}
 }
@@ -431,7 +384,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/api/data",
 				Version: 0,
 				Headers: map[string]string{
-					"accept":          AcceptHeader(JSON, TextPlain),
+					"accept":          "application/json,text/plain",
 					"accept-encoding": "gzip, br",
 					"user-agent":      "QH-Client/1.0",
 				},
@@ -446,9 +399,8 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/submit",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
-					"content-length": "15",
-					"authorization":  "Bearer token123",
+					"content-type":  "application/json",
+					"authorization": "Bearer token123",
 				},
 				Body: []byte(`{"name":"test"}`),
 			},
@@ -461,8 +413,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/user/123",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
-					"content-length": "18",
+					"content-type": "application/json",
 				},
 				Body: []byte(`{"name":"updated"}`),
 			},
@@ -475,8 +426,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/user/123",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
-					"content-length": "12",
+					"content-type": "application/json",
 				},
 				Body: []byte(`{"age":"30"}`),
 			},
@@ -500,7 +450,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/api/data",
 				Version: 0,
 				Headers: map[string]string{
-					"accept": AcceptHeader(JSON, TextPlain),
+					"accept": "application/json,text/plain",
 				},
 				Body: []byte{},
 			},
@@ -524,8 +474,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/custom",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":     TextPlain.HeaderValue(),
-					"content-length":   "5",
+					"content-type":     "text/plain",
 					"x-custom-header":  "custom-value",
 					"x-another-custom": "another-value",
 				},
@@ -537,7 +486,7 @@ func TestRequestRoundTrip(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			formatted := tt.request.Format()
-			parsed, err := parseRequest(formatted)
+			parsed, err := ParseRequest(formatted)
 			require.NoError(t, err)
 			assertRequestEqual(t, tt.request, parsed)
 		})
@@ -563,10 +512,9 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
-					"content-length": "15",
-					"cache-control":  "max-age=3600",
-					"date":           "1758784800",
+					"content-type":  "application/json",
+					"cache-control": "max-age=3600",
+					"date":          "1758784800",
 				},
 				Body: []byte(`{"status":"ok"}`),
 			},
@@ -577,8 +525,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 404,
 				Headers: map[string]string{
-					"content-type":   TextPlain.HeaderValue(),
-					"content-length": "9",
+					"content-type": "text/plain",
 				},
 				Body: []byte("Not Found"),
 			},
@@ -589,7 +536,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 204,
 				Headers: map[string]string{
-					"content-type": TextPlain.HeaderValue(),
+					"content-type": "text/plain",
 				},
 				Body: []byte{},
 			},
@@ -600,8 +547,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type":       JSON.HeaderValue(),
-					"content-length":     "2",
+					"content-type":       "application/json",
 					"x-custom-response":  "custom-value",
 					"x-another-response": "another-value",
 				},
@@ -614,8 +560,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type":                 JSON.HeaderValue(),
-					"content-length":               "2",
+					"content-type":                 "application/json",
 					"access-control-allow-origin":  "*",
 					"access-control-allow-methods": "GET, POST, PUT",
 					"access-control-allow-headers": "Content-Type, Authorization",
@@ -628,7 +573,7 @@ func TestResponseRoundTrip(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			formatted := tt.response.Format()
-			parsed, err := parseResponse(formatted)
+			parsed, err := ParseResponse(formatted)
 			require.NoError(t, err)
 			assertResponseEqual(t, tt.response, parsed)
 		})

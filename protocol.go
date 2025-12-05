@@ -1,12 +1,9 @@
 // Package qh implements the QH (Quite Ok HTTP) protocol.
-//
-//nolint:gosec // G115: false warnings
 package qh
 
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -15,14 +12,13 @@ const (
 	// This value is encoded in the first byte of both requests and responses.
 	Version = 0
 
-	versionBitShift     = 6          // Version is stored in upper 2 bits (bits 7-6)
-	methodBitShift      = 3          // Method is stored in middle 3 bits (bits 5-3)
-	statusCodeMask      = 0b00111111 // Status code uses lower 6 bits
-	methodMask          = 0b00000111 // Method uses 3 bits
-	maxVersionValue     = 3          // Maximum version (2 bits: 0-3)
-	maxContentTypeValue = 15         // Maximum content type (4 bits: 0-15)
-	maxHostLength       = 253        // Maximum host length (DNS label length limit)
-	firstByteOffset     = 1          // Offset to skip the first byte in wire format
+	versionBitShift = 6          // Version is stored in upper 2 bits (bits 7-6)
+	methodBitShift  = 3          // Method is stored in middle 3 bits (bits 5-3)
+	statusCodeMask  = 0b00111111 // Status code uses lower 6 bits
+	methodMask      = 0b00000111 // Method uses 3 bits
+	maxVersionValue = 3          // Maximum version (2 bits: 0-3)
+	maxHostLength   = 253        // Maximum host length (DNS label length limit)
+	firstByteOffset = 1          // Offset to skip the first byte in wire format
 )
 
 // Method represents a QH method encoded as an integer for compact wire format.
@@ -63,66 +59,9 @@ func (m Method) String() string {
 	}
 }
 
-// ContentType represents a MIME content type encoded as an integer.
-// This allows compact representation of common content types in headers.
-type ContentType int
-
-// Content type constants for use in QH headers.
-// A maximum of 16 content types are supported.
 const (
-	Custom      ContentType = iota // Custom allows for a custom string content type
-	TextPlain                      // TextPlain represents "text/plain"
-	JSON                           // JSON represents "application/json"
-	HTML                           // HTML represents "text/html"
-	OctetStream                    // OctetStream represents "application/octet-stream"
-	// Additional content types can be added up to 15
-)
-
-func isValidContentType(code int) bool {
-	return code >= 0 && code <= maxContentTypeValue
-}
-
-// String returns the MIME type string for this content type (e.g., "application/json").
-func (ct ContentType) String() string {
-	switch ct {
-	case Custom:
-		return "custom"
-	case TextPlain:
-		return "text/plain"
-	case JSON:
-		return "application/json"
-	case HTML:
-		return "text/html"
-	case OctetStream:
-		return "application/octet-stream"
-	default:
-		return "unknown"
-	}
-}
-
-// HeaderValue returns the content type as a string suitable for use in headers.
-// This returns the integer value as a string for compact wire encoding.
-func (ct ContentType) HeaderValue() string {
-	return strconv.Itoa(int(ct))
-}
-
-// AcceptHeader creates an Accept header value from a list of content types.
-// The returned string contains comma-separated integer values representing
-// the accepted content types in order of preference.
-func AcceptHeader(types ...ContentType) string {
-	if len(types) == 0 {
-		return ""
-	}
-	parts := make([]string, len(types))
-	for i, ct := range types {
-		parts[i] = strconv.Itoa(int(ct))
-	}
-	return strings.Join(parts, ",")
-}
-
-const (
-	// customHeader is a special header ID (0) used to indicate custom headers
-	customHeader byte = 0
+	// CustomHeader is a special header ID (0) used to indicate custom headers
+	CustomHeader byte = 0
 )
 
 // Request represents a QH protocol request message.
@@ -171,16 +110,16 @@ func encodeHeaders(
 		// Try Format 2: name-only match with custom value, encode ID
 		if headerID, exists := nameOnly[key]; exists {
 			result = append(result, headerID)
-			result = appendUvarint(result, uint64(len(value)))
+			result = AppendUvarint(result, uint64(len(value)))
 			result = append(result, []byte(value)...)
 			continue
 		}
 
 		// Format 3: Custom header not in static table
-		result = append(result, customHeader)
-		result = appendUvarint(result, uint64(len(key)))
+		result = append(result, CustomHeader)
+		result = AppendUvarint(result, uint64(len(key)))
 		result = append(result, []byte(key)...)
-		result = appendUvarint(result, uint64(len(value)))
+		result = AppendUvarint(result, uint64(len(value)))
 		result = append(result, []byte(value)...)
 	}
 
@@ -200,17 +139,17 @@ func (r *Request) Format() []byte {
 	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
 	firstByte := (r.Version << versionBitShift) | (byte(r.Method) << methodBitShift)
 	result := []byte{firstByte}
-	result = appendUvarint(result, uint64(len(r.Host)))
+	result = AppendUvarint(result, uint64(len(r.Host)))
 	result = append(result, []byte(r.Host)...)
-	result = appendUvarint(result, uint64(len(r.Path)))
+	result = AppendUvarint(result, uint64(len(r.Path)))
 	result = append(result, []byte(r.Path)...)
 
 	// Encode headers first to get total length
 	encodedHeaders := encodeHeaders(r.Headers, requestHeaderCompletePairs, requestHeaderNameOnly)
-	result = appendUvarint(result, uint64(len(encodedHeaders)))
+	result = AppendUvarint(result, uint64(len(encodedHeaders)))
 	result = append(result, encodedHeaders...)
 
-	result = appendUvarint(result, uint64(len(r.Body)))
+	result = AppendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
 
 	return result
@@ -230,39 +169,39 @@ func (r *Response) Format() []byte {
 
 	// Encode headers first to get total length
 	encodedHeaders := encodeHeaders(r.Headers, responseHeaderCompletePairs, responseHeaderNameOnly)
-	result = appendUvarint(result, uint64(len(encodedHeaders)))
+	result = AppendUvarint(result, uint64(len(encodedHeaders)))
 	result = append(result, encodedHeaders...)
 
-	result = appendUvarint(result, uint64(len(r.Body)))
+	result = AppendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
 
 	return result
 }
 
 func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
-	keyLen, n, readErr := readUvarint(data, offset)
+	keyLen, n, readErr := ReadUvarint(data, offset)
 	if readErr != nil {
 		return "", "", offset, fmt.Errorf("failed to read custom header key length: %w", readErr)
 	}
 	offset += n
 
-	keyLenInt := int(keyLen)
-	if offset+keyLenInt > len(data) {
+	if keyLen > uint64(len(data)-offset) {
 		return "", "", offset, errors.New("custom header key length exceeds buffer")
 	}
+	keyLenInt := int(keyLen)
 	key := string(data[offset : offset+keyLenInt])
 	offset += keyLenInt
 
-	valueLen, n, readErr := readUvarint(data, offset)
+	valueLen, n, readErr := ReadUvarint(data, offset)
 	if readErr != nil {
 		return "", "", offset, fmt.Errorf("failed to read custom header value length: %w", readErr)
 	}
 	offset += n
 
-	valueLenInt := int(valueLen)
-	if offset+valueLenInt > len(data) {
+	if valueLen > uint64(len(data)-offset) {
 		return "", "", offset, errors.New("custom header value length exceeds buffer")
 	}
+	valueLenInt := int(valueLen)
 	value := string(data[offset : offset+valueLenInt])
 	offset += valueLenInt
 
@@ -270,16 +209,16 @@ func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
 }
 
 func parseKnownHeader(data []byte, offset int) (string, int, error) {
-	valueLen, n, readErr := readUvarint(data, offset)
+	valueLen, n, readErr := ReadUvarint(data, offset)
 	if readErr != nil {
 		return "", offset, fmt.Errorf("failed to read header value length: %w", readErr)
 	}
 	offset += n
 
-	valueLenInt := int(valueLen)
-	if offset+valueLenInt > len(data) {
+	if valueLen > uint64(len(data)-offset) {
 		return "", offset, errors.New("header value length exceeds buffer")
 	}
+	valueLenInt := int(valueLen)
 	value := string(data[offset : offset+valueLenInt])
 	offset += valueLenInt
 
@@ -292,7 +231,7 @@ func parseHeaderEntry(
 	headerID byte,
 	staticTable map[byte]headerEntry,
 ) (string, string, int, error) {
-	if headerID == customHeader {
+	if headerID == CustomHeader {
 		// Format 3: Custom header <0x00><varint:keyLen><key><varint:valueLen><value>
 		return parseCustomHeader(data, offset)
 	}
@@ -321,6 +260,9 @@ func parseHeaders(
 	staticTable map[byte]headerEntry,
 ) (map[string]string, int, error) {
 	headers := make(map[string]string)
+	if headersLen > uint64(len(data)-offset) {
+		return nil, offset, errors.New("headers length exceeds buffer")
+	}
 	endOffset := offset + int(headersLen)
 
 	for offset < endOffset {
@@ -346,7 +288,7 @@ func parseHeaders(
 
 // validate and skip over a length-prefixed field
 func checkField(data []byte, offset *int, fieldName string) (bool, error) {
-	length, n, err := readUvarint(data, *offset)
+	length, n, err := ReadUvarint(data, *offset)
 	if errors.Is(err, errVarintIncomplete) {
 		return false, nil
 	}
@@ -354,27 +296,17 @@ func checkField(data []byte, offset *int, fieldName string) (bool, error) {
 		return false, fmt.Errorf("reading %s length: %w", fieldName, err)
 	}
 
-	const maxInt = int(^uint(0) >> 1)
-	if length > uint64(maxInt) {
-		return false, fmt.Errorf("%s length too large: %d", fieldName, length)
-	}
-
-	lengthInt := int(length)
-
-	if *offset > maxInt-lengthInt {
-		return false, fmt.Errorf("%s offset overflow", fieldName)
-	}
-
 	*offset += n
-	if *offset+lengthInt > len(data) {
+	remaining := len(data) - *offset
+	if remaining < 0 || length > uint64(remaining) {
 		return false, nil // Need more data
 	}
 
-	*offset += lengthInt
+	*offset += int(length)
 	return true, nil
 }
 
-func isRequestComplete(data []byte) (bool, error) {
+func IsRequestComplete(data []byte) (bool, error) {
 	if len(data) == 0 {
 		return false, nil
 	}
@@ -401,7 +333,7 @@ func isRequestComplete(data []byte) (bool, error) {
 	return true, nil
 }
 
-func isResponseComplete(data []byte) (bool, error) {
+func IsResponseComplete(data []byte) (bool, error) {
 	if len(data) == 0 {
 		return false, nil
 	}
@@ -420,7 +352,7 @@ func isResponseComplete(data []byte) (bool, error) {
 	return true, nil
 }
 
-func parseResponse(data []byte) (*Response, error) {
+func ParseResponse(data []byte) (*Response, error) {
 	if len(data) == 0 {
 		return nil, errors.New("invalid response: empty data")
 	}
@@ -440,7 +372,7 @@ func parseResponse(data []byte) (*Response, error) {
 
 	httpStatusCode := decodeStatusCode(compactStatus)
 
-	headersLen, n, err := readUvarint(data, offset)
+	headersLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid response: failed to read headers length: %w", err)
 	}
@@ -452,16 +384,16 @@ func parseResponse(data []byte) (*Response, error) {
 	}
 	offset = newOffset
 
-	bodyLen, n, err := readUvarint(data, offset)
+	bodyLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid response: failed to read body length: %w", err)
 	}
 	offset += n
 
-	bodyLenInt := int(bodyLen)
-	if offset+bodyLenInt > len(data) {
+	if bodyLen > uint64(len(data)-offset) {
 		return nil, errors.New("invalid response: body length exceeds buffer")
 	}
+	bodyLenInt := int(bodyLen)
 	body := data[offset : offset+bodyLenInt]
 
 	resp := &Response{
@@ -471,17 +403,10 @@ func parseResponse(data []byte) (*Response, error) {
 		Body:       body,
 	}
 
-	if contentLengthStr, ok := headers["content-length"]; ok {
-		expectedLen, err := strconv.Atoi(contentLengthStr)
-		if err == nil && len(body) != expectedLen {
-			return nil, errors.New("invalid response: body length does not match content-length")
-		}
-	}
-
 	return resp, nil
 }
 
-func parseRequest(data []byte) (*Request, error) {
+func ParseRequest(data []byte) (*Request, error) {
 	if len(data) == 0 {
 		return nil, errors.New("invalid request: empty data")
 	}
@@ -503,16 +428,16 @@ func parseRequest(data []byte) (*Request, error) {
 		return nil, fmt.Errorf("invalid method value: %d", method)
 	}
 
-	hostLen, n, err := readUvarint(data, offset)
+	hostLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read host length: %w", err)
 	}
 	offset += n
 
-	hostLenInt := int(hostLen)
-	if offset+hostLenInt > len(data) {
+	if hostLen > uint64(len(data)-offset) {
 		return nil, errors.New("invalid request: host length exceeds buffer")
 	}
+	hostLenInt := int(hostLen)
 	host := string(data[offset : offset+hostLenInt])
 	offset += hostLenInt
 
@@ -524,16 +449,16 @@ func parseRequest(data []byte) (*Request, error) {
 		return nil, fmt.Errorf("invalid request: host exceeds maximum length of %d characters", maxHostLength)
 	}
 
-	pathLen, n, err := readUvarint(data, offset)
+	pathLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read path length: %w", err)
 	}
 	offset += n
 
-	pathLenInt := int(pathLen)
-	if offset+pathLenInt > len(data) {
+	if pathLen > uint64(len(data)-offset) {
 		return nil, errors.New("invalid request: path length exceeds buffer")
 	}
+	pathLenInt := int(pathLen)
 	path := string(data[offset : offset+pathLenInt])
 	offset += pathLenInt
 
@@ -541,7 +466,7 @@ func parseRequest(data []byte) (*Request, error) {
 		path = "/"
 	}
 
-	headersLen, n, err := readUvarint(data, offset)
+	headersLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read headers length: %w", err)
 	}
@@ -553,16 +478,16 @@ func parseRequest(data []byte) (*Request, error) {
 	}
 	offset = newOffset
 
-	bodyLen, n, err := readUvarint(data, offset)
+	bodyLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read body length: %w", err)
 	}
 	offset += n
 
-	bodyLenInt := int(bodyLen)
-	if offset+bodyLenInt > len(data) {
+	if bodyLen > uint64(len(data)-offset) {
 		return nil, errors.New("invalid request: body length exceeds buffer")
 	}
+	bodyLenInt := int(bodyLen)
 	body := data[offset : offset+bodyLenInt]
 
 	req := &Request{
@@ -572,13 +497,6 @@ func parseRequest(data []byte) (*Request, error) {
 		Version: version,
 		Headers: headers,
 		Body:    body,
-	}
-
-	if contentLengthStr, ok := headers["content-length"]; ok {
-		expectedLen, err := strconv.Atoi(contentLengthStr)
-		if err == nil && len(body) != expectedLen {
-			return nil, errors.New("invalid request: body length does not match content-length")
-		}
 	}
 
 	return req, nil

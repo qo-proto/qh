@@ -7,7 +7,6 @@ import (
 	"io"
 	"log/slog"
 	"maps"
-	"strconv"
 
 	"github.com/qo-proto/qotp"
 )
@@ -161,7 +160,7 @@ func (s *Server) Serve() error {
 
 			slog.Debug("Received data fragment", "fragment_bytes", len(data), "total_bytes", len(buffer))
 
-			complete, checkErr := isRequestComplete(buffer)
+			complete, checkErr := IsRequestComplete(buffer)
 			if checkErr != nil {
 				slog.Error("Request validation error", "error", checkErr)
 				s.sendErrorResponse(stream, StatusBadRequest, "Bad Request")
@@ -201,7 +200,7 @@ func (s *Server) getPublicKeyDNS() string {
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
 
-	req, err := parseRequest(requestData)
+	req, err := ParseRequest(requestData)
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
 		s.sendErrorResponse(stream, StatusBadRequest, "Bad Request")
@@ -209,8 +208,8 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	}
 
 	// Validate and normalize Content-Type for requests with body
-	if (req.Method == POST || req.Method == PUT || req.Method == PATCH) && s.validateContentType(req, stream) != nil {
-		return // error response already sent
+	if req.Method == POST || req.Method == PUT || req.Method == PATCH {
+		s.validateContentType(req)
 	}
 
 	resp := s.routeRequest(req) // execute according handler
@@ -231,23 +230,13 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Response sent, stream kept open for reuse")
 }
 
-func (s *Server) validateContentType(req *Request, stream *qotp.Stream) error {
+func (s *Server) validateContentType(req *Request) {
 	contentTypeStr, hasContentType := req.Headers["content-type"]
 
 	if !hasContentType || contentTypeStr == "" {
 		slog.Debug("content-type missing for POST, defaulting to octet-stream")
-		req.Headers["content-type"] = strconv.Itoa(int(OctetStream))
-		return nil
+		req.Headers["content-type"] = "application/octet-stream"
 	}
-
-	contentType, parseErr := strconv.Atoi(contentTypeStr)
-	if parseErr != nil || !isValidContentType(contentType) {
-		slog.Error("Invalid content-type", "value", contentTypeStr)
-		s.sendErrorResponse(stream, StatusUnsupportedMediaType, "Unsupported Media Type")
-		return fmt.Errorf("invalid content-type: %s", contentTypeStr)
-	}
-
-	return nil
 }
 
 func (s *Server) routeRequest(req *Request) *Response {
@@ -284,8 +273,7 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 	}
 
 	contentTypeStr, ok := resp.Headers["content-type"]
-	contentType, err := strconv.Atoi(contentTypeStr)
-	if ok && err == nil && contentType == int(OctetStream) {
+	if ok && contentTypeStr == "application/octet-stream" {
 		slog.Debug("Skipping compression for binary media", "content_type", "octet-stream")
 		return
 	}
@@ -304,7 +292,7 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 	}
 
 	originalSize := len(resp.Body)
-	compressed, err := compress(resp.Body, selectedEncoding)
+	compressed, err := Compress(resp.Body, selectedEncoding)
 	if err != nil {
 		slog.Error("Compression failed", "encoding", selectedEncoding, "error", err)
 		return
@@ -318,7 +306,6 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 
 	resp.Body = compressed
 	resp.Headers["content-encoding"] = string(selectedEncoding)
-	resp.Headers["content-length"] = strconv.Itoa(len(compressed))
 
 	savings := float64(originalSize-len(compressed)) / float64(originalSize) * 100
 	slog.Info("Compressed", "encoding", selectedEncoding,
@@ -327,11 +314,9 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 }
 
 // NewResponse creates a new Response with the given status code, body, and headers.
-// The Content-Length header is automatically set based on the body size.
 // Any headers provided will override auto-generated headers.
 func NewResponse(statusCode int, body []byte, headers map[string]string) *Response {
 	headerMap := make(map[string]string)
-	headerMap["content-length"] = strconv.Itoa(len(body))
 
 	maps.Copy(headerMap, headers)
 
@@ -347,7 +332,7 @@ func NewResponse(statusCode int, body []byte, headers map[string]string) *Respon
 // This is a convenience method for returning plain text responses.
 func TextResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
-		"content-type": strconv.Itoa(int(TextPlain)),
+		"content-type": "text/plain",
 	}
 	return NewResponse(statusCode, []byte(body), headers)
 }
@@ -356,7 +341,7 @@ func TextResponse(statusCode int, body string) *Response {
 // This is a convenience method for returning JSON responses.
 func JSONResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
-		"content-type": strconv.Itoa(int(JSON)),
+		"content-type": "application/json",
 	}
 	return NewResponse(statusCode, []byte(body), headers)
 }

@@ -132,7 +132,7 @@ func TestCompressDecompress(t *testing.T) {
 
 	for _, encoding := range encodings {
 		t.Run(string(encoding), func(t *testing.T) {
-			compressed, err := compress(testData, encoding)
+			compressed, err := Compress(testData, encoding)
 			require.NoError(t, err, "compression should succeed")
 
 			// Verify compression actually happened
@@ -145,7 +145,7 @@ func TestCompressDecompress(t *testing.T) {
 					encoding, savings, len(testData), len(compressed))
 			}
 
-			decompressed, err := decompress(compressed, encoding, 10*1024*1024)
+			decompressed, err := Decompress(compressed, encoding, 10*1024*1024)
 			require.NoError(t, err, "decompression should succeed")
 			assert.Equal(t, testData, decompressed, "decompressed data should match original")
 		})
@@ -155,11 +155,11 @@ func TestCompressDecompress(t *testing.T) {
 func TestCompressDecompressEmptyEncoding(t *testing.T) {
 	testData := []byte("Hello, World!")
 
-	compressed, err := compress(testData, "")
+	compressed, err := Compress(testData, "")
 	require.NoError(t, err)
 	assert.Equal(t, testData, compressed, "empty encoding compression should return same data")
 
-	decompressed, err := decompress(compressed, "", 10*1024*1024)
+	decompressed, err := Decompress(compressed, "", 10*1024*1024)
 	require.NoError(t, err)
 	assert.Equal(t, testData, decompressed, "empty encoding decompression should return same data")
 }
@@ -170,10 +170,10 @@ func TestCompressDecompressEmpty(t *testing.T) {
 
 	for _, encoding := range encodings {
 		t.Run(string(encoding), func(t *testing.T) {
-			compressed, err := compress(testData, encoding)
+			compressed, err := Compress(testData, encoding)
 			require.NoError(t, err, "compression of empty data should succeed")
 
-			decompressed, err := decompress(compressed, encoding, 10*1024*1024)
+			decompressed, err := Decompress(compressed, encoding, 10*1024*1024)
 			require.NoError(t, err, "decompression of empty data should succeed")
 
 			assert.Empty(t, decompressed, "decompressed empty data should remain empty")
@@ -183,43 +183,14 @@ func TestCompressDecompressEmpty(t *testing.T) {
 
 func TestCompressInvalidEncoding(t *testing.T) {
 	testData := []byte("test")
-	_, err := compress(testData, Encoding("invalid"))
+	_, err := Compress(testData, Encoding("invalid"))
 	assert.Error(t, err, "should return error for invalid encoding")
 }
 
 func TestDecompressInvalidEncoding(t *testing.T) {
 	testData := []byte("test")
-	_, err := decompress(testData, Encoding("invalid"), 10*1024*1024)
+	_, err := Decompress(testData, Encoding("invalid"), 10*1024*1024)
 	assert.Error(t, err, "should return error for invalid encoding")
-}
-
-// binary data shouldnt compress well (http also skips it)
-func TestBinaryDataCompression(t *testing.T) {
-	binaryData := make([]byte, 10000)
-	seed := uint32(12345)
-	for i := range binaryData { // fill with pseudo-random data
-		seed = seed*1103515245 + 12345
-		binaryData[i] = byte(seed >> 16)
-	}
-
-	encodings := []Encoding{Gzip, Brotli, Zstd}
-
-	for _, encoding := range encodings {
-		t.Run(string(encoding), func(t *testing.T) {
-			compressed, err := compress(binaryData, encoding)
-			require.NoError(t, err, "compression should succeed even on binary data")
-
-			ratio := float64(len(compressed)) / float64(len(binaryData)) * 100
-			t.Logf("%s compression of binary/random data: %.2f%% (%d -> %d bytes)",
-				encoding, ratio, len(binaryData), len(compressed))
-
-			if ratio > 95.0 {
-				t.Logf("✓ Binary data compression ineffective (%.2f%% - expected for already-compressed formats)", ratio)
-			} else {
-				t.Logf("! Binary data compressed to %.2f%% (test data may not be random enough)", ratio)
-			}
-		})
-	}
 }
 
 func BenchmarkCompressions(b *testing.B) {
@@ -230,8 +201,67 @@ func BenchmarkCompressions(b *testing.B) {
 		b.Run(string(encoding), func(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
-				_, _ = compress(testData, encoding)
+				_, _ = Compress(testData, encoding)
 			}
+		})
+	}
+}
+
+func TestCompressionBomb(t *testing.T) {
+	t.Run("ZstdBomb", func(t *testing.T) {
+		uncompressed := make([]byte, 1024*1024)
+
+		compressed, err := Compress(uncompressed, Zstd)
+		require.NoError(t, err)
+
+		t.Logf("Compression ratio: %d bytes -> %d bytes", len(uncompressed), len(compressed))
+
+		decompressed, err := Decompress(compressed, Zstd, 2*1024*1024) // 2MB limit
+		require.NoError(t, err)
+		assert.Len(t, decompressed, len(uncompressed))
+
+		_, err = Decompress(compressed, Zstd, 512*1024) // 512KB limit (too small)
+		require.Error(t, err, "Should fail when decompressed size exceeds limit")
+	})
+
+	t.Run("GzipBomb", func(t *testing.T) {
+		uncompressed := make([]byte, 512*1024)
+
+		compressed, err := Compress(uncompressed, Gzip)
+		require.NoError(t, err)
+
+		_, err = Decompress(compressed, Gzip, 256*1024)
+		require.Error(t, err, "Should fail when decompressed size exceeds limit")
+	})
+
+	t.Run("BrotliBomb", func(t *testing.T) {
+		uncompressed := make([]byte, 512*1024)
+
+		compressed, err := Compress(uncompressed, Brotli)
+		require.NoError(t, err)
+
+		_, err = Decompress(compressed, Brotli, 256*1024)
+		require.Error(t, err, "Should fail when decompressed size exceeds limit")
+	})
+}
+
+func TestCorruptedCompressedData(t *testing.T) {
+	tests := []struct {
+		name     string
+		encoding Encoding
+	}{
+		{"CorruptedZstd", Zstd},
+		{"CorruptedGzip", Gzip},
+		{"CorruptedBrotli", Brotli},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Random garbage data
+			corruptedData := []byte{0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8}
+
+			_, err := Decompress(corruptedData, tt.encoding, 1024*1024)
+			require.Error(t, err, "Should fail to decompress corrupted data")
 		})
 	}
 }

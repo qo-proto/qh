@@ -14,8 +14,8 @@ github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWE
 github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/qo-proto/qotp v0.2.9 h1:V49jPtX9XWovHgaa1vcJXOWhjGPAjMfy/iTC2g4xkdY=
-github.com/qo-proto/qotp v0.2.9/go.mod h1:nVnoXcivvMr4QaigQX4GVq1p+N6QfIvMlY9Fr7D6v98=
+github.com/qo-proto/qotp v0.2.16 h1:RkgzkqencS+qJfsmNhvR2A3CB3tUAy0U1CqcpYVyazw=
+github.com/qo-proto/qotp v0.2.16/go.mod h1:nVnoXcivvMr4QaigQX4GVq1p+N6QfIvMlY9Fr7D6v98=
 github.com/quic-go/qpack v0.5.1 h1:giqksBPnT/HDtZ6VhtFKgoLOWmlyo9Ei6u9PqzIMbhI=
 github.com/quic-go/qpack v0.5.1/go.mod h1:+PC4XFrEskIVkcLzpEkbLqq1uCoxPhQuvK5rH1ZgaEg=
 github.com/quic-go/quic-go v0.56.0 h1:q/TW+OLismmXAehgFLczhCDTYB3bFmua4D9lsNBWxvY=
