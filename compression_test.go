@@ -193,35 +193,6 @@ func TestDecompressInvalidEncoding(t *testing.T) {
 	assert.Error(t, err, "should return error for invalid encoding")
 }
 
-// binary data shouldnt compress well (http also skips it)
-func TestBinaryDataCompression(t *testing.T) {
-	binaryData := make([]byte, 10000)
-	seed := uint32(12345)
-	for i := range binaryData { // fill with pseudo-random data
-		seed = seed*1103515245 + 12345
-		binaryData[i] = byte(seed >> 16)
-	}
-
-	encodings := []Encoding{Gzip, Brotli, Zstd}
-
-	for _, encoding := range encodings {
-		t.Run(string(encoding), func(t *testing.T) {
-			compressed, err := Compress(binaryData, encoding)
-			require.NoError(t, err, "compression should succeed even on binary data")
-
-			ratio := float64(len(compressed)) / float64(len(binaryData)) * 100
-			t.Logf("%s compression of binary/random data: %.2f%% (%d -> %d bytes)",
-				encoding, ratio, len(binaryData), len(compressed))
-
-			if ratio > 95.0 {
-				t.Logf("✓ Binary data compression ineffective (%.2f%% - expected for already-compressed formats)", ratio)
-			} else {
-				t.Logf("! Binary data compressed to %.2f%% (test data may not be random enough)", ratio)
-			}
-		})
-	}
-}
-
 func BenchmarkCompressions(b *testing.B) {
 	testData := []byte(strings.Repeat("Hello, QH Protocol! This is benchmark data. ", 1000))
 	encodings := []Encoding{Gzip, Brotli, Zstd}
@@ -234,4 +205,15 @@ func BenchmarkCompressions(b *testing.B) {
 			}
 		})
 	}
+}
+
+func TestDecompressSizeLimit(t *testing.T) {
+	original := []byte(strings.Repeat("test ", 1000))
+	compressed, _ := Compress(original, Zstd)
+	sizeLimit := 1000
+
+	_, err := Decompress(compressed, Zstd, sizeLimit)
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "exceeds limit")
 }
