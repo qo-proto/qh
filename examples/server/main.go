@@ -48,7 +48,7 @@ func main() {
 	srv.HandleFunc("/api/user", qh.GET, func(_ *qh.Request) *qh.Response {
 		slog.Info("Handling request", "method", "GET", "path", "/api/user")
 		headers := map[string]string{
-			"Content-Type":  qh.JSON.HeaderValue(),
+			"Content-Type":  "application/json",
 			"Cache-Control": "max-age=3600",
 			"Date":          strconv.FormatInt(time.Now().Unix(), 10),
 		}
@@ -88,7 +88,7 @@ func main() {
 			return qh.TextResponse(500, "Internal Server Error")
 		}
 		headers := map[string]string{
-			"Content-Type": qh.TextPlain.HeaderValue(),
+			"Content-Type": "text/plain",
 		}
 		return qh.NewResponse(200, content, headers)
 	})
@@ -99,7 +99,7 @@ func main() {
 		slog.Info("Handling request", "method", "HEAD", "path", "/file")
 		// We don't need to read the file, just set the headers.
 		headers := map[string]string{
-			"Content-Type": qh.TextPlain.HeaderValue(),
+			"Content-Type": "text/plain",
 		}
 		// For HEAD, the body is nil, and Content-Length should be set to 0.
 		return qh.NewResponse(200, nil, headers)
@@ -114,7 +114,7 @@ func main() {
 		}
 		slog.Info("Serving image", "bytes", len(content))
 		headers := map[string]string{
-			"Content-Type": qh.OctetStream.HeaderValue(),
+			"Content-Type": "application/octet-stream",
 		}
 		return qh.NewResponse(200, content, headers)
 	})

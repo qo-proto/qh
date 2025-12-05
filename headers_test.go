@@ -235,7 +235,7 @@ func TestHeaderValuesAreBinarySafe(t *testing.T) {
 
 func TestResponseHeaderIntegration(t *testing.T) {
 	headers := map[string]string{
-		"content-type":  JSON.HeaderValue(),
+		"content-type":  "application/json",
 		"cache-control": "max-age=3600",
 		"etag":          `"abc123"`,
 	}
@@ -251,7 +251,7 @@ func TestResponseHeaderIntegration(t *testing.T) {
 	parsed, err := ParseResponse(data)
 	require.NoError(t, err)
 
-	assert.Equal(t, JSON.HeaderValue(), parsed.Headers["content-type"])
+	assert.Equal(t, "application/json", parsed.Headers["content-type"])
 	assert.Equal(t, "max-age=3600", parsed.Headers["cache-control"])
 	assert.Equal(t, `"abc123"`, parsed.Headers["etag"])
 }
@@ -312,61 +312,6 @@ func TestResponseHeaderEncoding(t *testing.T) {
 		actualKey := string(encoded[offset : offset+int(keyLen)])
 		assert.Equal(t, "x-custom-response", actualKey)
 	})
-}
-
-func TestContentTypeValidation(t *testing.T) {
-	tests := []struct {
-		code  int
-		valid bool
-	}{
-		{0, true},   // Custom
-		{1, true},   // TextPlain
-		{2, true},   // JSON
-		{3, true},   // HTML
-		{4, true},   // OctetStream
-		{15, true},  // Maximum valid
-		{16, false}, // Over maximum
-		{99, false}, // Way over
-		{-1, false}, // Negative
-	}
-
-	for _, tt := range tests {
-		t.Run("ContentType"+string(rune(tt.code)), func(t *testing.T) {
-			result := IsValidContentType(tt.code)
-			assert.Equal(t, tt.valid, result)
-		})
-	}
-}
-
-func TestAcceptHeaderHelper(t *testing.T) {
-	tests := []struct {
-		name     string
-		types    []ContentType
-		expected string
-	}{
-		{
-			"SingleType",
-			[]ContentType{JSON},
-			"2",
-		},
-		{
-			"MultipleTypes",
-			[]ContentType{JSON, HTML, TextPlain},
-			"2,3,1",
-		},
-		{
-			"EmptyTypes",
-			[]ContentType{},
-			"",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := AcceptHeader(tt.types...)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
 }
 
 func TestLargeHeaderValue(t *testing.T) {

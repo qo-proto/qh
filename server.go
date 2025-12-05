@@ -220,15 +220,8 @@ func (s *Server) validateContentType(req *Request, stream *qotp.Stream) error {
 
 	if !hasContentType || contentTypeStr == "" {
 		slog.Debug("content-type missing for POST, defaulting to octet-stream")
-		req.Headers["content-type"] = strconv.Itoa(int(OctetStream))
+		req.Headers["content-type"] = "application/octet-stream"
 		return nil
-	}
-
-	contentType, parseErr := strconv.Atoi(contentTypeStr)
-	if parseErr != nil || !IsValidContentType(contentType) {
-		slog.Error("Invalid content-type", "value", contentTypeStr)
-		s.sendErrorResponse(stream, StatusUnsupportedMediaType, "Unsupported Media Type")
-		return fmt.Errorf("invalid content-type: %s", contentTypeStr)
 	}
 
 	return nil
@@ -268,8 +261,7 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 	}
 
 	contentTypeStr, ok := resp.Headers["content-type"]
-	contentType, err := strconv.Atoi(contentTypeStr)
-	if ok && err == nil && contentType == int(OctetStream) {
+	if ok && contentTypeStr == "application/octet-stream" {
 		slog.Debug("Skipping compression for binary media", "content_type", "octet-stream")
 		return
 	}
@@ -329,14 +321,14 @@ func NewResponse(statusCode int, body []byte, headers map[string]string) *Respon
 // Convenience methods for common response types
 func TextResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
-		"content-type": strconv.Itoa(int(TextPlain)),
+		"content-type": "text/plain",
 	}
 	return NewResponse(statusCode, []byte(body), headers)
 }
 
 func JSONResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
-		"content-type": strconv.Itoa(int(JSON)),
+		"content-type": "application/json",
 	}
 	return NewResponse(statusCode, []byte(body), headers)
 }

@@ -9,36 +9,28 @@ QH uses a single `Response()` function that accepts headers as a string map:
 ```go
 // Minimal response with automatic Content-Length
 server.Response(200, []byte(`{"message": "success"}`), map[string]string{
-    "Content-Type": qh.JSON.HeaderValue(),
+    "Content-Type": "application/json",
 })
 
 // Response with multiple headers
 server.Response(200, []byte(body), map[string]string{
-    "Content-Type":  qh.JSON.HeaderValue(),
+    "Content-Type":  "application/json",
     "Cache-Control": "max-age=3600",
     "Date":          strconv.FormatInt(time.Now().Unix(), 10),
     "ETag":          "\"abc123\"",
 })
 
 // Convenience methods (automatically set Content-Type)
-server.TextResponse(200, "Hello, World!")        // Content-Type: 1 (text/plain)
-server.TextResponse(404, "Not Found")            // Content-Type: 1 (text/plain)
-server.JSONResponse(200, `{"data": "value"}`)    // Content-Type: 2 (application/json)
+server.TextResponse(200, "Hello, World!")        // Content-Type: text/plain
+server.TextResponse(404, "Not Found")            // Content-Type: text/plain
+server.JSONResponse(200, `{"data": "value"}`)    // Content-Type: application/json
 ```
 
 **Notes**:
 
 - `Content-Length` is automatically calculated and set
 - `Date` header is optional, set it manually if needed for caching
-- Use the `ContentType.HeaderValue()` method for single content type values
-
-**Content Type Helpers:**
-
-```go
-// For single content type (Content-Type header)
-headers["Content-Type"] = qh.JSON.HeaderValue()  // Returns "2"
-headers["Content-Type"] = qh.TextPlain.HeaderValue()  // Returns "1"
-```
+- Use standard MIME type strings for Content-Type (e.g., `"application/json"`, `"text/plain"`)
 
 ## Client
 
@@ -48,7 +40,7 @@ QH supports the following HTTP methods for RESTful APIs:
 
 ```go
 headers := map[string]string{
-    "Accept": qh.AcceptHeader(qh.HTML, qh.JSON, qh.TextPlain),
+    "Accept": "text/html,application/json,text/plain",
 }
 response, err := client.GET("example.com", "/api/data", headers)
 ```
@@ -57,7 +49,7 @@ response, err := client.GET("example.com", "/api/data", headers)
 
 ```go
 headers := map[string]string{
-    "Accept": qh.AcceptHeader(qh.JSON, qh.TextPlain),
+    "Accept": "application/json,text/plain",
 }
 response, err := client.HEAD("example.com", "/api/user", headers)
 // Response contains headers but no body
@@ -68,8 +60,8 @@ response, err := client.HEAD("example.com", "/api/user", headers)
 ```go
 body := []byte(`{"name": "test"}`)
 headers := map[string]string{
-    "Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
-    "Content-Type": qh.JSON.HeaderValue(),
+    "Accept":       "application/json,text/plain",
+    "Content-Type": "application/json",
 }
 response, err := client.POST("example.com", "/submit", body, headers)
 ```
@@ -79,8 +71,8 @@ response, err := client.POST("example.com", "/submit", body, headers)
 ```go
 body := []byte(`{"name": "test", "id": 123}`)
 headers := map[string]string{
-    "Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
-    "Content-Type": qh.JSON.HeaderValue(),
+    "Accept":       "application/json,text/plain",
+    "Content-Type": "application/json",
 }
 response, err := client.PUT("example.com", "/api/user", body, headers)
 ```
@@ -90,8 +82,8 @@ response, err := client.PUT("example.com", "/api/user", body, headers)
 ```go
 body := []byte(`{"name": "updated"}`)
 headers := map[string]string{
-    "Accept":       qh.AcceptHeader(qh.JSON, qh.TextPlain),
-    "Content-Type": qh.JSON.HeaderValue(),
+    "Accept":       "application/json,text/plain",
+    "Content-Type": "application/json",
 }
 response, err := client.PATCH("example.com", "/api/user", body, headers)
 ```
@@ -100,7 +92,7 @@ response, err := client.PATCH("example.com", "/api/user", body, headers)
 
 ```go
 headers := map[string]string{
-    "Accept": qh.AcceptHeader(qh.JSON, qh.TextPlain),
+    "Accept": "application/json,text/plain",
 }
 response, err := client.DELETE("example.com", "/api/user", headers)
 ```
@@ -194,11 +186,13 @@ go run -tags keylog ./examples/server/main.go
 ```
 
 The keylog file will contain entries in the format:
+
 ```
 QOTP_SHARED_SECRET <connId_hex> <secret_hex>
 ```
 
 **Notes:**
+
 - Keylog is only available when building with `-tags keylog`
 - Without the build tag, keylog functions are no-ops
 - The keylog format is compatible with the QOTP Wireshark dissector

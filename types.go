@@ -11,14 +11,13 @@ import (
 const (
 	Version = 0 // Version is the current QH protocol version
 
-	versionBitShift     = 6          // Version is stored in upper 2 bits (bits 7-6)
-	methodBitShift      = 3          // Method is stored in middle 3 bits (bits 5-3)
-	statusCodeMask      = 0b00111111 // Status code uses lower 6 bits
-	methodMask          = 0b00000111 // Method uses 3 bits
-	maxVersionValue     = 3          // Maximum version (2 bits: 0-3)
-	maxContentTypeValue = 15         // Maximum content type (4 bits: 0-15)
-	maxHostLength       = 253        // Maximum host length (DNS label length limit)
-	firstByteOffset     = 1          // Offset to skip the first byte in wire format
+	versionBitShift = 6          // Version is stored in upper 2 bits (bits 7-6)
+	methodBitShift  = 3          // Method is stored in middle 3 bits (bits 5-3)
+	statusCodeMask  = 0b00111111 // Status code uses lower 6 bits
+	methodMask      = 0b00000111 // Method uses 3 bits
+	maxVersionValue = 3          // Maximum version (2 bits: 0-3)
+	maxHostLength   = 253        // Maximum host length (DNS label length limit)
+	firstByteOffset = 1          // Offset to skip the first byte in wire format
 )
 
 type Method int
@@ -52,54 +51,6 @@ func (m Method) String() string {
 	default:
 		return "UNKNOWN"
 	}
-}
-
-type ContentType int
-
-const (
-	// 4 bits for content type (16 types)
-	Custom ContentType = iota // Allows for a custom string in the body if needed
-	TextPlain
-	JSON
-	HTML
-	OctetStream
-	// ... up to 15
-)
-
-func IsValidContentType(code int) bool {
-	return code >= 0 && code <= maxContentTypeValue
-}
-
-func (ct ContentType) String() string {
-	switch ct {
-	case Custom:
-		return "custom"
-	case TextPlain:
-		return "text/plain"
-	case JSON:
-		return "application/json"
-	case HTML:
-		return "text/html"
-	case OctetStream:
-		return "application/octet-stream"
-	default:
-		return "unknown"
-	}
-}
-
-func (ct ContentType) HeaderValue() string {
-	return strconv.Itoa(int(ct))
-}
-
-func AcceptHeader(types ...ContentType) string {
-	if len(types) == 0 {
-		return ""
-	}
-	parts := make([]string, len(types))
-	for i, ct := range types {
-		parts[i] = strconv.Itoa(int(ct))
-	}
-	return strings.Join(parts, ",")
 }
 
 const (

@@ -46,7 +46,7 @@ func TestRequestFormat(t *testing.T) {
 				Path:    "/api",
 				Version: 0,
 				Headers: map[string]string{
-					"accept": JSON.HeaderValue(),
+					"accept": "application/json",
 				},
 			},
 		},
@@ -58,7 +58,7 @@ func TestRequestFormat(t *testing.T) {
 				Path:    "/submit",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type": JSON.HeaderValue(),
+					"content-type": "application/json",
 				},
 				Body: []byte(`{"key":"val"}`),
 			},
@@ -120,7 +120,7 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type": TextPlain.HeaderValue(),
+					"content-type": "text/plain",
 				},
 				Body: []byte("Hello"),
 			},
@@ -131,7 +131,7 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 404,
 				Headers: map[string]string{
-					"content-type": TextPlain.HeaderValue(),
+					"content-type": "text/plain",
 				},
 				Body: []byte("Not Found"),
 			},
@@ -142,7 +142,7 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 204,
 				Headers: map[string]string{
-					"content-type": Custom.HeaderValue(),
+					"content-type": "custom",
 				},
 				Body: []byte{},
 			},
@@ -193,7 +193,7 @@ func TestParseRequestWithBody(t *testing.T) {
 		Path:    "/submit",
 		Version: 0,
 		Headers: map[string]string{
-			"content-type":   JSON.HeaderValue(),
+			"content-type":   "application/json",
 			"content-length": "16",
 		},
 		Body: []byte(`{"name": "test"}`),
@@ -290,7 +290,7 @@ func TestParseResponseBasic(t *testing.T) {
 		Version:    0,
 		StatusCode: 200,
 		Headers: map[string]string{
-			"content-type":   TextPlain.HeaderValue(),
+			"content-type":   "text/plain",
 			"content-length": "13",
 			"date":           "1758784800",
 		},
@@ -311,7 +311,7 @@ func TestParseResponseSingleHeader(t *testing.T) {
 		Version:    0,
 		StatusCode: 200,
 		Headers: map[string]string{
-			"content-type": TextPlain.HeaderValue(),
+			"content-type": "text/plain",
 		},
 		Body: []byte("Response body"),
 	}
@@ -363,51 +363,6 @@ func TestMethodString(t *testing.T) {
 	}
 }
 
-func TestIsValidContentType(t *testing.T) {
-	tests := []struct {
-		name  string
-		code  int
-		valid bool
-	}{
-		{"Custom", 0, true},
-		{"TextPlain", 1, true},
-		{"JSON", 2, true},
-		{"HTML", 3, true},
-		{"OctetStream", 4, true},
-		{"MaxValid", 15, true},
-		{"TooHigh", 16, false},
-		{"Invalid99", 99, false},
-		{"Negative", -1, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.valid, IsValidContentType(tt.code))
-		})
-	}
-}
-
-func TestContentTypeHeaderValue(t *testing.T) {
-	tests := []struct {
-		name        string
-		contentType ContentType
-		expected    string
-	}{
-		{"Custom", Custom, "0"},
-		{"TextPlain", TextPlain, "1"},
-		{"JSON", JSON, "2"},
-		{"HTML", HTML, "3"},
-		{"OctetStream", OctetStream, "4"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := tt.contentType.HeaderValue()
-			require.Equal(t, tt.expected, actual)
-		})
-	}
-}
-
 func assertRequestEqual(t *testing.T, expected, actual *Request) {
 	t.Helper()
 	require.Equal(t, expected.Method, actual.Method)
@@ -431,7 +386,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/api/data",
 				Version: 0,
 				Headers: map[string]string{
-					"accept":          AcceptHeader(JSON, TextPlain),
+					"accept":          "application/json,text/plain",
 					"accept-encoding": "gzip, br",
 					"user-agent":      "QH-Client/1.0",
 				},
@@ -446,7 +401,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/submit",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
+					"content-type":   "application/json",
 					"content-length": "15",
 					"authorization":  "Bearer token123",
 				},
@@ -461,7 +416,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/user/123",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
+					"content-type":   "application/json",
 					"content-length": "18",
 				},
 				Body: []byte(`{"name":"updated"}`),
@@ -475,7 +430,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/user/123",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
+					"content-type":   "application/json",
 					"content-length": "12",
 				},
 				Body: []byte(`{"age":"30"}`),
@@ -500,7 +455,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/api/data",
 				Version: 0,
 				Headers: map[string]string{
-					"accept": AcceptHeader(JSON, TextPlain),
+					"accept": "application/json,text/plain",
 				},
 				Body: []byte{},
 			},
@@ -524,7 +479,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/custom",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":     TextPlain.HeaderValue(),
+					"content-type":     "text/plain",
 					"content-length":   "5",
 					"x-custom-header":  "custom-value",
 					"x-another-custom": "another-value",
@@ -563,7 +518,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
+					"content-type":   "application/json",
 					"content-length": "15",
 					"cache-control":  "max-age=3600",
 					"date":           "1758784800",
@@ -577,7 +532,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 404,
 				Headers: map[string]string{
-					"content-type":   TextPlain.HeaderValue(),
+					"content-type":   "text/plain",
 					"content-length": "9",
 				},
 				Body: []byte("Not Found"),
@@ -589,7 +544,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 204,
 				Headers: map[string]string{
-					"content-type": TextPlain.HeaderValue(),
+					"content-type": "text/plain",
 				},
 				Body: []byte{},
 			},
@@ -600,7 +555,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type":       JSON.HeaderValue(),
+					"content-type":       "application/json",
 					"content-length":     "2",
 					"x-custom-response":  "custom-value",
 					"x-another-response": "another-value",
@@ -614,7 +569,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type":                 JSON.HeaderValue(),
+					"content-type":                 "application/json",
 					"content-length":               "2",
 					"access-control-allow-origin":  "*",
 					"access-control-allow-methods": "GET, POST, PUT",
