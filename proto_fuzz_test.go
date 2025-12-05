@@ -89,7 +89,7 @@ func FuzzParseRequest(f *testing.F) {
 	})
 }
 
-//nolint:gocognit,nestif,cyclop // intentional flat structure
+//nolint:gocognit,nestif // intentional flat structure
 func FuzzParseResponse(f *testing.F) {
 	f.Add([]byte("\x00\x00\x04OK!"))                      // 200 OK minimal
 	f.Add([]byte("\x01\x00\x09Not Found"))                // 404 Not Found
