@@ -112,16 +112,16 @@ func encodeHeaders(
 		// Try Format 2: name-only match with custom value, encode ID
 		if headerID, exists := nameOnly[key]; exists {
 			result = append(result, headerID)
-			result = appendUvarint(result, uint64(len(value)))
+			result = AppendUvarint(result, uint64(len(value)))
 			result = append(result, []byte(value)...)
 			continue
 		}
 
 		// Format 3: Custom header not in static table
 		result = append(result, CustomHeader)
-		result = appendUvarint(result, uint64(len(key)))
+		result = AppendUvarint(result, uint64(len(key)))
 		result = append(result, []byte(key)...)
-		result = appendUvarint(result, uint64(len(value)))
+		result = AppendUvarint(result, uint64(len(value)))
 		result = append(result, []byte(value)...)
 	}
 
@@ -141,17 +141,17 @@ func (r *Request) Format() []byte {
 	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
 	firstByte := (r.Version << versionBitShift) | (byte(r.Method) << methodBitShift)
 	result := []byte{firstByte}
-	result = appendUvarint(result, uint64(len(r.Host)))
+	result = AppendUvarint(result, uint64(len(r.Host)))
 	result = append(result, []byte(r.Host)...)
-	result = appendUvarint(result, uint64(len(r.Path)))
+	result = AppendUvarint(result, uint64(len(r.Path)))
 	result = append(result, []byte(r.Path)...)
 
 	// Encode headers first to get total length
 	encodedHeaders := encodeHeaders(r.Headers, requestHeaderCompletePairs, requestHeaderNameOnly)
-	result = appendUvarint(result, uint64(len(encodedHeaders)))
+	result = AppendUvarint(result, uint64(len(encodedHeaders)))
 	result = append(result, encodedHeaders...)
 
-	result = appendUvarint(result, uint64(len(r.Body)))
+	result = AppendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
 
 	return result
@@ -171,10 +171,10 @@ func (r *Response) Format() []byte {
 
 	// Encode headers first to get total length
 	encodedHeaders := encodeHeaders(r.Headers, responseHeaderCompletePairs, responseHeaderNameOnly)
-	result = appendUvarint(result, uint64(len(encodedHeaders)))
+	result = AppendUvarint(result, uint64(len(encodedHeaders)))
 	result = append(result, encodedHeaders...)
 
-	result = appendUvarint(result, uint64(len(r.Body)))
+	result = AppendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
 
 	return result
@@ -308,7 +308,7 @@ func checkField(data []byte, offset *int, fieldName string) (bool, error) {
 	return true, nil
 }
 
-func isRequestComplete(data []byte) (bool, error) {
+func IsRequestComplete(data []byte) (bool, error) {
 	if len(data) == 0 {
 		return false, nil
 	}
@@ -335,7 +335,7 @@ func isRequestComplete(data []byte) (bool, error) {
 	return true, nil
 }
 
-func isResponseComplete(data []byte) (bool, error) {
+func IsResponseComplete(data []byte) (bool, error) {
 	if len(data) == 0 {
 		return false, nil
 	}

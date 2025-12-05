@@ -45,7 +45,7 @@ func main() {
 		slog.Info("Request processing", "method", "GET", "path", "/api/user")
 		time.Sleep(requestDelay)
 		headers := map[string]string{
-			"Content-Type":  qh.JSON.HeaderValue(),
+			"Content-Type":  "application/json",
 			"Cache-Control": "max-age=3600",
 			"Date":          strconv.FormatInt(time.Now().Unix(), 10),
 		}

@@ -279,7 +279,7 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 
 		responseBuffer = append(responseBuffer, chunk...)
 
-		complete, checkErr := isResponseComplete(responseBuffer)
+		complete, checkErr := IsResponseComplete(responseBuffer)
 		if checkErr != nil {
 			slog.Error("Error checking response completeness", "error", checkErr)
 			return false, nil

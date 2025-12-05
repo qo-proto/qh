@@ -160,7 +160,7 @@ func (s *Server) Serve() error {
 
 			slog.Debug("Received data fragment", "fragment_bytes", len(data), "total_bytes", len(buffer))
 
-			complete, checkErr := isRequestComplete(buffer)
+			complete, checkErr := IsRequestComplete(buffer)
 			if checkErr != nil {
 				slog.Error("Request validation error", "error", checkErr)
 				s.sendErrorResponse(stream, StatusBadRequest, "Bad Request")

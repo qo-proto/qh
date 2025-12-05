@@ -26,7 +26,7 @@ func ReadUvarint(buf []byte, offset int) (uint64, int, error) {
 	}
 }
 
-func appendUvarint(buf []byte, v uint64) []byte {
+func AppendUvarint(buf []byte, v uint64) []byte {
 	start := len(buf)
 	buf = append(buf, make([]byte, binary.MaxVarintLen64)...)
 	n := binary.PutUvarint(buf[start:], v)
