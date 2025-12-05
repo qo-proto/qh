@@ -12,6 +12,7 @@ func newTestServer(t *testing.T, opts ...ServerOption) (*Server, string) {
 	t.Helper()
 
 	// Find an available port by briefly binding to port 0
+	//nolint:noctx // Context not needed
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("Failed to find available port: %v", err)

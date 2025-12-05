@@ -192,8 +192,8 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	}
 
 	// Validate and normalize Content-Type for requests with body
-	if (req.Method == POST || req.Method == PUT || req.Method == PATCH) && s.validateContentType(req, stream) != nil {
-		return // error response already sent
+	if req.Method == POST || req.Method == PUT || req.Method == PATCH {
+		s.validateContentType(req)
 	}
 
 	resp := s.routeRequest(req) // execute according handler
@@ -214,16 +214,13 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Response sent, stream kept open for reuse")
 }
 
-func (s *Server) validateContentType(req *Request, stream *qotp.Stream) error {
+func (s *Server) validateContentType(req *Request) {
 	contentTypeStr, hasContentType := req.Headers["content-type"]
 
 	if !hasContentType || contentTypeStr == "" {
 		slog.Debug("content-type missing for POST, defaulting to octet-stream")
 		req.Headers["content-type"] = "application/octet-stream"
-		return nil
 	}
-
-	return nil
 }
 
 func (s *Server) routeRequest(req *Request) *Response {

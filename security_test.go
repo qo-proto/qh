@@ -83,14 +83,14 @@ func TestInfiniteRedirectLoop(t *testing.T) {
 	defer srv.Close()
 
 	// Setup redirect loop: /a -> /b -> /a
-	srv.HandleFunc("/a", GET, func(req *Request) *Response {
+	srv.HandleFunc("/a", GET, func(_ *Request) *Response {
 		headers := map[string]string{
 			"location": "qh://127.0.0.1/b",
 		}
 		return NewResponse(302, nil, headers)
 	})
 
-	srv.HandleFunc("/b", GET, func(req *Request) *Response {
+	srv.HandleFunc("/b", GET, func(_ *Request) *Response {
 		headers := map[string]string{
 			"location": "qh://127.0.0.1/a",
 		}
@@ -110,7 +110,7 @@ func TestZeroMaxRedirects(t *testing.T) {
 	srv, addr := newTestServer(t)
 	defer srv.Close()
 
-	srv.HandleFunc("/redirect", GET, func(req *Request) *Response {
+	srv.HandleFunc("/redirect", GET, func(_ *Request) *Response {
 		return NewResponse(301, nil, map[string]string{
 			"location": "qh://127.0.0.1/target",
 		})

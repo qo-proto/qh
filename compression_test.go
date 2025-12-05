@@ -218,7 +218,7 @@ func TestCompressionBomb(t *testing.T) {
 
 		decompressed, err := Decompress(compressed, Zstd, 2*1024*1024) // 2MB limit
 		require.NoError(t, err)
-		assert.Equal(t, len(uncompressed), len(decompressed))
+		assert.Len(t, decompressed, len(uncompressed))
 
 		_, err = Decompress(compressed, Zstd, 512*1024) // 512KB limit (too small)
 		require.Error(t, err, "Should fail when decompressed size exceeds limit")

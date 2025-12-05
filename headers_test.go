@@ -1,3 +1,4 @@
+//nolint:gosec // False warnings, intentional
 package qh
 
 import (
@@ -206,7 +207,7 @@ func TestEmptyHeaderValue(t *testing.T) {
 	parsed, err := ParseRequest(data)
 	require.NoError(t, err)
 
-	assert.Equal(t, "", parsed.Headers["x-empty"])
+	assert.Empty(t, parsed.Headers["x-empty"])
 }
 
 func TestHeaderValuesAreBinarySafe(t *testing.T) {
