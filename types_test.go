@@ -193,8 +193,7 @@ func TestParseRequestWithBody(t *testing.T) {
 		Path:    "/submit",
 		Version: 0,
 		Headers: map[string]string{
-			"content-type":   "application/json",
-			"content-length": "16",
+			"content-type": "application/json",
 		},
 		Body: []byte(`{"name": "test"}`),
 	}
@@ -290,9 +289,8 @@ func TestParseResponseBasic(t *testing.T) {
 		Version:    0,
 		StatusCode: 200,
 		Headers: map[string]string{
-			"content-type":   "text/plain",
-			"content-length": "13",
-			"date":           "1758784800",
+			"content-type": "text/plain",
+			"date":         "1758784800",
 		},
 		Body: []byte("Hello, world!"),
 	}
@@ -401,9 +399,8 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/submit",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   "application/json",
-					"content-length": "15",
-					"authorization":  "Bearer token123",
+					"content-type":  "application/json",
+					"authorization": "Bearer token123",
 				},
 				Body: []byte(`{"name":"test"}`),
 			},
@@ -416,8 +413,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/user/123",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   "application/json",
-					"content-length": "18",
+					"content-type": "application/json",
 				},
 				Body: []byte(`{"name":"updated"}`),
 			},
@@ -430,8 +426,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/user/123",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   "application/json",
-					"content-length": "12",
+					"content-type": "application/json",
 				},
 				Body: []byte(`{"age":"30"}`),
 			},
@@ -480,7 +475,6 @@ func TestRequestRoundTrip(t *testing.T) {
 				Version: 0,
 				Headers: map[string]string{
 					"content-type":     "text/plain",
-					"content-length":   "5",
 					"x-custom-header":  "custom-value",
 					"x-another-custom": "another-value",
 				},
@@ -518,10 +512,9 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type":   "application/json",
-					"content-length": "15",
-					"cache-control":  "max-age=3600",
-					"date":           "1758784800",
+					"content-type":  "application/json",
+					"cache-control": "max-age=3600",
+					"date":          "1758784800",
 				},
 				Body: []byte(`{"status":"ok"}`),
 			},
@@ -532,8 +525,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 404,
 				Headers: map[string]string{
-					"content-type":   "text/plain",
-					"content-length": "9",
+					"content-type": "text/plain",
 				},
 				Body: []byte("Not Found"),
 			},
@@ -556,7 +548,6 @@ func TestResponseRoundTrip(t *testing.T) {
 				StatusCode: 200,
 				Headers: map[string]string{
 					"content-type":       "application/json",
-					"content-length":     "2",
 					"x-custom-response":  "custom-value",
 					"x-another-response": "another-value",
 				},
@@ -570,7 +561,6 @@ func TestResponseRoundTrip(t *testing.T) {
 				StatusCode: 200,
 				Headers: map[string]string{
 					"content-type":                 "application/json",
-					"content-length":               "2",
 					"access-control-allow-origin":  "*",
 					"access-control-allow-methods": "GET, POST, PUT",
 					"access-control-allow-headers": "Content-Type, Authorization",

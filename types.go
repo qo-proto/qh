@@ -4,7 +4,6 @@ package qh
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -164,10 +163,10 @@ func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
 	}
 	offset += n
 
-	keyLenInt := int(keyLen)
-	if offset+keyLenInt > len(data) {
+	if keyLen > uint64(len(data)-offset) {
 		return "", "", offset, errors.New("custom header key length exceeds buffer")
 	}
+	keyLenInt := int(keyLen)
 	key := string(data[offset : offset+keyLenInt])
 	offset += keyLenInt
 
@@ -177,10 +176,10 @@ func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
 	}
 	offset += n
 
-	valueLenInt := int(valueLen)
-	if offset+valueLenInt > len(data) {
+	if valueLen > uint64(len(data)-offset) {
 		return "", "", offset, errors.New("custom header value length exceeds buffer")
 	}
+	valueLenInt := int(valueLen)
 	value := string(data[offset : offset+valueLenInt])
 	offset += valueLenInt
 
@@ -194,10 +193,10 @@ func parseKnownHeader(data []byte, offset int) (string, int, error) {
 	}
 	offset += n
 
-	valueLenInt := int(valueLen)
-	if offset+valueLenInt > len(data) {
+	if valueLen > uint64(len(data)-offset) {
 		return "", offset, errors.New("header value length exceeds buffer")
 	}
+	valueLenInt := int(valueLen)
 	value := string(data[offset : offset+valueLenInt])
 	offset += valueLenInt
 
@@ -239,6 +238,9 @@ func parseHeaders(
 	staticTable map[byte]headerEntry,
 ) (map[string]string, int, error) {
 	headers := make(map[string]string)
+	if headersLen > uint64(len(data)-offset) {
+		return nil, offset, errors.New("headers length exceeds buffer")
+	}
 	endOffset := offset + int(headersLen)
 
 	for offset < endOffset {
@@ -272,23 +274,13 @@ func checkField(data []byte, offset *int, fieldName string) (bool, error) {
 		return false, fmt.Errorf("reading %s length: %w", fieldName, err)
 	}
 
-	const maxInt = int(^uint(0) >> 1)
-	if length > uint64(maxInt) {
-		return false, fmt.Errorf("%s length too large: %d", fieldName, length)
-	}
-
-	lengthInt := int(length)
-
-	if *offset > maxInt-lengthInt {
-		return false, fmt.Errorf("%s offset overflow", fieldName)
-	}
-
 	*offset += n
-	if *offset+lengthInt > len(data) {
+	remaining := len(data) - *offset
+	if remaining < 0 || length > uint64(remaining) {
 		return false, nil // Need more data
 	}
 
-	*offset += lengthInt
+	*offset += int(length)
 	return true, nil
 }
 
@@ -376,10 +368,10 @@ func ParseResponse(data []byte) (*Response, error) {
 	}
 	offset += n
 
-	bodyLenInt := int(bodyLen)
-	if offset+bodyLenInt > len(data) {
+	if bodyLen > uint64(len(data)-offset) {
 		return nil, errors.New("invalid response: body length exceeds buffer")
 	}
+	bodyLenInt := int(bodyLen)
 	body := data[offset : offset+bodyLenInt]
 
 	resp := &Response{
@@ -387,13 +379,6 @@ func ParseResponse(data []byte) (*Response, error) {
 		StatusCode: httpStatusCode,
 		Headers:    headers,
 		Body:       body,
-	}
-
-	if contentLengthStr, ok := headers["content-length"]; ok {
-		expectedLen, err := strconv.Atoi(contentLengthStr)
-		if err == nil && len(body) != expectedLen {
-			return nil, errors.New("invalid response: body length does not match content-length")
-		}
 	}
 
 	return resp, nil
@@ -427,10 +412,10 @@ func ParseRequest(data []byte) (*Request, error) {
 	}
 	offset += n
 
-	hostLenInt := int(hostLen)
-	if offset+hostLenInt > len(data) {
+	if hostLen > uint64(len(data)-offset) {
 		return nil, errors.New("invalid request: host length exceeds buffer")
 	}
+	hostLenInt := int(hostLen)
 	host := string(data[offset : offset+hostLenInt])
 	offset += hostLenInt
 
@@ -448,10 +433,10 @@ func ParseRequest(data []byte) (*Request, error) {
 	}
 	offset += n
 
-	pathLenInt := int(pathLen)
-	if offset+pathLenInt > len(data) {
+	if pathLen > uint64(len(data)-offset) {
 		return nil, errors.New("invalid request: path length exceeds buffer")
 	}
+	pathLenInt := int(pathLen)
 	path := string(data[offset : offset+pathLenInt])
 	offset += pathLenInt
 
@@ -477,10 +462,10 @@ func ParseRequest(data []byte) (*Request, error) {
 	}
 	offset += n
 
-	bodyLenInt := int(bodyLen)
-	if offset+bodyLenInt > len(data) {
+	if bodyLen > uint64(len(data)-offset) {
 		return nil, errors.New("invalid request: body length exceeds buffer")
 	}
+	bodyLenInt := int(bodyLen)
 	body := data[offset : offset+bodyLenInt]
 
 	req := &Request{
@@ -490,13 +475,6 @@ func ParseRequest(data []byte) (*Request, error) {
 		Version: version,
 		Headers: headers,
 		Body:    body,
-	}
-
-	if contentLengthStr, ok := headers["content-length"]; ok {
-		expectedLen, err := strconv.Atoi(contentLengthStr)
-		if err == nil && len(body) != expectedLen {
-			return nil, errors.New("invalid request: body length does not match content-length")
-		}
 	}
 
 	return req, nil

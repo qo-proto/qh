@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"strconv"
 
 	"github.com/qo-proto/qotp"
 )
@@ -294,7 +293,6 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 
 	resp.Body = compressed
 	resp.Headers["content-encoding"] = string(selectedEncoding)
-	resp.Headers["content-length"] = strconv.Itoa(len(compressed))
 
 	savings := float64(originalSize-len(compressed)) / float64(originalSize) * 100
 	slog.Info("Compressed", "encoding", selectedEncoding,
@@ -304,7 +302,6 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 
 func NewResponse(statusCode int, body []byte, headers map[string]string) *Response {
 	headerMap := make(map[string]string)
-	headerMap["content-length"] = strconv.Itoa(len(body))
 
 	for key, value := range headers {
 		headerMap[key] = value

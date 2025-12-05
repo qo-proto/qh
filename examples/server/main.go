@@ -97,11 +97,10 @@ func main() {
 	// This is useful for checking resource metadata without downloading the content.
 	srv.HandleFunc("/file", qh.HEAD, func(_ *qh.Request) *qh.Response {
 		slog.Info("Handling request", "method", "HEAD", "path", "/file")
-		// We don't need to read the file, just set the headers.
 		headers := map[string]string{
 			"Content-Type": "text/plain",
 		}
-		// For HEAD, the body is nil, and Content-Length should be set to 0.
+		// For HEAD, the body is nil
 		return qh.NewResponse(200, nil, headers)
 	})
 

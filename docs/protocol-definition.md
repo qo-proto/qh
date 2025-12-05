@@ -249,6 +249,7 @@ Implementations that reject messages due to size constraints SHOULD return:
 - **Varint length prefixes**: All variable-length fields use varint-encoded lengths
 - **Binary-safe**: No reserved separator bytes (all data is binary-safe)
 - **Body**: Optional content (JSON, HTML, binary data, etc.)
+- **No Content-Length header required**: Unlike HTTP/1.1, QH determines body length from the varint prefix in the wire format, not from headers. The `content-length` header is unnecessary and ignored by the protocol.
 
 **Message completeness:**
 

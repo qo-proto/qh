@@ -1,7 +1,6 @@
 package qh
 
 import (
-	"strconv"
 	"strings"
 	"testing"
 
@@ -84,7 +83,6 @@ func TestClientDecompression(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, original, resp.Body)
 		assert.NotContains(t, resp.Headers, "content-encoding", "Should remove content-encoding header")
-		assert.Equal(t, strconv.Itoa(len(original)), resp.Headers["content-length"])
 	})
 
 	t.Run("InvalidCompressedData", func(t *testing.T) {
