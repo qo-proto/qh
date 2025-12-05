@@ -57,7 +57,7 @@ func selectEncoding(acceptedEncodings []Encoding, serverSupported []Encoding) En
 	return "" // No common encoding, don't compress
 }
 
-func compress(data []byte, encoding Encoding) ([]byte, error) {
+func Compress(data []byte, encoding Encoding) ([]byte, error) {
 	if len(data) == 0 || encoding == "" {
 		return data, nil
 	}
@@ -99,7 +99,7 @@ func compress(data []byte, encoding Encoding) ([]byte, error) {
 	}
 }
 
-func decompress(data []byte, encoding Encoding, maxSize int) ([]byte, error) {
+func Decompress(data []byte, encoding Encoding, maxSize int) ([]byte, error) {
 	if len(data) == 0 || encoding == "" {
 		return data, nil
 	}

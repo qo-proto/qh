@@ -10,7 +10,7 @@ var (
 	errVarintIncomplete = errors.New("varint is incomplete (buffer too short)")
 )
 
-func readUvarint(buf []byte, offset int) (uint64, int, error) {
+func ReadUvarint(buf []byte, offset int) (uint64, int, error) {
 	if offset >= len(buf) {
 		return 0, 0, errVarintIncomplete
 	}

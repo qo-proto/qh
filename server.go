@@ -292,7 +292,7 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 	}
 
 	originalSize := len(resp.Body)
-	compressed, err := compress(resp.Body, selectedEncoding)
+	compressed, err := Compress(resp.Body, selectedEncoding)
 	if err != nil {
 		slog.Error("Compression failed", "encoding", selectedEncoding, "error", err)
 		return

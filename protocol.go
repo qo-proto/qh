@@ -181,7 +181,7 @@ func (r *Response) Format() []byte {
 }
 
 func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
-	keyLen, n, readErr := readUvarint(data, offset)
+	keyLen, n, readErr := ReadUvarint(data, offset)
 	if readErr != nil {
 		return "", "", offset, fmt.Errorf("failed to read custom header key length: %w", readErr)
 	}
@@ -194,7 +194,7 @@ func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
 	key := string(data[offset : offset+keyLenInt])
 	offset += keyLenInt
 
-	valueLen, n, readErr := readUvarint(data, offset)
+	valueLen, n, readErr := ReadUvarint(data, offset)
 	if readErr != nil {
 		return "", "", offset, fmt.Errorf("failed to read custom header value length: %w", readErr)
 	}
@@ -211,7 +211,7 @@ func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
 }
 
 func parseKnownHeader(data []byte, offset int) (string, int, error) {
-	valueLen, n, readErr := readUvarint(data, offset)
+	valueLen, n, readErr := ReadUvarint(data, offset)
 	if readErr != nil {
 		return "", offset, fmt.Errorf("failed to read header value length: %w", readErr)
 	}
@@ -290,7 +290,7 @@ func parseHeaders(
 
 // validate and skip over a length-prefixed field
 func checkField(data []byte, offset *int, fieldName string) (bool, error) {
-	length, n, err := readUvarint(data, *offset)
+	length, n, err := ReadUvarint(data, *offset)
 	if errors.Is(err, errVarintIncomplete) {
 		return false, nil
 	}
@@ -374,7 +374,7 @@ func parseResponse(data []byte) (*Response, error) {
 
 	httpStatusCode := decodeStatusCode(compactStatus)
 
-	headersLen, n, err := readUvarint(data, offset)
+	headersLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid response: failed to read headers length: %w", err)
 	}
@@ -386,7 +386,7 @@ func parseResponse(data []byte) (*Response, error) {
 	}
 	offset = newOffset
 
-	bodyLen, n, err := readUvarint(data, offset)
+	bodyLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid response: failed to read body length: %w", err)
 	}
@@ -430,7 +430,7 @@ func parseRequest(data []byte) (*Request, error) {
 		return nil, fmt.Errorf("invalid method value: %d", method)
 	}
 
-	hostLen, n, err := readUvarint(data, offset)
+	hostLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read host length: %w", err)
 	}
@@ -451,7 +451,7 @@ func parseRequest(data []byte) (*Request, error) {
 		return nil, fmt.Errorf("invalid request: host exceeds maximum length of %d characters", maxHostLength)
 	}
 
-	pathLen, n, err := readUvarint(data, offset)
+	pathLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read path length: %w", err)
 	}
@@ -468,7 +468,7 @@ func parseRequest(data []byte) (*Request, error) {
 		path = "/"
 	}
 
-	headersLen, n, err := readUvarint(data, offset)
+	headersLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read headers length: %w", err)
 	}
@@ -480,7 +480,7 @@ func parseRequest(data []byte) (*Request, error) {
 	}
 	offset = newOffset
 
-	bodyLen, n, err := readUvarint(data, offset)
+	bodyLen, n, err := ReadUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read body length: %w", err)
 	}
