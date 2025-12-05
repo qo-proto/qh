@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 
 	"github.com/qo-proto/qotp"
 )
@@ -16,9 +17,13 @@ const (
 	defaultMinCompressionSize = 1024             // 1KB
 )
 
-// handles QH requests
+// Handler is a function type that processes QH requests and returns responses.
+// Handlers are registered with the server to handle specific path and method combinations.
 type Handler func(*Request) *Response
 
+// Server is a QH protocol server that listens for incoming connections
+// and routes requests to registered handlers. It supports automatic
+// response compression and configurable request size limits.
 type Server struct {
 	listener           *qotp.Listener
 	handlers           map[string]map[Method]Handler // path -> method -> handler (method parsed from request first byte)
@@ -28,32 +33,46 @@ type Server struct {
 	keylogWriter       io.Writer
 }
 
+// ServerOption is a functional option for configuring a Server.
 type ServerOption func(*Server)
 
+// WithMaxRequestSize sets the maximum allowed request size in bytes.
+// Requests exceeding this limit will receive a 413 Payload Too Large response.
+// Default is 10MB.
 func WithMaxRequestSize(size int) ServerOption {
 	return func(s *Server) {
 		s.maxRequestSize = size
 	}
 }
 
+// WithMinCompressionSize sets the minimum response body size for compression.
+// Responses smaller than this threshold will not be compressed.
+// Default is 1KB.
 func WithMinCompressionSize(size int) ServerOption {
 	return func(s *Server) {
 		s.minCompressionSize = size
 	}
 }
 
+// WithSupportedEncodings sets the compression encodings the server supports.
+// The server will use the first client-preferred encoding that the server
+// also supports. Default is [Zstd, Brotli, Gzip].
 func WithSupportedEncodings(encodings []Encoding) ServerOption {
 	return func(s *Server) {
 		s.supportedEncodings = encodings
 	}
 }
 
+// WithServerKeyLogWriter sets an io.Writer for logging session keys.
+// Used for debugging encrypted traffic with Wireshark.
+// Should only be used in development environments.
 func WithServerKeyLogWriter(w io.Writer) ServerOption {
 	return func(s *Server) {
 		s.keylogWriter = w
 	}
 }
 
+// NewServer creates a new QH server with the specified options.
 func NewServer(opts ...ServerOption) *Server {
 	s := &Server{
 		handlers:           make(map[string]map[Method]Handler),
@@ -84,10 +103,7 @@ func (s *Server) HandleFunc(path string, method Method, handler Handler) {
 // Deprecated: keyLogWriter parameter is unused. Use WithServerKeyLogWriter option instead.
 func (s *Server) Listen(addr string, _ io.Writer, seed ...string) error {
 	opts := []qotp.ListenFunc{qotp.WithListenAddr(addr)}
-	// TODO: Re-enable when using qotp v0.2.7+ with WithKeyLogWriter support
-	// if keyLogWriter != nil {
-	// 	opts = append(opts, qotp.WithKeyLogWriter(keyLogWriter))
-	// }
+
 	if len(seed) > 0 && seed[0] != "" {
 		opts = append(opts, qotp.WithSeedStr(seed[0]))
 		slog.Info("QH server listening with provided seed")
@@ -144,7 +160,7 @@ func (s *Server) Serve() error {
 
 			slog.Debug("Received data fragment", "fragment_bytes", len(data), "total_bytes", len(buffer))
 
-			complete, checkErr := IsRequestComplete(buffer)
+			complete, checkErr := isRequestComplete(buffer)
 			if checkErr != nil {
 				slog.Error("Request validation error", "error", checkErr)
 				s.sendErrorResponse(stream, StatusBadRequest, "Bad Request")
@@ -184,7 +200,7 @@ func (s *Server) getPublicKeyDNS() string {
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
 
-	req, err := ParseRequest(requestData)
+	req, err := parseRequest(requestData)
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
 		s.sendErrorResponse(stream, StatusBadRequest, "Bad Request")
@@ -267,8 +283,8 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 		return
 	}
 
-	acceptedEncodings := ParseAcceptEncoding(acceptEncodingStr)
-	selectedEncoding := SelectEncoding(acceptedEncodings, s.supportedEncodings)
+	acceptedEncodings := parseAcceptEncoding(acceptEncodingStr)
+	selectedEncoding := selectEncoding(acceptedEncodings, s.supportedEncodings)
 
 	if selectedEncoding == "" {
 		slog.Debug("No common encoding between client and server")
@@ -276,7 +292,7 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 	}
 
 	originalSize := len(resp.Body)
-	compressed, err := Compress(resp.Body, selectedEncoding)
+	compressed, err := compress(resp.Body, selectedEncoding)
 	if err != nil {
 		slog.Error("Compression failed", "encoding", selectedEncoding, "error", err)
 		return
@@ -297,12 +313,12 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 		"saved", fmt.Sprintf("%.1f%%", savings))
 }
 
+// NewResponse creates a new Response with the given status code, body, and headers.
+// Any headers provided will override auto-generated headers.
 func NewResponse(statusCode int, body []byte, headers map[string]string) *Response {
 	headerMap := make(map[string]string)
 
-	for key, value := range headers {
-		headerMap[key] = value
-	}
+	maps.Copy(headerMap, headers)
 
 	return &Response{
 		Version:    Version,
@@ -312,7 +328,8 @@ func NewResponse(statusCode int, body []byte, headers map[string]string) *Respon
 	}
 }
 
-// Convenience methods for common response types
+// TextResponse creates a text/plain response with the given status code and body.
+// This is a convenience method for returning plain text responses.
 func TextResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
 		"content-type": "text/plain",
@@ -320,6 +337,8 @@ func TextResponse(statusCode int, body string) *Response {
 	return NewResponse(statusCode, []byte(body), headers)
 }
 
+// JSONResponse creates an application/json response with the given status code and body.
+// This is a convenience method for returning JSON responses.
 func JSONResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
 		"content-type": "application/json",

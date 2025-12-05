@@ -1,4 +1,6 @@
-//nolint:gosec // G115: Ignore integer overflow warnings
+// Package qh implements the QH (Quite Ok HTTP) protocol.
+//
+//nolint:gosec // G115: false warnings
 package qh
 
 import (
@@ -8,7 +10,9 @@ import (
 )
 
 const (
-	Version = 0 // Version is the current QH protocol version
+	// Version is the current QH protocol version number.
+	// This value is encoded in the first byte of both requests and responses.
+	Version = 0
 
 	versionBitShift = 6          // Version is stored in upper 2 bits (bits 7-6)
 	methodBitShift  = 3          // Method is stored in middle 3 bits (bits 5-3)
@@ -19,18 +23,23 @@ const (
 	firstByteOffset = 1          // Offset to skip the first byte in wire format
 )
 
+// Method represents a QH method encoded as an integer for compact wire format.
+// Methods are encoded in 3 bits.
 type Method int
 
+// QH method constants for use in QH requests.
+// These are encoded as 3-bit values in the wire format.
 const (
-	GET Method = iota
-	POST
-	PUT
-	PATCH
-	DELETE
-	HEAD
-	OPTIONS
+	GET     Method = iota // GET retrieves a resource
+	POST                  // POST submits data to be processed
+	PUT                   // PUT replaces a resource
+	PATCH                 // PATCH partially modifies a resource
+	DELETE                // DELETE removes a resource
+	HEAD                  // HEAD retrieves headers only
+	OPTIONS               // OPTIONS describes communication options
 )
 
+// String returns the QH method name as a string (e.g., "GET", "POST").
 func (m Method) String() string {
 	switch m {
 	case GET:
@@ -53,24 +62,29 @@ func (m Method) String() string {
 }
 
 const (
-	// CustomHeader is a special header ID (0) used to indicate custom headers
-	CustomHeader byte = 0
+	// customHeader is a special header ID (0) used to indicate custom headers
+	customHeader byte = 0
 )
 
+// Request represents a QH protocol request message.
+// It contains the QH method, target host and path, protocol version,
+// headers as key-value pairs, and an optional body.
 type Request struct {
-	Method  Method
-	Host    string
-	Path    string
-	Version uint8
-	Headers map[string]string
-	Body    []byte
+	Method  Method            // QH method (GET, POST, etc.)
+	Host    string            // Target hostname
+	Path    string            // Request path (e.g., "/api/users")
+	Version uint8             // Protocol version number
+	Headers map[string]string // Request headers as key-value pairs
+	Body    []byte            // Optional request body
 }
 
+// Response represents a QH protocol response message.
+// It contains the protocol version, QH status code, headers, and body.
 type Response struct {
-	Version    uint8
-	StatusCode int
-	Headers    map[string]string
-	Body       []byte
+	Version    uint8             // Protocol version number
+	StatusCode int               // QH status code
+	Headers    map[string]string // Response headers as key-value pairs
+	Body       []byte            // Response body content
 }
 
 // encodeHeaders implements the three-format header encoding:
@@ -98,66 +112,76 @@ func encodeHeaders(
 		// Try Format 2: name-only match with custom value, encode ID
 		if headerID, exists := nameOnly[key]; exists {
 			result = append(result, headerID)
-			result = AppendUvarint(result, uint64(len(value)))
+			result = appendUvarint(result, uint64(len(value)))
 			result = append(result, []byte(value)...)
 			continue
 		}
 
 		// Format 3: Custom header not in static table
-		result = append(result, CustomHeader)
-		result = AppendUvarint(result, uint64(len(key)))
+		result = append(result, customHeader)
+		result = appendUvarint(result, uint64(len(key)))
 		result = append(result, []byte(key)...)
-		result = AppendUvarint(result, uint64(len(value)))
+		result = appendUvarint(result, uint64(len(value)))
 		result = append(result, []byte(value)...)
 	}
 
 	return result
 }
 
-// Format encodes a QH request into the wire format using varint length prefixes.
-// Wire format: <1-byte-method><varint:hostLen><host><varint:pathLen><path><varint:headersLen>[headers]<varint:bodyLen><body>
+// Format encodes a QH request into wire format bytes using varint length prefixes.
+//
+// Wire format structure:
+//   - 1 byte: Version (2 bits) | Method (3 bits) | Reserved (3 bits)
+//   - varint: host length, followed by host bytes
+//   - varint: path length, followed by path bytes
+//   - varint: headers length, followed by encoded headers
+//   - varint: body length, followed by body bytes
 func (r *Request) Format() []byte {
 	// The first byte contains: Version (2 bits, bits 7-6) | Method (3 bits, bits 5-3) | Reserved (3 bits, bits 2-0)
 	// Bit layout: [Version (2 bits) | Method (3 bits) | Reserved (3 bits)]
 	firstByte := (r.Version << versionBitShift) | (byte(r.Method) << methodBitShift)
 	result := []byte{firstByte}
-	result = AppendUvarint(result, uint64(len(r.Host)))
+	result = appendUvarint(result, uint64(len(r.Host)))
 	result = append(result, []byte(r.Host)...)
-	result = AppendUvarint(result, uint64(len(r.Path)))
+	result = appendUvarint(result, uint64(len(r.Path)))
 	result = append(result, []byte(r.Path)...)
 
 	// Encode headers first to get total length
 	encodedHeaders := encodeHeaders(r.Headers, requestHeaderCompletePairs, requestHeaderNameOnly)
-	result = AppendUvarint(result, uint64(len(encodedHeaders)))
+	result = appendUvarint(result, uint64(len(encodedHeaders)))
 	result = append(result, encodedHeaders...)
 
-	result = AppendUvarint(result, uint64(len(r.Body)))
+	result = appendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
 
 	return result
 }
 
-// Format encodes a QH response into the wire format using varint length prefixes.
-// Wire format: <1-byte-status><varint:headersLen>[headers]<varint:bodyLen><body>
+// Format encodes a QH response into wire format bytes using varint length prefixes.
+//
+// Wire format structure:
+//   - 1 byte: Version (2 bits) | Compact status code (6 bits)
+//   - varint: headers length, followed by encoded headers
+//   - varint: body length, followed by body bytes
 func (r *Response) Format() []byte {
-	compactStatus := EncodeStatusCode(r.StatusCode)
+	compactStatus := encodeStatusCode(r.StatusCode)
 	// First byte: Version (upper 2 bits) + Status Code (lower 6 bits)
 	firstByte := (r.Version << versionBitShift) | compactStatus
 	result := []byte{firstByte}
 
 	// Encode headers first to get total length
 	encodedHeaders := encodeHeaders(r.Headers, responseHeaderCompletePairs, responseHeaderNameOnly)
-	result = AppendUvarint(result, uint64(len(encodedHeaders)))
+	result = appendUvarint(result, uint64(len(encodedHeaders)))
 	result = append(result, encodedHeaders...)
 
-	result = AppendUvarint(result, uint64(len(r.Body)))
+	result = appendUvarint(result, uint64(len(r.Body)))
 	result = append(result, r.Body...)
 
 	return result
 }
 
 func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
-	keyLen, n, readErr := ReadUvarint(data, offset)
+	keyLen, n, readErr := readUvarint(data, offset)
 	if readErr != nil {
 		return "", "", offset, fmt.Errorf("failed to read custom header key length: %w", readErr)
 	}
@@ -170,7 +194,7 @@ func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
 	key := string(data[offset : offset+keyLenInt])
 	offset += keyLenInt
 
-	valueLen, n, readErr := ReadUvarint(data, offset)
+	valueLen, n, readErr := readUvarint(data, offset)
 	if readErr != nil {
 		return "", "", offset, fmt.Errorf("failed to read custom header value length: %w", readErr)
 	}
@@ -187,7 +211,7 @@ func parseCustomHeader(data []byte, offset int) (string, string, int, error) {
 }
 
 func parseKnownHeader(data []byte, offset int) (string, int, error) {
-	valueLen, n, readErr := ReadUvarint(data, offset)
+	valueLen, n, readErr := readUvarint(data, offset)
 	if readErr != nil {
 		return "", offset, fmt.Errorf("failed to read header value length: %w", readErr)
 	}
@@ -209,7 +233,7 @@ func parseHeaderEntry(
 	headerID byte,
 	staticTable map[byte]headerEntry,
 ) (string, string, int, error) {
-	if headerID == CustomHeader {
+	if headerID == customHeader {
 		// Format 3: Custom header <0x00><varint:keyLen><key><varint:valueLen><value>
 		return parseCustomHeader(data, offset)
 	}
@@ -266,8 +290,8 @@ func parseHeaders(
 
 // validate and skip over a length-prefixed field
 func checkField(data []byte, offset *int, fieldName string) (bool, error) {
-	length, n, err := ReadUvarint(data, *offset)
-	if errors.Is(err, ErrVarintIncomplete) {
+	length, n, err := readUvarint(data, *offset)
+	if errors.Is(err, errVarintIncomplete) {
 		return false, nil
 	}
 	if err != nil {
@@ -284,7 +308,7 @@ func checkField(data []byte, offset *int, fieldName string) (bool, error) {
 	return true, nil
 }
 
-func IsRequestComplete(data []byte) (bool, error) {
+func isRequestComplete(data []byte) (bool, error) {
 	if len(data) == 0 {
 		return false, nil
 	}
@@ -311,7 +335,7 @@ func IsRequestComplete(data []byte) (bool, error) {
 	return true, nil
 }
 
-func IsResponseComplete(data []byte) (bool, error) {
+func isResponseComplete(data []byte) (bool, error) {
 	if len(data) == 0 {
 		return false, nil
 	}
@@ -330,7 +354,7 @@ func IsResponseComplete(data []byte) (bool, error) {
 	return true, nil
 }
 
-func ParseResponse(data []byte) (*Response, error) {
+func parseResponse(data []byte) (*Response, error) {
 	if len(data) == 0 {
 		return nil, errors.New("invalid response: empty data")
 	}
@@ -348,9 +372,9 @@ func ParseResponse(data []byte) (*Response, error) {
 		return nil, fmt.Errorf("invalid version: %d", version)
 	}
 
-	httpStatusCode := DecodeStatusCode(compactStatus)
+	httpStatusCode := decodeStatusCode(compactStatus)
 
-	headersLen, n, err := ReadUvarint(data, offset)
+	headersLen, n, err := readUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid response: failed to read headers length: %w", err)
 	}
@@ -362,7 +386,7 @@ func ParseResponse(data []byte) (*Response, error) {
 	}
 	offset = newOffset
 
-	bodyLen, n, err := ReadUvarint(data, offset)
+	bodyLen, n, err := readUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid response: failed to read body length: %w", err)
 	}
@@ -384,7 +408,7 @@ func ParseResponse(data []byte) (*Response, error) {
 	return resp, nil
 }
 
-func ParseRequest(data []byte) (*Request, error) {
+func parseRequest(data []byte) (*Request, error) {
 	if len(data) == 0 {
 		return nil, errors.New("invalid request: empty data")
 	}
@@ -406,7 +430,7 @@ func ParseRequest(data []byte) (*Request, error) {
 		return nil, fmt.Errorf("invalid method value: %d", method)
 	}
 
-	hostLen, n, err := ReadUvarint(data, offset)
+	hostLen, n, err := readUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read host length: %w", err)
 	}
@@ -427,7 +451,7 @@ func ParseRequest(data []byte) (*Request, error) {
 		return nil, fmt.Errorf("invalid request: host exceeds maximum length of %d characters", maxHostLength)
 	}
 
-	pathLen, n, err := ReadUvarint(data, offset)
+	pathLen, n, err := readUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read path length: %w", err)
 	}
@@ -444,7 +468,7 @@ func ParseRequest(data []byte) (*Request, error) {
 		path = "/"
 	}
 
-	headersLen, n, err := ReadUvarint(data, offset)
+	headersLen, n, err := readUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read headers length: %w", err)
 	}
@@ -456,7 +480,7 @@ func ParseRequest(data []byte) (*Request, error) {
 	}
 	offset = newOffset
 
-	bodyLen, n, err := ReadUvarint(data, offset)
+	bodyLen, n, err := readUvarint(data, offset)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: failed to read body length: %w", err)
 	}

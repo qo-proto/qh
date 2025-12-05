@@ -53,7 +53,7 @@ func TestParseAcceptEncoding(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := ParseAcceptEncoding(tt.input)
+			result := parseAcceptEncoding(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -120,7 +120,7 @@ func TestSelectEncoding(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := SelectEncoding(tt.clientAccepts, tt.serverSupports)
+			result := selectEncoding(tt.clientAccepts, tt.serverSupports)
 			assert.Equal(t, tt.expected, result, tt.description)
 		})
 	}
@@ -132,7 +132,7 @@ func TestCompressDecompress(t *testing.T) {
 
 	for _, encoding := range encodings {
 		t.Run(string(encoding), func(t *testing.T) {
-			compressed, err := Compress(testData, encoding)
+			compressed, err := compress(testData, encoding)
 			require.NoError(t, err, "compression should succeed")
 
 			// Verify compression actually happened
@@ -145,7 +145,7 @@ func TestCompressDecompress(t *testing.T) {
 					encoding, savings, len(testData), len(compressed))
 			}
 
-			decompressed, err := Decompress(compressed, encoding, 10*1024*1024)
+			decompressed, err := decompress(compressed, encoding, 10*1024*1024)
 			require.NoError(t, err, "decompression should succeed")
 			assert.Equal(t, testData, decompressed, "decompressed data should match original")
 		})
@@ -155,11 +155,11 @@ func TestCompressDecompress(t *testing.T) {
 func TestCompressDecompressEmptyEncoding(t *testing.T) {
 	testData := []byte("Hello, World!")
 
-	compressed, err := Compress(testData, "")
+	compressed, err := compress(testData, "")
 	require.NoError(t, err)
 	assert.Equal(t, testData, compressed, "empty encoding compression should return same data")
 
-	decompressed, err := Decompress(compressed, "", 10*1024*1024)
+	decompressed, err := decompress(compressed, "", 10*1024*1024)
 	require.NoError(t, err)
 	assert.Equal(t, testData, decompressed, "empty encoding decompression should return same data")
 }
@@ -170,10 +170,10 @@ func TestCompressDecompressEmpty(t *testing.T) {
 
 	for _, encoding := range encodings {
 		t.Run(string(encoding), func(t *testing.T) {
-			compressed, err := Compress(testData, encoding)
+			compressed, err := compress(testData, encoding)
 			require.NoError(t, err, "compression of empty data should succeed")
 
-			decompressed, err := Decompress(compressed, encoding, 10*1024*1024)
+			decompressed, err := decompress(compressed, encoding, 10*1024*1024)
 			require.NoError(t, err, "decompression of empty data should succeed")
 
 			assert.Empty(t, decompressed, "decompressed empty data should remain empty")
@@ -183,13 +183,13 @@ func TestCompressDecompressEmpty(t *testing.T) {
 
 func TestCompressInvalidEncoding(t *testing.T) {
 	testData := []byte("test")
-	_, err := Compress(testData, Encoding("invalid"))
+	_, err := compress(testData, Encoding("invalid"))
 	assert.Error(t, err, "should return error for invalid encoding")
 }
 
 func TestDecompressInvalidEncoding(t *testing.T) {
 	testData := []byte("test")
-	_, err := Decompress(testData, Encoding("invalid"), 10*1024*1024)
+	_, err := decompress(testData, Encoding("invalid"), 10*1024*1024)
 	assert.Error(t, err, "should return error for invalid encoding")
 }
 
@@ -201,7 +201,7 @@ func BenchmarkCompressions(b *testing.B) {
 		b.Run(string(encoding), func(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
-				_, _ = Compress(testData, encoding)
+				_, _ = compress(testData, encoding)
 			}
 		})
 	}
