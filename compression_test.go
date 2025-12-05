@@ -207,13 +207,61 @@ func BenchmarkCompressions(b *testing.B) {
 	}
 }
 
-func TestDecompressSizeLimit(t *testing.T) {
-	original := []byte(strings.Repeat("test ", 1000))
-	compressed, _ := Compress(original, Zstd)
-	sizeLimit := 1000
+func TestCompressionBomb(t *testing.T) {
+	t.Run("ZstdBomb", func(t *testing.T) {
+		uncompressed := make([]byte, 1024*1024)
 
-	_, err := Decompress(compressed, Zstd, sizeLimit)
+		compressed, err := Compress(uncompressed, Zstd)
+		require.NoError(t, err)
 
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "exceeds limit")
+		t.Logf("Compression ratio: %d bytes -> %d bytes", len(uncompressed), len(compressed))
+
+		decompressed, err := Decompress(compressed, Zstd, 2*1024*1024) // 2MB limit
+		require.NoError(t, err)
+		assert.Equal(t, len(uncompressed), len(decompressed))
+
+		_, err = Decompress(compressed, Zstd, 512*1024) // 512KB limit (too small)
+		require.Error(t, err, "Should fail when decompressed size exceeds limit")
+	})
+
+	t.Run("GzipBomb", func(t *testing.T) {
+		uncompressed := make([]byte, 512*1024)
+
+		compressed, err := Compress(uncompressed, Gzip)
+		require.NoError(t, err)
+
+		_, err = Decompress(compressed, Gzip, 256*1024)
+		require.Error(t, err, "Should fail when decompressed size exceeds limit")
+	})
+
+	t.Run("BrotliBomb", func(t *testing.T) {
+		uncompressed := make([]byte, 512*1024)
+
+		compressed, err := Compress(uncompressed, Brotli)
+		require.NoError(t, err)
+
+		_, err = Decompress(compressed, Brotli, 256*1024)
+		require.Error(t, err, "Should fail when decompressed size exceeds limit")
+	})
+}
+
+func TestCorruptedCompressedData(t *testing.T) {
+	tests := []struct {
+		name     string
+		encoding Encoding
+	}{
+		{"CorruptedZstd", Zstd},
+		{"CorruptedGzip", Gzip},
+		{"CorruptedBrotli", Brotli},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Random garbage data
+			corruptedData := []byte{0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8}
+
+			_, err := Decompress(corruptedData, tt.encoding, 1024*1024)
+			require.Error(t, err, "Should fail to decompress corrupted data")
+		})
+	}
 }
