@@ -2,6 +2,7 @@ package qh
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 )
 
@@ -42,6 +43,16 @@ func FuzzParseRequest(f *testing.F) {
 				t.Error("Empty path in successful parse (should default to /)")
 			}
 
+			if req.Headers == nil {
+				t.Error("Headers map is nil (should be empty map)")
+			}
+
+			for k := range req.Headers {
+				if k != strings.ToLower(k) {
+					t.Errorf("Header key not normalized to lowercase: %s", k)
+				}
+			}
+
 			// Roundtrip test: parse -> format -> parse
 			encoded := req.Format()
 			req2, err2 := ParseRequest(encoded)
@@ -58,6 +69,17 @@ func FuzzParseRequest(f *testing.F) {
 				}
 				if req2.Path != req.Path {
 					t.Error("Roundtrip: path mismatch")
+				}
+				if req2.Version != req.Version {
+					t.Error("Roundtrip: version mismatch")
+				}
+				if len(req2.Headers) != len(req.Headers) {
+					t.Error("Roundtrip: header count mismatch")
+				}
+				for k, v := range req.Headers {
+					if req2.Headers[k] != v {
+						t.Errorf("Roundtrip: header %s mismatch", k)
+					}
 				}
 				if !bytes.Equal(req2.Body, req.Body) {
 					t.Error("Roundtrip: body mismatch")
@@ -91,6 +113,16 @@ func FuzzParseResponse(f *testing.F) {
 				t.Errorf("Invalid status code: %d", resp.StatusCode)
 			}
 
+			if resp.Headers == nil {
+				t.Error("Headers map is nil (should be empty map)")
+			}
+
+			for k := range resp.Headers {
+				if k != strings.ToLower(k) {
+					t.Errorf("Header key not normalized to lowercase: %s", k)
+				}
+			}
+
 			// Roundtrip test: parse -> format -> parse
 			encoded := resp.Format()
 			resp2, err2 := ParseResponse(encoded)
@@ -104,6 +136,14 @@ func FuzzParseResponse(f *testing.F) {
 				}
 				if resp2.Version != resp.Version {
 					t.Error("Roundtrip: version mismatch")
+				}
+				if len(resp2.Headers) != len(resp.Headers) {
+					t.Error("Roundtrip: header count mismatch")
+				}
+				for k, v := range resp.Headers {
+					if resp2.Headers[k] != v {
+						t.Errorf("Roundtrip: header %s mismatch", k)
+					}
 				}
 				if !bytes.Equal(resp2.Body, resp.Body) {
 					t.Error("Roundtrip: body mismatch")
