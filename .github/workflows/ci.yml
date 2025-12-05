@@ -89,6 +89,7 @@ jobs:
 
   fuzz-tests:
     name: "Fuzz Tests"
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     strategy:
       matrix:

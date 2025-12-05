@@ -292,7 +292,7 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 		return true, nil
 	})
 
-	resp, parseErr := parseResponse(responseBuffer)
+	resp, parseErr := ParseResponse(responseBuffer)
 	if parseErr != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", parseErr)
 	}

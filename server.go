@@ -200,7 +200,7 @@ func (s *Server) getPublicKeyDNS() string {
 func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Received request", "bytes", len(requestData), "data", string(requestData))
 
-	req, err := parseRequest(requestData)
+	req, err := ParseRequest(requestData)
 	if err != nil {
 		slog.Error("Failed to parse request", "error", err)
 		s.sendErrorResponse(stream, StatusBadRequest, "Bad Request")

@@ -62,8 +62,8 @@ func (m Method) String() string {
 }
 
 const (
-	// customHeader is a special header ID (0) used to indicate custom headers
-	customHeader byte = 0
+	// CustomHeader is a special header ID (0) used to indicate custom headers
+	CustomHeader byte = 0
 )
 
 // Request represents a QH protocol request message.
@@ -118,7 +118,7 @@ func encodeHeaders(
 		}
 
 		// Format 3: Custom header not in static table
-		result = append(result, customHeader)
+		result = append(result, CustomHeader)
 		result = appendUvarint(result, uint64(len(key)))
 		result = append(result, []byte(key)...)
 		result = appendUvarint(result, uint64(len(value)))
@@ -233,7 +233,7 @@ func parseHeaderEntry(
 	headerID byte,
 	staticTable map[byte]headerEntry,
 ) (string, string, int, error) {
-	if headerID == customHeader {
+	if headerID == CustomHeader {
 		// Format 3: Custom header <0x00><varint:keyLen><key><varint:valueLen><value>
 		return parseCustomHeader(data, offset)
 	}
@@ -354,7 +354,7 @@ func isResponseComplete(data []byte) (bool, error) {
 	return true, nil
 }
 
-func parseResponse(data []byte) (*Response, error) {
+func ParseResponse(data []byte) (*Response, error) {
 	if len(data) == 0 {
 		return nil, errors.New("invalid response: empty data")
 	}
@@ -408,7 +408,7 @@ func parseResponse(data []byte) (*Response, error) {
 	return resp, nil
 }
 
-func parseRequest(data []byte) (*Request, error) {
+func ParseRequest(data []byte) (*Request, error) {
 	if len(data) == 0 {
 		return nil, errors.New("invalid request: empty data")
 	}
