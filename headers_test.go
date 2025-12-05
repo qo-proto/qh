@@ -1,4 +1,3 @@
-//nolint:gosec // False warnings, intentional
 package qh
 
 import (
