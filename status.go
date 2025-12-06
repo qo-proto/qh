@@ -117,7 +117,6 @@ var statusToCompact = map[int]uint8{
 	503: 53, // Service Unavailable
 	504: 54, // Gateway Timeout
 	505: 55, // QH Version Not Supported
-	// room for additional codes up until 63
 }
 
 var compactToStatus map[uint8]int // reverse mapping for decoding
