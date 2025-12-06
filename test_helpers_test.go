@@ -8,8 +8,6 @@ import (
 
 // newTestServer creates a test server on a random available port.
 // Returns the server and its address (e.g., "127.0.0.1:12345").
-//
-//nolint:unparam // opts kept for future extensibility
 func newTestServer(t *testing.T, opts ...ServerOption) (*Server, string) {
 	t.Helper()
 

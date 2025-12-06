@@ -117,6 +117,9 @@ linters:
     #- wrapcheck # checks that errors returned from external packages are wrapped
     #- zerologlint # detects the wrong usage of zerolog that a user forgets to dispatch zerolog.Event
   settings:
+    gosec:
+      excludes:
+        - G115 # Lots of false warnings
     cyclop:
       max-complexity: 20 # default is 10
       package-average: 15.0 # default is 0.0

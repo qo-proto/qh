@@ -1,3 +1,4 @@
+//nolint:goconst
 package qh
 
 import (
@@ -99,7 +100,7 @@ func TestIntegrationLargeRequestBody(t *testing.T) {
 			resp, err := client.POST("127.0.0.1", "/upload", largeBody, nil)
 			require.NoError(t, err)
 			assert.Equal(t, 200, resp.StatusCode)
-			assert.Equal(t, size, len(resp.Body), "Response should echo same size")
+			assert.Len(t, resp.Body, size, "Response should echo same size")
 		})
 	}
 }
@@ -121,7 +122,7 @@ func TestIntegrationLargeResponseBody(t *testing.T) {
 	resp, err := client.GET("127.0.0.1", "/large", nil)
 	require.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
-	assert.Equal(t, responseSize, len(resp.Body))
+	assert.Len(t, resp.Body, responseSize)
 }
 
 func TestIntegrationCompressionNegotiation(t *testing.T) {
