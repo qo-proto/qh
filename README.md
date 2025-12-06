@@ -6,14 +6,17 @@
 
 ## Comparison
 
-| Feature          | HTTP/1.1       | HTTP/2         | HTTP/3         | QH                                    |
-| ---------------- | -------------- | -------------- | -------------- | ------------------------------------- |
-| Transport        | TCP            | TCP            | UDP (QUIC)     | UDP (QOTP)                            |
-| Encryption       | Optional (TLS) | Optional (TLS) | Built-in       | Built-in                              |
-| 0-RTT            | No             | With TLS 1.3   | Yes            | Yes                                   |
-| Multiplexing     | No             | Yes            | Yes            | Yes                                   |
-| Header Format    | Text           | Binary (HPACK) | Binary (QPACK) | Binary (static table, no compression) |
-| Key Distribution | CAs            | CAs            | CAs            | DNS TXT                               |
+| Feature           | HTTP/1.1       | HTTP/2         | HTTP/3         | QH                                    |
+| ----------------- | -------------- | -------------- | -------------- | ------------------------------------- |
+| Transport         | TCP            | TCP            | UDP (QUIC)     | UDP (QOTP)                            |
+| Encryption        | Optional (TLS) | Optional (TLS) | Built-in       | Built-in                              |
+| 0-RTT             | No             | With TLS 1.3   | Yes            | Yes                                   |
+| Multiplexing      | No             | Yes            | Yes            | Yes                                   |
+| Header Format     | Text           | Binary (HPACK) | Binary (QPACK) | Binary (static table, no compression) |
+| Key Distribution  | CAs            | CAs            | CAs            | DNS TXT                               |
+| Avg Header Size\* | 1829 B         | 1226 B         | 1171 B         | 1318 B                                |
+
+\*Average total headers (request + response) across 110 test cases. See [Benchmark Report](./docs/benchmarks/report.md) for details.
 
 ## Documentation
 
