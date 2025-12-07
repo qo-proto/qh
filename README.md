@@ -22,7 +22,9 @@
 
 - **[Protocol Specification](./docs/protocol-definition.md)** - QH protocol definition
 - **[Headers Reference](./docs/headers.md)** - Header format
-  - [Static header table](./docs/static-tables.md)
+  - [Static header table](./docs/static-tables.md) (Markdown)
+  - [Static header table](./data/static-header-table.json) (JSON - use for own implementations)
+  - _Static table generated using [http-header-tracker](https://github.com/Erl-koenig/http-header-tracker)_
 - **[API Documentation](./docs/api.md)** - API reference of the Go implementation
 
 ## Installation

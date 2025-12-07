@@ -1,0 +1,1965 @@
+{
+  "version": "0.1.0",
+  "protocol_version": "QH/0",
+  "generated_at": "2025-12-07T14:23:33.826686+00:00",
+  "generator": "https://github.com/Erl-koenig/http-header-tracker",
+  "description": "Static header table for QH protocol. Format 1 (complete_pair) uses a single byte ID. Format 2 (name_only) requires ID + value length + value.",
+  "request_headers": {
+    "slots_used": 100,
+    "slots_total": 255,
+    "headers": [
+      {
+        "id": "0x01",
+        "id_dec": 1,
+        "type": "complete_pair",
+        "name": "sec-ch-ua-mobile",
+        "value": "?0"
+      },
+      {
+        "id": "0x02",
+        "id_dec": 2,
+        "type": "complete_pair",
+        "name": "sec-ch-ua-platform",
+        "value": "\"Windows\""
+      },
+      {
+        "id": "0x03",
+        "id_dec": 3,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "*/*"
+      },
+      {
+        "id": "0x04",
+        "id_dec": 4,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+      },
+      {
+        "id": "0x05",
+        "id_dec": 5,
+        "type": "complete_pair",
+        "name": "x-requested-with",
+        "value": "XMLHttpRequest"
+      },
+      {
+        "id": "0x06",
+        "id_dec": 6,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/json; charset=UTF-8"
+      },
+      {
+        "id": "0x07",
+        "id_dec": 7,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/plain;charset=UTF-8"
+      },
+      {
+        "id": "0x08",
+        "id_dec": 8,
+        "type": "complete_pair",
+        "name": "sec-ch-ua-arch",
+        "value": "\"x86\""
+      },
+      {
+        "id": "0x09",
+        "id_dec": 9,
+        "type": "complete_pair",
+        "name": "sec-ch-ua-bitness",
+        "value": "\"64\""
+      },
+      {
+        "id": "0x0A",
+        "id_dec": 10,
+        "type": "complete_pair",
+        "name": "sec-gpc",
+        "value": "1"
+      },
+      {
+        "id": "0x0B",
+        "id_dec": 11,
+        "type": "complete_pair",
+        "name": "connection",
+        "value": "keep-alive"
+      },
+      {
+        "id": "0x0C",
+        "id_dec": 12,
+        "type": "complete_pair",
+        "name": "accept-language",
+        "value": "en-US,en;q=0.5"
+      },
+      {
+        "id": "0x0D",
+        "id_dec": 13,
+        "type": "complete_pair",
+        "name": "accept-encoding",
+        "value": "gzip, deflate, br, zstd"
+      },
+      {
+        "id": "0x0E",
+        "id_dec": 14,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/json"
+      },
+      {
+        "id": "0x0F",
+        "id_dec": 15,
+        "type": "complete_pair",
+        "name": "sec-fetch-mode",
+        "value": "cors"
+      },
+      {
+        "id": "0x10",
+        "id_dec": 16,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/x-www-form-urlencoded"
+      },
+      {
+        "id": "0x11",
+        "id_dec": 17,
+        "type": "complete_pair",
+        "name": "sec-fetch-site",
+        "value": "cross-site"
+      },
+      {
+        "id": "0x12",
+        "id_dec": 18,
+        "type": "complete_pair",
+        "name": "sec-fetch-site",
+        "value": "same-origin"
+      },
+      {
+        "id": "0x13",
+        "id_dec": 19,
+        "type": "complete_pair",
+        "name": "sec-fetch-dest",
+        "value": "script"
+      },
+      {
+        "id": "0x14",
+        "id_dec": 20,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "no-cache"
+      },
+      {
+        "id": "0x15",
+        "id_dec": 21,
+        "type": "complete_pair",
+        "name": "pragma",
+        "value": "no-cache"
+      },
+      {
+        "id": "0x16",
+        "id_dec": 22,
+        "type": "complete_pair",
+        "name": "sec-fetch-dest",
+        "value": "empty"
+      },
+      {
+        "id": "0x17",
+        "id_dec": 23,
+        "type": "complete_pair",
+        "name": "sec-fetch-mode",
+        "value": "no-cors"
+      },
+      {
+        "id": "0x18",
+        "id_dec": 24,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "no-cache, no-store"
+      },
+      {
+        "id": "0x19",
+        "id_dec": 25,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+      },
+      {
+        "id": "0x1A",
+        "id_dec": 26,
+        "type": "complete_pair",
+        "name": "upgrade-insecure-requests",
+        "value": "1"
+      },
+      {
+        "id": "0x1B",
+        "id_dec": 27,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/plain"
+      },
+      {
+        "id": "0x1C",
+        "id_dec": 28,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/json; charset=utf-8"
+      },
+      {
+        "id": "0x1D",
+        "id_dec": 29,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "application/json"
+      },
+      {
+        "id": "0x1E",
+        "id_dec": 30,
+        "type": "complete_pair",
+        "name": "sec-purpose",
+        "value": "prefetch;prerender"
+      },
+      {
+        "id": "0x1F",
+        "id_dec": 31,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "image/avif,image/jxl,image/webp,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
+      },
+      {
+        "id": "0x20",
+        "id_dec": 32,
+        "type": "complete_pair",
+        "name": "sec-fetch-dest",
+        "value": "image"
+      },
+      {
+        "id": "0x21",
+        "id_dec": 33,
+        "type": "complete_pair",
+        "name": "sec-fetch-site",
+        "value": "same-site"
+      },
+      {
+        "id": "0x22",
+        "id_dec": 34,
+        "type": "complete_pair",
+        "name": "sec-purpose",
+        "value": "prefetch"
+      },
+      {
+        "id": "0x23",
+        "id_dec": 35,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "image/webp,*/*"
+      },
+      {
+        "id": "0x24",
+        "id_dec": 36,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "application/json, text/plain, */*"
+      },
+      {
+        "id": "0x25",
+        "id_dec": 37,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "application/json, text/javascript, */*; q=0.01"
+      },
+      {
+        "id": "0x26",
+        "id_dec": 38,
+        "type": "complete_pair",
+        "name": "content-encoding",
+        "value": "gzip"
+      },
+      {
+        "id": "0x27",
+        "id_dec": 39,
+        "type": "complete_pair",
+        "name": "service-worker",
+        "value": "script"
+      },
+      {
+        "id": "0x28",
+        "id_dec": 40,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/x-www-form-urlencoded; charset=UTF-8"
+      },
+      {
+        "id": "0x29",
+        "id_dec": 41,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/json+protobuf"
+      },
+      {
+        "id": "0x2A",
+        "id_dec": 42,
+        "type": "complete_pair",
+        "name": "sec-fetch-mode",
+        "value": "same-origin"
+      },
+      {
+        "id": "0x2B",
+        "id_dec": 43,
+        "type": "complete_pair",
+        "name": "access-control-request-method",
+        "value": "POST"
+      },
+      {
+        "id": "0x2C",
+        "id_dec": 44,
+        "type": "complete_pair",
+        "name": "sec-fetch-dest",
+        "value": "style"
+      },
+      {
+        "id": "0x2D",
+        "id_dec": 45,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "application/signed-exchange;v=b3;q=0.7,*/*;q=0.8"
+      },
+      {
+        "id": "0x2E",
+        "id_dec": 46,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "text/html"
+      },
+      {
+        "id": "0x2F",
+        "id_dec": 47,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "application/font-woff2;q=1.0,application/font-woff;q=0.9,*/*;q=0.8"
+      },
+      {
+        "id": "0x30",
+        "id_dec": 48,
+        "type": "complete_pair",
+        "name": "sec-fetch-dest",
+        "value": "font"
+      },
+      {
+        "id": "0x31",
+        "id_dec": 49,
+        "type": "complete_pair",
+        "name": "accept",
+        "value": "text/event-stream"
+      },
+      {
+        "id": "0x32",
+        "id_dec": 50,
+        "type": "complete_pair",
+        "name": "sec-fetch-mode",
+        "value": "navigate"
+      },
+      {
+        "id": "0x33",
+        "id_dec": 51,
+        "type": "complete_pair",
+        "name": "content-length",
+        "value": "0"
+      },
+      {
+        "id": "0x34",
+        "id_dec": 52,
+        "type": "complete_pair",
+        "name": "connection",
+        "value": "Upgrade"
+      },
+      {
+        "id": "0x35",
+        "id_dec": 53,
+        "type": "complete_pair",
+        "name": "upgrade",
+        "value": "websocket"
+      },
+      {
+        "id": "0x36",
+        "id_dec": 54,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "max-age=0"
+      },
+      {
+        "id": "0x37",
+        "id_dec": 55,
+        "type": "complete_pair",
+        "name": "range",
+        "value": "bytes=0-"
+      },
+      {
+        "id": "0x38",
+        "id_dec": 56,
+        "type": "complete_pair",
+        "name": "sec-fetch-dest",
+        "value": "document"
+      },
+      {
+        "id": "0x39",
+        "id_dec": 57,
+        "type": "complete_pair",
+        "name": "sec-fetch-mode",
+        "value": "websocket"
+      },
+      {
+        "id": "0x3A",
+        "id_dec": 58,
+        "type": "complete_pair",
+        "name": "sec-fetch-user",
+        "value": "?1"
+      },
+      {
+        "id": "0x3B",
+        "id_dec": 59,
+        "type": "complete_pair",
+        "name": "access-control-request-method",
+        "value": "GET"
+      },
+      {
+        "id": "0x3C",
+        "id_dec": 60,
+        "type": "complete_pair",
+        "name": "sec-ch-ua-mobile",
+        "value": "?1"
+      },
+      {
+        "id": "0x3D",
+        "id_dec": 61,
+        "type": "complete_pair",
+        "name": "sec-ch-ua-platform",
+        "value": "\"macOS\""
+      },
+      {
+        "id": "0x3E",
+        "id_dec": 62,
+        "type": "complete_pair",
+        "name": "sec-ch-ua-platform",
+        "value": "\"Linux\""
+      },
+      {
+        "id": "0x3F",
+        "id_dec": 63,
+        "type": "complete_pair",
+        "name": "sec-ch-ua-platform",
+        "value": "\"Android\""
+      },
+      {
+        "id": "0x40",
+        "id_dec": 64,
+        "type": "complete_pair",
+        "name": "sec-ch-ua-arch",
+        "value": "\"arm\""
+      },
+      {
+        "id": "0x41",
+        "id_dec": 65,
+        "type": "name_only",
+        "name": "user-agent"
+      },
+      {
+        "id": "0x42",
+        "id_dec": 66,
+        "type": "name_only",
+        "name": "sec-ch-ua-mobile"
+      },
+      {
+        "id": "0x43",
+        "id_dec": 67,
+        "type": "name_only",
+        "name": "sec-ch-ua-platform"
+      },
+      {
+        "id": "0x44",
+        "id_dec": 68,
+        "type": "name_only",
+        "name": "sec-ch-ua"
+      },
+      {
+        "id": "0x45",
+        "id_dec": 69,
+        "type": "name_only",
+        "name": "accept"
+      },
+      {
+        "id": "0x46",
+        "id_dec": 70,
+        "type": "name_only",
+        "name": "content-type"
+      },
+      {
+        "id": "0x47",
+        "id_dec": 71,
+        "type": "name_only",
+        "name": "sec-ch-ua-platform-version"
+      },
+      {
+        "id": "0x48",
+        "id_dec": 72,
+        "type": "name_only",
+        "name": "sec-ch-ua-arch"
+      },
+      {
+        "id": "0x49",
+        "id_dec": 73,
+        "type": "name_only",
+        "name": "connection"
+      },
+      {
+        "id": "0x4A",
+        "id_dec": 74,
+        "type": "name_only",
+        "name": "host"
+      },
+      {
+        "id": "0x4B",
+        "id_dec": 75,
+        "type": "name_only",
+        "name": "sec-gpc"
+      },
+      {
+        "id": "0x4C",
+        "id_dec": 76,
+        "type": "name_only",
+        "name": "accept-language"
+      },
+      {
+        "id": "0x4D",
+        "id_dec": 77,
+        "type": "name_only",
+        "name": "sec-fetch-mode"
+      },
+      {
+        "id": "0x4E",
+        "id_dec": 78,
+        "type": "name_only",
+        "name": "sec-fetch-site"
+      },
+      {
+        "id": "0x4F",
+        "id_dec": 79,
+        "type": "name_only",
+        "name": "sec-fetch-dest"
+      },
+      {
+        "id": "0x50",
+        "id_dec": 80,
+        "type": "name_only",
+        "name": "accept-encoding"
+      },
+      {
+        "id": "0x51",
+        "id_dec": 81,
+        "type": "name_only",
+        "name": "referer"
+      },
+      {
+        "id": "0x52",
+        "id_dec": 82,
+        "type": "name_only",
+        "name": "authorization"
+      },
+      {
+        "id": "0x53",
+        "id_dec": 83,
+        "type": "name_only",
+        "name": "origin"
+      },
+      {
+        "id": "0x54",
+        "id_dec": 84,
+        "type": "name_only",
+        "name": "cookie"
+      },
+      {
+        "id": "0x55",
+        "id_dec": 85,
+        "type": "name_only",
+        "name": "cache-control"
+      },
+      {
+        "id": "0x56",
+        "id_dec": 86,
+        "type": "name_only",
+        "name": "pragma"
+      },
+      {
+        "id": "0x57",
+        "id_dec": 87,
+        "type": "name_only",
+        "name": "sec-purpose"
+      },
+      {
+        "id": "0x58",
+        "id_dec": 88,
+        "type": "name_only",
+        "name": "content-length"
+      },
+      {
+        "id": "0x59",
+        "id_dec": 89,
+        "type": "name_only",
+        "name": "prefer"
+      },
+      {
+        "id": "0x5A",
+        "id_dec": 90,
+        "type": "name_only",
+        "name": "content-encoding"
+      },
+      {
+        "id": "0x5B",
+        "id_dec": 91,
+        "type": "name_only",
+        "name": "access-control-request-method"
+      },
+      {
+        "id": "0x5C",
+        "id_dec": 92,
+        "type": "name_only",
+        "name": "access-control-request-headers"
+      },
+      {
+        "id": "0x5D",
+        "id_dec": 93,
+        "type": "name_only",
+        "name": "range"
+      },
+      {
+        "id": "0x5E",
+        "id_dec": 94,
+        "type": "name_only",
+        "name": "sec-websocket-version"
+      },
+      {
+        "id": "0x5F",
+        "id_dec": 95,
+        "type": "name_only",
+        "name": "upgrade"
+      },
+      {
+        "id": "0x60",
+        "id_dec": 96,
+        "type": "name_only",
+        "name": "if-none-match"
+      },
+      {
+        "id": "0x61",
+        "id_dec": 97,
+        "type": "name_only",
+        "name": "sec-websocket-extensions"
+      },
+      {
+        "id": "0x62",
+        "id_dec": 98,
+        "type": "name_only",
+        "name": "sec-websocket-key"
+      },
+      {
+        "id": "0x63",
+        "id_dec": 99,
+        "type": "name_only",
+        "name": "if-modified-since"
+      },
+      {
+        "id": "0x64",
+        "id_dec": 100,
+        "type": "name_only",
+        "name": "x-payment"
+      }
+    ]
+  },
+  "response_headers": {
+    "slots_used": 190,
+    "slots_total": 255,
+    "headers": [
+      {
+        "id": "0x01",
+        "id_dec": 1,
+        "type": "complete_pair",
+        "name": "x-content-type-options",
+        "value": "nosniff"
+      },
+      {
+        "id": "0x02",
+        "id_dec": 2,
+        "type": "complete_pair",
+        "name": "timing-allow-origin",
+        "value": "*"
+      },
+      {
+        "id": "0x03",
+        "id_dec": 3,
+        "type": "complete_pair",
+        "name": "access-control-allow-origin",
+        "value": "*"
+      },
+      {
+        "id": "0x04",
+        "id_dec": 4,
+        "type": "complete_pair",
+        "name": "vary",
+        "value": "Accept-Encoding"
+      },
+      {
+        "id": "0x05",
+        "id_dec": 5,
+        "type": "complete_pair",
+        "name": "content-encoding",
+        "value": "gzip"
+      },
+      {
+        "id": "0x06",
+        "id_dec": 6,
+        "type": "complete_pair",
+        "name": "strict-transport-security",
+        "value": "max-age=31536000"
+      },
+      {
+        "id": "0x07",
+        "id_dec": 7,
+        "type": "complete_pair",
+        "name": "cross-origin-resource-policy",
+        "value": "cross-origin"
+      },
+      {
+        "id": "0x08",
+        "id_dec": 8,
+        "type": "complete_pair",
+        "name": "content-encoding",
+        "value": "br"
+      },
+      {
+        "id": "0x09",
+        "id_dec": 9,
+        "type": "complete_pair",
+        "name": "x-download-options",
+        "value": "noopen"
+      },
+      {
+        "id": "0x0A",
+        "id_dec": 10,
+        "type": "complete_pair",
+        "name": "pragma",
+        "value": "no-cache"
+      },
+      {
+        "id": "0x0B",
+        "id_dec": 11,
+        "type": "complete_pair",
+        "name": "accept-ranges",
+        "value": "bytes"
+      },
+      {
+        "id": "0x0C",
+        "id_dec": 12,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/json; charset=utf-8"
+      },
+      {
+        "id": "0x0D",
+        "id_dec": 13,
+        "type": "complete_pair",
+        "name": "content-disposition",
+        "value": "attachment"
+      },
+      {
+        "id": "0x0E",
+        "id_dec": 14,
+        "type": "complete_pair",
+        "name": "x-xss-protection",
+        "value": "0"
+      },
+      {
+        "id": "0x0F",
+        "id_dec": 15,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "no-cache"
+      },
+      {
+        "id": "0x10",
+        "id_dec": 16,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "private"
+      },
+      {
+        "id": "0x11",
+        "id_dec": 17,
+        "type": "complete_pair",
+        "name": "content-length",
+        "value": "0"
+      },
+      {
+        "id": "0x12",
+        "id_dec": 18,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/javascript"
+      },
+      {
+        "id": "0x13",
+        "id_dec": 19,
+        "type": "complete_pair",
+        "name": "x-frame-options",
+        "value": "SAMEORIGIN"
+      },
+      {
+        "id": "0x14",
+        "id_dec": 20,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "image/gif"
+      },
+      {
+        "id": "0x15",
+        "id_dec": 21,
+        "type": "complete_pair",
+        "name": "strict-transport-security",
+        "value": "max-age=31536000; includeSubDomains"
+      },
+      {
+        "id": "0x16",
+        "id_dec": 22,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "image/avif"
+      },
+      {
+        "id": "0x17",
+        "id_dec": 23,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/json"
+      },
+      {
+        "id": "0x18",
+        "id_dec": 24,
+        "type": "complete_pair",
+        "name": "strict-transport-security",
+        "value": "max-age=31536000; includeSubDomains; preload"
+      },
+      {
+        "id": "0x19",
+        "id_dec": 25,
+        "type": "complete_pair",
+        "name": "vary",
+        "value": "Origin"
+      },
+      {
+        "id": "0x1A",
+        "id_dec": 26,
+        "type": "complete_pair",
+        "name": "x-xss-protection",
+        "value": "1; mode=block"
+      },
+      {
+        "id": "0x1B",
+        "id_dec": 27,
+        "type": "complete_pair",
+        "name": "cf-cache-status",
+        "value": "HIT"
+      },
+      {
+        "id": "0x1C",
+        "id_dec": 28,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "max-age=630720000"
+      },
+      {
+        "id": "0x1D",
+        "id_dec": 29,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "max-age=86400000"
+      },
+      {
+        "id": "0x1E",
+        "id_dec": 30,
+        "type": "complete_pair",
+        "name": "referrer-policy",
+        "value": "strict-origin-when-cross-origin"
+      },
+      {
+        "id": "0x1F",
+        "id_dec": 31,
+        "type": "complete_pair",
+        "name": "cf-cache-status",
+        "value": "DYNAMIC"
+      },
+      {
+        "id": "0x20",
+        "id_dec": 32,
+        "type": "complete_pair",
+        "name": "strict-transport-security",
+        "value": "max-age=0"
+      },
+      {
+        "id": "0x21",
+        "id_dec": 33,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public, max-age=31536000"
+      },
+      {
+        "id": "0x22",
+        "id_dec": 34,
+        "type": "complete_pair",
+        "name": "access-control-allow-methods",
+        "value": "GET, POST, OPTIONS"
+      },
+      {
+        "id": "0x23",
+        "id_dec": 35,
+        "type": "complete_pair",
+        "name": "expires",
+        "value": "Thu, 01 Jan 1970 00:00:01 GMT"
+      },
+      {
+        "id": "0x24",
+        "id_dec": 36,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/plain"
+      },
+      {
+        "id": "0x25",
+        "id_dec": 37,
+        "type": "complete_pair",
+        "name": "expires",
+        "value": "-1"
+      },
+      {
+        "id": "0x26",
+        "id_dec": 38,
+        "type": "complete_pair",
+        "name": "vary",
+        "value": "accept-encoding"
+      },
+      {
+        "id": "0x27",
+        "id_dec": 39,
+        "type": "complete_pair",
+        "name": "cross-origin-opener-policy",
+        "value": "same-origin-allow-popups"
+      },
+      {
+        "id": "0x28",
+        "id_dec": 40,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/javascript"
+      },
+      {
+        "id": "0x29",
+        "id_dec": 41,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/html; charset=UTF-8"
+      },
+      {
+        "id": "0x2A",
+        "id_dec": 42,
+        "type": "complete_pair",
+        "name": "expires",
+        "value": "Fri, 01 Jan 1990 00:00:00 GMT"
+      },
+      {
+        "id": "0x2B",
+        "id_dec": 43,
+        "type": "complete_pair",
+        "name": "x-permitted-cross-domain-policies",
+        "value": "none"
+      },
+      {
+        "id": "0x2C",
+        "id_dec": 44,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/css"
+      },
+      {
+        "id": "0x2D",
+        "id_dec": 45,
+        "type": "complete_pair",
+        "name": "permissions-policy",
+        "value": "unload=()"
+      },
+      {
+        "id": "0x2E",
+        "id_dec": 46,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "image/jpeg"
+      },
+      {
+        "id": "0x2F",
+        "id_dec": 47,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "no-cache, no-store, must-revalidate"
+      },
+      {
+        "id": "0x30",
+        "id_dec": 48,
+        "type": "complete_pair",
+        "name": "vary",
+        "value": "Accept-Encoding, Origin"
+      },
+      {
+        "id": "0x31",
+        "id_dec": 49,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "no-store, no-cache"
+      },
+      {
+        "id": "0x32",
+        "id_dec": 50,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public, max-age=2592000"
+      },
+      {
+        "id": "0x33",
+        "id_dec": 51,
+        "type": "complete_pair",
+        "name": "referrer-policy",
+        "value": "no-referrer-when-downgrade"
+      },
+      {
+        "id": "0x34",
+        "id_dec": 52,
+        "type": "complete_pair",
+        "name": "x-frame-options",
+        "value": "DENY"
+      },
+      {
+        "id": "0x35",
+        "id_dec": 53,
+        "type": "complete_pair",
+        "name": "access-control-allow-methods",
+        "value": "POST"
+      },
+      {
+        "id": "0x36",
+        "id_dec": 54,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/javascript; charset=UTF-8"
+      },
+      {
+        "id": "0x37",
+        "id_dec": 55,
+        "type": "complete_pair",
+        "name": "strict-transport-security",
+        "value": "max-age=63072000"
+      },
+      {
+        "id": "0x38",
+        "id_dec": 56,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public, immutable, max-age=31536000"
+      },
+      {
+        "id": "0x39",
+        "id_dec": 57,
+        "type": "complete_pair",
+        "name": "connection",
+        "value": "keep-alive"
+      },
+      {
+        "id": "0x3A",
+        "id_dec": 58,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "image/webp"
+      },
+      {
+        "id": "0x3B",
+        "id_dec": 59,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public,max-age=31536000"
+      },
+      {
+        "id": "0x3C",
+        "id_dec": 60,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public, max-age=31536000, immutable"
+      },
+      {
+        "id": "0x3D",
+        "id_dec": 61,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "image/png"
+      },
+      {
+        "id": "0x3E",
+        "id_dec": 62,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "max-age=0, private, must-revalidate"
+      },
+      {
+        "id": "0x3F",
+        "id_dec": 63,
+        "type": "complete_pair",
+        "name": "permissions-policy",
+        "value": "interest-cohort=()"
+      },
+      {
+        "id": "0x40",
+        "id_dec": 64,
+        "type": "complete_pair",
+        "name": "expires",
+        "value": "0"
+      },
+      {
+        "id": "0x41",
+        "id_dec": 65,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "no-cache, must-revalidate"
+      },
+      {
+        "id": "0x42",
+        "id_dec": 66,
+        "type": "complete_pair",
+        "name": "strict-transport-security",
+        "value": "max-age=63072000; includeSubDomains; preload"
+      },
+      {
+        "id": "0x43",
+        "id_dec": 67,
+        "type": "complete_pair",
+        "name": "content-encoding",
+        "value": "zstd"
+      },
+      {
+        "id": "0x44",
+        "id_dec": 68,
+        "type": "complete_pair",
+        "name": "access-control-expose-headers",
+        "value": "*"
+      },
+      {
+        "id": "0x45",
+        "id_dec": 69,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/javascript; charset=utf-8"
+      },
+      {
+        "id": "0x46",
+        "id_dec": 70,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "no-cache, no-store"
+      },
+      {
+        "id": "0x47",
+        "id_dec": 71,
+        "type": "complete_pair",
+        "name": "access-control-max-age",
+        "value": "7200"
+      },
+      {
+        "id": "0x48",
+        "id_dec": 72,
+        "type": "complete_pair",
+        "name": "vary",
+        "value": "Accept, Origin"
+      },
+      {
+        "id": "0x49",
+        "id_dec": 73,
+        "type": "complete_pair",
+        "name": "access-control-allow-methods",
+        "value": "GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS"
+      },
+      {
+        "id": "0x4A",
+        "id_dec": 74,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "max-age=2592000,s-maxage=86400"
+      },
+      {
+        "id": "0x4B",
+        "id_dec": 75,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "image/svg+xml"
+      },
+      {
+        "id": "0x4C",
+        "id_dec": 76,
+        "type": "complete_pair",
+        "name": "access-control-max-age",
+        "value": "86400"
+      },
+      {
+        "id": "0x4D",
+        "id_dec": 77,
+        "type": "complete_pair",
+        "name": "content-disposition",
+        "value": "attachment; filename=\"f.txt\""
+      },
+      {
+        "id": "0x4E",
+        "id_dec": 78,
+        "type": "complete_pair",
+        "name": "x-robots-tag",
+        "value": "none"
+      },
+      {
+        "id": "0x4F",
+        "id_dec": 79,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public, max-age=22222222"
+      },
+      {
+        "id": "0x50",
+        "id_dec": 80,
+        "type": "complete_pair",
+        "name": "cross-origin-opener-policy",
+        "value": "unsafe-none"
+      },
+      {
+        "id": "0x51",
+        "id_dec": 81,
+        "type": "complete_pair",
+        "name": "strict-transport-security",
+        "value": "max-age=15552000; includeSubDomains; preload"
+      },
+      {
+        "id": "0x52",
+        "id_dec": 82,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/css; charset=UTF-8"
+      },
+      {
+        "id": "0x53",
+        "id_dec": 83,
+        "type": "complete_pair",
+        "name": "x-frame-options",
+        "value": "deny"
+      },
+      {
+        "id": "0x54",
+        "id_dec": 84,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/html"
+      },
+      {
+        "id": "0x55",
+        "id_dec": 85,
+        "type": "complete_pair",
+        "name": "access-control-allow-methods",
+        "value": "OPTIONS,GET,POST"
+      },
+      {
+        "id": "0x56",
+        "id_dec": 86,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public,max-age=31536000,immutable"
+      },
+      {
+        "id": "0x57",
+        "id_dec": 87,
+        "type": "complete_pair",
+        "name": "access-control-allow-methods",
+        "value": "GET, HEAD"
+      },
+      {
+        "id": "0x58",
+        "id_dec": 88,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "max-age=31536000"
+      },
+      {
+        "id": "0x59",
+        "id_dec": 89,
+        "type": "complete_pair",
+        "name": "x-dns-prefetch-control",
+        "value": "on"
+      },
+      {
+        "id": "0x5A",
+        "id_dec": 90,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/json;charset=UTF-8"
+      },
+      {
+        "id": "0x5B",
+        "id_dec": 91,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "private, max-age=3600"
+      },
+      {
+        "id": "0x5C",
+        "id_dec": 92,
+        "type": "complete_pair",
+        "name": "access-control-allow-methods",
+        "value": "GET"
+      },
+      {
+        "id": "0x5D",
+        "id_dec": 93,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "font/woff2"
+      },
+      {
+        "id": "0x5E",
+        "id_dec": 94,
+        "type": "complete_pair",
+        "name": "access-control-max-age",
+        "value": "3000"
+      },
+      {
+        "id": "0x5F",
+        "id_dec": 95,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public"
+      },
+      {
+        "id": "0x60",
+        "id_dec": 96,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "max-age=31536000, public"
+      },
+      {
+        "id": "0x61",
+        "id_dec": 97,
+        "type": "complete_pair",
+        "name": "permissions-policy",
+        "value": "microphone=()"
+      },
+      {
+        "id": "0x62",
+        "id_dec": 98,
+        "type": "complete_pair",
+        "name": "transfer-encoding",
+        "value": "chunked"
+      },
+      {
+        "id": "0x63",
+        "id_dec": 99,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "no-cache, no-store, max-age=0, must-revalidate"
+      },
+      {
+        "id": "0x64",
+        "id_dec": 100,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "max-age=300"
+      },
+      {
+        "id": "0x65",
+        "id_dec": 101,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "max-age=2592000"
+      },
+      {
+        "id": "0x66",
+        "id_dec": 102,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "no-store"
+      },
+      {
+        "id": "0x67",
+        "id_dec": 103,
+        "type": "complete_pair",
+        "name": "cf-cache-status",
+        "value": "MISS"
+      },
+      {
+        "id": "0x68",
+        "id_dec": 104,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public, max-age=7200"
+      },
+      {
+        "id": "0x69",
+        "id_dec": 105,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public,max-age=604800"
+      },
+      {
+        "id": "0x6A",
+        "id_dec": 106,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/plain; charset=utf-8"
+      },
+      {
+        "id": "0x6B",
+        "id_dec": 107,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      {
+        "id": "0x6C",
+        "id_dec": 108,
+        "type": "complete_pair",
+        "name": "cross-origin-embedder-policy",
+        "value": "require-corp"
+      },
+      {
+        "id": "0x6D",
+        "id_dec": 109,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "private, max-age=0"
+      },
+      {
+        "id": "0x6E",
+        "id_dec": 110,
+        "type": "complete_pair",
+        "name": "origin-agent-cluster",
+        "value": "?1"
+      },
+      {
+        "id": "0x6F",
+        "id_dec": 111,
+        "type": "complete_pair",
+        "name": "vary",
+        "value": "Accept, Accept-Encoding"
+      },
+      {
+        "id": "0x70",
+        "id_dec": 112,
+        "type": "complete_pair",
+        "name": "age",
+        "value": "0"
+      },
+      {
+        "id": "0x71",
+        "id_dec": 113,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public, max-age=86400"
+      },
+      {
+        "id": "0x72",
+        "id_dec": 114,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "max-age=0, no-cache, no-store"
+      },
+      {
+        "id": "0x73",
+        "id_dec": 115,
+        "type": "complete_pair",
+        "name": "pragma",
+        "value": "public"
+      },
+      {
+        "id": "0x74",
+        "id_dec": 116,
+        "type": "complete_pair",
+        "name": "accept-ranges",
+        "value": "none"
+      },
+      {
+        "id": "0x75",
+        "id_dec": 117,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "max-age=2147483648, immutable"
+      },
+      {
+        "id": "0x76",
+        "id_dec": 118,
+        "type": "complete_pair",
+        "name": "vary",
+        "value": "Referer"
+      },
+      {
+        "id": "0x77",
+        "id_dec": 119,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public, max-age=604800"
+      },
+      {
+        "id": "0x78",
+        "id_dec": 120,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public, max-age=86400, no-transform"
+      },
+      {
+        "id": "0x79",
+        "id_dec": 121,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "public, max-age=0, must-revalidate"
+      },
+      {
+        "id": "0x7A",
+        "id_dec": 122,
+        "type": "complete_pair",
+        "name": "vary",
+        "value": "Origin, Accept-Encoding"
+      },
+      {
+        "id": "0x7B",
+        "id_dec": 123,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "no-store, no-cache, must-revalidate"
+      },
+      {
+        "id": "0x7C",
+        "id_dec": 124,
+        "type": "complete_pair",
+        "name": "vary",
+        "value": "Accept"
+      },
+      {
+        "id": "0x7D",
+        "id_dec": 125,
+        "type": "complete_pair",
+        "name": "cache-control",
+        "value": "private, max-age=900"
+      },
+      {
+        "id": "0x7E",
+        "id_dec": 126,
+        "type": "complete_pair",
+        "name": "content-security-policy",
+        "value": "frame-ancestors 'self'"
+      },
+      {
+        "id": "0x7F",
+        "id_dec": 127,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/json+protobuf; charset=UTF-8"
+      },
+      {
+        "id": "0x80",
+        "id_dec": 128,
+        "type": "complete_pair",
+        "name": "cross-origin-opener-policy",
+        "value": "same-origin"
+      },
+      {
+        "id": "0x81",
+        "id_dec": 129,
+        "type": "complete_pair",
+        "name": "cross-origin-resource-policy",
+        "value": "same-origin"
+      },
+      {
+        "id": "0x82",
+        "id_dec": 130,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/octet-stream"
+      },
+      {
+        "id": "0x83",
+        "id_dec": 131,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/json; odata.metadata=minimal"
+      },
+      {
+        "id": "0x84",
+        "id_dec": 132,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/plain;charset=UTF-8"
+      },
+      {
+        "id": "0x85",
+        "id_dec": 133,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "video/MP2T"
+      },
+      {
+        "id": "0x86",
+        "id_dec": 134,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/javascript;charset=utf-8"
+      },
+      {
+        "id": "0x87",
+        "id_dec": 135,
+        "type": "complete_pair",
+        "name": "cross-origin-resource-policy",
+        "value": "same-site"
+      },
+      {
+        "id": "0x88",
+        "id_dec": 136,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "video/x-m4v"
+      },
+      {
+        "id": "0x89",
+        "id_dec": 137,
+        "type": "complete_pair",
+        "name": "upgrade",
+        "value": "websocket"
+      },
+      {
+        "id": "0x8A",
+        "id_dec": 138,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/xml"
+      },
+      {
+        "id": "0x8B",
+        "id_dec": 139,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "application/font-woff"
+      },
+      {
+        "id": "0x8C",
+        "id_dec": 140,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "audio/mpeg"
+      },
+      {
+        "id": "0x8D",
+        "id_dec": 141,
+        "type": "complete_pair",
+        "name": "content-type",
+        "value": "text/javascript;charset=UTF-8"
+      },
+      {
+        "id": "0x8E",
+        "id_dec": 142,
+        "type": "name_only",
+        "name": "date"
+      },
+      {
+        "id": "0x8F",
+        "id_dec": 143,
+        "type": "name_only",
+        "name": "content-type"
+      },
+      {
+        "id": "0x90",
+        "id_dec": 144,
+        "type": "name_only",
+        "name": "cache-control"
+      },
+      {
+        "id": "0x91",
+        "id_dec": 145,
+        "type": "name_only",
+        "name": "content-length"
+      },
+      {
+        "id": "0x92",
+        "id_dec": 146,
+        "type": "name_only",
+        "name": "server"
+      },
+      {
+        "id": "0x93",
+        "id_dec": 147,
+        "type": "name_only",
+        "name": "access-control-allow-origin"
+      },
+      {
+        "id": "0x94",
+        "id_dec": 148,
+        "type": "name_only",
+        "name": "strict-transport-security"
+      },
+      {
+        "id": "0x95",
+        "id_dec": 149,
+        "type": "name_only",
+        "name": "vary"
+      },
+      {
+        "id": "0x96",
+        "id_dec": 150,
+        "type": "name_only",
+        "name": "content-encoding"
+      },
+      {
+        "id": "0x97",
+        "id_dec": 151,
+        "type": "name_only",
+        "name": "x-content-type-options"
+      },
+      {
+        "id": "0x98",
+        "id_dec": 152,
+        "type": "name_only",
+        "name": "timing-allow-origin"
+      },
+      {
+        "id": "0x99",
+        "id_dec": 153,
+        "type": "name_only",
+        "name": "report-to"
+      },
+      {
+        "id": "0x9A",
+        "id_dec": 154,
+        "type": "name_only",
+        "name": "alt-svc"
+      },
+      {
+        "id": "0x9B",
+        "id_dec": 155,
+        "type": "name_only",
+        "name": "last-modified"
+      },
+      {
+        "id": "0x9C",
+        "id_dec": 156,
+        "type": "name_only",
+        "name": "access-control-expose-headers"
+      },
+      {
+        "id": "0x9D",
+        "id_dec": 157,
+        "type": "name_only",
+        "name": "expires"
+      },
+      {
+        "id": "0x9E",
+        "id_dec": 158,
+        "type": "name_only",
+        "name": "age"
+      },
+      {
+        "id": "0x9F",
+        "id_dec": 159,
+        "type": "name_only",
+        "name": "cross-origin-resource-policy"
+      },
+      {
+        "id": "0xA0",
+        "id_dec": 160,
+        "type": "name_only",
+        "name": "x-xss-protection"
+      },
+      {
+        "id": "0xA1",
+        "id_dec": 161,
+        "type": "name_only",
+        "name": "etag"
+      },
+      {
+        "id": "0xA2",
+        "id_dec": 162,
+        "type": "name_only",
+        "name": "content-disposition"
+      },
+      {
+        "id": "0xA3",
+        "id_dec": 163,
+        "type": "name_only",
+        "name": "pragma"
+      },
+      {
+        "id": "0xA4",
+        "id_dec": 164,
+        "type": "name_only",
+        "name": "via"
+      },
+      {
+        "id": "0xA5",
+        "id_dec": 165,
+        "type": "name_only",
+        "name": "accept-ranges"
+      },
+      {
+        "id": "0xA6",
+        "id_dec": 166,
+        "type": "name_only",
+        "name": "x-download-options"
+      },
+      {
+        "id": "0xA7",
+        "id_dec": 167,
+        "type": "name_only",
+        "name": "x-frame-options"
+      },
+      {
+        "id": "0xA8",
+        "id_dec": 168,
+        "type": "name_only",
+        "name": "accept-ch"
+      },
+      {
+        "id": "0xA9",
+        "id_dec": 169,
+        "type": "name_only",
+        "name": "access-control-allow-credentials"
+      },
+      {
+        "id": "0xAA",
+        "id_dec": 170,
+        "type": "name_only",
+        "name": "access-control-allow-methods"
+      },
+      {
+        "id": "0xAB",
+        "id_dec": 171,
+        "type": "name_only",
+        "name": "content-security-policy"
+      },
+      {
+        "id": "0xAC",
+        "id_dec": 172,
+        "type": "name_only",
+        "name": "referrer-policy"
+      },
+      {
+        "id": "0xAD",
+        "id_dec": 173,
+        "type": "name_only",
+        "name": "access-control-allow-headers"
+      },
+      {
+        "id": "0xAE",
+        "id_dec": 174,
+        "type": "name_only",
+        "name": "permissions-policy"
+      },
+      {
+        "id": "0xAF",
+        "id_dec": 175,
+        "type": "name_only",
+        "name": "content-security-policy-report-only"
+      },
+      {
+        "id": "0xB0",
+        "id_dec": 176,
+        "type": "name_only",
+        "name": "access-control-max-age"
+      },
+      {
+        "id": "0xB1",
+        "id_dec": 177,
+        "type": "name_only",
+        "name": "x-permitted-cross-domain-policies"
+      },
+      {
+        "id": "0xB2",
+        "id_dec": 178,
+        "type": "name_only",
+        "name": "connection"
+      },
+      {
+        "id": "0xB3",
+        "id_dec": 179,
+        "type": "name_only",
+        "name": "x-robots-tag"
+      },
+      {
+        "id": "0xB4",
+        "id_dec": 180,
+        "type": "name_only",
+        "name": "location"
+      },
+      {
+        "id": "0xB5",
+        "id_dec": 181,
+        "type": "name_only",
+        "name": "link"
+      },
+      {
+        "id": "0xB6",
+        "id_dec": 182,
+        "type": "name_only",
+        "name": "set-cookie"
+      },
+      {
+        "id": "0xB7",
+        "id_dec": 183,
+        "type": "name_only",
+        "name": "origin-agent-cluster"
+      },
+      {
+        "id": "0xB8",
+        "id_dec": 184,
+        "type": "name_only",
+        "name": "content-language"
+      },
+      {
+        "id": "0xB9",
+        "id_dec": 185,
+        "type": "name_only",
+        "name": "cross-origin-embedder-policy"
+      },
+      {
+        "id": "0xBA",
+        "id_dec": 186,
+        "type": "name_only",
+        "name": "www-authenticate"
+      },
+      {
+        "id": "0xBB",
+        "id_dec": 187,
+        "type": "name_only",
+        "name": "content-range"
+      },
+      {
+        "id": "0xBC",
+        "id_dec": 188,
+        "type": "name_only",
+        "name": "retry-after"
+      },
+      {
+        "id": "0xBD",
+        "id_dec": 189,
+        "type": "name_only",
+        "name": "critical-ch"
+      },
+      {
+        "id": "0xBE",
+        "id_dec": 190,
+        "type": "name_only",
+        "name": "x-payment-response"
+      }
+    ]
+  }
+}
+

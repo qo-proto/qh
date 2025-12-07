@@ -1,6 +1,6 @@
 ## Request Headers
 
-This file was generated using the `generate_outputs.py` CLI: https://github.com/Erl-koenig/http-header-tracker
+This file was generated using the `generate_outputs.py` script: https://github.com/Erl-koenig/http-header-tracker
 
 **Slot usage: 100/255**
 
