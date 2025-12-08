@@ -18,8 +18,20 @@ var errUnsupportedMethod = errors.New("unsupported method")
 func main() {
 	slog.Info("QH Protocol Client starting")
 
+	// Optionally enable keylog for Wireshark decryption
+	// Run with: go run -tags keylog .\examples\client\
+
+	var clientOpts []qh.ClientOption
+
+	keylogFile, err := os.Create("qh_client_keylog.txt")
+	if err == nil {
+		defer keylogFile.Close()
+		clientOpts = append(clientOpts, qh.WithClientKeyLogWriter(keylogFile))
+		slog.Info("Keylog file created", "path", "qh_client_keylog.txt")
+	}
+
 	hostname := "qh.gianhunold.ch" // 127.0.0.1 with public key from seed: my-secret-server-seed
-	// hostname := "qh2.gianhunold.ch" // 127.0.0.1 but no public key
+	//hostname := "qh2.gianhunold.ch" // 127.0.0.1 but no public key
 	port := 8090
 
 	addr := fmt.Sprintf("%s:%d", hostname, port)
@@ -31,26 +43,26 @@ func main() {
 	}{
 		{method: "GET", path: "/hello"},
 		{method: "GET", path: "/status"},
-		{method: "GET", path: "/api/user"}, // JSON response
+		/*ethod: "GET", path: "/api/user"}, // JSON response
 		{method: "POST", path: "/echo", body: "Hello QH World!"},
 		{method: "POST", path: "/data", body: "Updated data!"},
 		{method: "PUT", path: "/api/user", body: `{"name": "Jane Doe", "id": 123}`},
-		{method: "PATCH", path: "/api/user", body: `{"status": "inactive"}`},
-		{method: "POST", path: "/large-post", body: strings.Repeat("LARGE_DATA_", 20000)}, // ~220KB
-		{method: "HEAD", path: "/file"},
-		{method: "GET", path: "/file"},
-		{method: "GET", path: "/image"},
-		{method: "GET", path: "/not-found"}, // This will trigger a 404
+		{method: "PATCH", path: "/api/user", body: `{"status": "inactive"}`},*/
+		//{method: "POST", path: "/large-post", body: strings.Repeat("LARGE_DATA_", 20000)}, // ~220KB
+		//{method: "HEAD", path: "/file"},
+		//{method: "GET", path: "/file"},
+		//{method: "GET", path: "/image"},
+		/*{method: "GET", path: "/not-found"}, // This will trigger a 404
 		{
 			method: "GET",
 			path:   "/redirect",
-		}, // This should return a 301 and hostname from the new site
+		}, // This should return a 301 and hostname from the new site*/
 	}
 
-	c := qh.NewClient()
+	c := qh.NewClient(clientOpts...)
 	defer c.Close()
 
-	if err := c.Connect(addr); err != nil {
+	if err := c.Connect(addr, nil); err != nil {
 		slog.Error("Failed to connect", "error", err)
 		return
 	}

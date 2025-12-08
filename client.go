@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"maps"
 	"net"
@@ -34,6 +35,7 @@ type Client struct {
 	remoteAddr      *net.UDPAddr
 	maxResponseSize int
 	maxRedirects    int
+	keylogWriter    io.Writer
 }
 
 type ClientOption func(*Client)
@@ -63,7 +65,13 @@ func NewClient(opts ...ClientOption) *Client {
 	return c
 }
 
-func (c *Client) Connect(addr string) error {
+func WithClientKeyLogWriter(w io.Writer) ClientOption {
+	return func(c *Client) {
+		c.keylogWriter = w
+	}
+}
+
+func (c *Client) Connect(addr string, _ io.Writer) error {
 	host, portStr, err := net.SplitHostPort(addr)
 	if err != nil {
 		return fmt.Errorf("invalid address format: %w", err)
@@ -101,7 +109,9 @@ func (c *Client) Connect(addr string) error {
 	}
 
 	// create local listener (auto generates keys)
-	listener, err := qotp.Listen()
+	opts := []qotp.ListenFunc{}
+	c.addKeyLogWriter(&opts)
+	listener, err := qotp.Listen(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
@@ -378,12 +388,14 @@ func (c *Client) reconnect(host string, port int) error {
 	c.Close()
 
 	// Create a new listener for the new connection
-	listener, err := qotp.Listen()
+	opts := []qotp.ListenFunc{}
+	c.addKeyLogWriter(&opts)
+	listener, err := qotp.Listen(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to create new listener for reconnect: %w", err)
 	}
 	c.listener = listener
-	return c.Connect(fmt.Sprintf("%s:%d", host, port))
+	return c.Connect(fmt.Sprintf("%s:%d", host, port), nil)
 }
 
 func (c *Client) handleRedirect(req *Request, resp *Response, redirectCount int) (*Response, error) {
