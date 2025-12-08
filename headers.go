@@ -3,11 +3,11 @@
 package qh
 
 type headerEntry struct {
-	name  string
-	value string // empty for name-only headers (Format 2)
+	Name  string
+	Value string // empty for name-only headers (Format 2)
 }
 
-var requestHeaderStaticTable = map[byte]headerEntry{
+var RequestHeaderStaticTable = map[byte]headerEntry{
 	// Complete key-value pairs (Format 1)
 	0x01: {"sec-ch-ua-mobile", "?0"},
 	0x02: {"sec-ch-ua-platform", "\"Windows\""},
@@ -113,7 +113,7 @@ var requestHeaderStaticTable = map[byte]headerEntry{
 	0x64: {"x-payment", ""},
 }
 
-var responseHeaderStaticTable = map[byte]headerEntry{
+var ResponseHeaderStaticTable = map[byte]headerEntry{
 	// Complete key-value pairs (Format 1)
 	0x01: {"x-content-type-options", "nosniff"},
 	0x02: {"timing-allow-origin", "*"},

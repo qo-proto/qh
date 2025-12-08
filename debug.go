@@ -255,14 +255,14 @@ func annotateStaticTableHeader(sb *strings.Builder, data []byte, offset *int, he
 
 func lookupHeaderInStaticTable(headerID byte, isRequest bool) (string, string, bool) {
 	if isRequest {
-		if entry, ok := requestHeaderStaticTable[headerID]; ok {
+		if entry, ok := RequestHeaderStaticTable[headerID]; ok {
 			// If entry.value is empty, the value bytes follow in the wire format (Format 2)
 			// If entry.value is filled, it's a complete pair (Format 1)
-			return entry.name, entry.value, entry.value == ""
+			return entry.Name, entry.Value, entry.Value == ""
 		}
 	} else {
-		if entry, ok := responseHeaderStaticTable[headerID]; ok {
-			return entry.name, entry.value, entry.value == ""
+		if entry, ok := ResponseHeaderStaticTable[headerID]; ok {
+			return entry.Name, entry.Value, entry.Value == ""
 		}
 	}
 	return "", "", false
