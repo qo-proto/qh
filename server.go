@@ -30,7 +30,6 @@ type Server struct {
 	supportedEncodings []Encoding                    // compression algorithms this server supports, in order of preference
 	maxRequestSize     int
 	minCompressionSize int
-	keylogWriter       io.Writer
 }
 
 // ServerOption is a functional option for configuring a Server.
@@ -63,15 +62,6 @@ func WithSupportedEncodings(encodings []Encoding) ServerOption {
 	}
 }
 
-// WithServerKeyLogWriter sets an io.Writer for logging session keys.
-// Used for debugging encrypted traffic with Wireshark.
-// Should only be used in development environments.
-func WithServerKeyLogWriter(w io.Writer) ServerOption {
-	return func(s *Server) {
-		s.keylogWriter = w
-	}
-}
-
 // NewServer creates a new QH server with the specified options.
 func NewServer(opts ...ServerOption) *Server {
 	s := &Server{
@@ -97,20 +87,13 @@ func (s *Server) HandleFunc(path string, method Method, handler Handler) {
 	slog.Info("Registered handler", "method", method.String(), "path", path)
 }
 
-// Listen starts listening on the given address.
-// It uses qotp with auto-generated keys.
-//
-// Deprecated: keyLogWriter parameter is unused. Use WithServerKeyLogWriter option instead.
 func (s *Server) Listen(addr string, _ io.Writer, seed ...string) error {
 	opts := []qotp.ListenFunc{qotp.WithListenAddr(addr)}
-
 	if len(seed) > 0 && seed[0] != "" {
 		opts = append(opts, qotp.WithSeedStr(seed[0]))
 		slog.Info("QH server listening with provided seed")
 	}
-	if s.keylogWriter != nil {
-		s.addKeyLogWriter(&opts)
-	}
+
 	listener, err := qotp.Listen(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to listen on %s: %w", addr, err)

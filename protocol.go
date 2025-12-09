@@ -237,13 +237,13 @@ func parseHeaderEntry(
 	}
 
 	if entry, exists := staticTable[headerID]; exists {
-		if entry.value != "" {
+		if entry.Value != "" {
 			// Format 1: Complete key-value pair, just return the entry
-			return entry.name, entry.value, offset, nil
+			return entry.Name, entry.Value, offset, nil
 		}
 		// Format 2: Known header name with custom value <headerID><varint:valueLen><value>
 		value, newOffset, err := parseKnownHeader(data, offset)
-		return entry.name, value, newOffset, err
+		return entry.Name, value, newOffset, err
 	}
 
 	// Unknown header ID
@@ -387,7 +387,7 @@ func ParseResponse(data []byte) (*Response, error) {
 	}
 	offset += n
 
-	headers, newOffset, err := parseHeaders(data, offset, headersLen, responseHeaderStaticTable)
+	headers, newOffset, err := parseHeaders(data, offset, headersLen, ResponseHeaderStaticTable)
 	if err != nil {
 		return nil, fmt.Errorf("invalid response: %w", err)
 	}
@@ -481,7 +481,7 @@ func ParseRequest(data []byte) (*Request, error) {
 	}
 	offset += n
 
-	headers, newOffset, err := parseHeaders(data, offset, headersLen, requestHeaderStaticTable)
+	headers, newOffset, err := parseHeaders(data, offset, headersLen, RequestHeaderStaticTable)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}

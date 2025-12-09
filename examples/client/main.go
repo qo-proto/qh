@@ -18,6 +18,18 @@ var errUnsupportedMethod = errors.New("unsupported method")
 func main() {
 	slog.Info("QH Protocol Client starting")
 
+	// Optionally enable keylog for Wireshark decryption
+	// Run with: go run -tags keylog .\examples\client\
+
+	var clientOpts []qh.ClientOption
+
+	keylogFile, err := os.Create("qh_client_keylog.txt")
+	if err == nil {
+		defer keylogFile.Close()
+		clientOpts = append(clientOpts, qh.WithClientKeyLogWriter(keylogFile))
+		slog.Info("Keylog file created", "path", "qh_client_keylog.txt")
+	}
+
 	hostname := "qh.gianhunold.ch" // 127.0.0.1 with public key from seed: my-secret-server-seed
 	// hostname := "qh2.gianhunold.ch" // 127.0.0.1 but no public key
 	port := 8090
@@ -47,10 +59,10 @@ func main() {
 		}, // This should return a 301 and hostname from the new site
 	}
 
-	c := qh.NewClient()
+	c := qh.NewClient(clientOpts...)
 	defer c.Close()
 
-	if err := c.Connect(addr); err != nil {
+	if err := c.Connect(addr, nil); err != nil {
 		slog.Error("Failed to connect", "error", err)
 		return
 	}
