@@ -162,7 +162,7 @@ func main() {
 
 	// You can provide a seed for deterministic keys
 	seed := "Start123"
-	//nolint:staticcheck // keyLogWriter parameter deprecated, use WithServerKeyLogWriter instead
+	// nolint:staticcheck // keyLogWriter parameter deprecated, use WithServerKeyLogWriter instead
 	if err := srv.Listen(addr, nil, seed); err != nil {
 		slog.Error("Failed to start server", "error", err)
 		return
