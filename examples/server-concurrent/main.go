@@ -63,7 +63,6 @@ func main() {
 	addr := "127.0.0.1:8090"
 	seed := "Start123"
 
-	//nolint:staticcheck
 	if err := srv.Listen(addr, nil, seed); err != nil {
 		slog.Error("Failed to start server", "error", err)
 		return
