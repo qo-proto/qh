@@ -47,7 +47,7 @@ func main() {
 		{method: "POST", path: "/echo", body: "Hello QH World!"},
 		{method: "POST", path: "/data", body: "Updated data!"},
 		{method: "PUT", path: "/api/user", body: `{"name": "Jane Doe", "id": 123}`},
-		{method: "PATCH", path: "/api/user", body: `{"status": "inactive"}`},*/
+		{method: "PATCH", path: "/api/user", body: `{"status": "inactive"}`},
 		{method: "POST", path: "/large-post", body: strings.Repeat("LARGE_DATA_", 20000)}, // ~220KB
 		{method: "HEAD", path: "/file"},
 		{method: "GET", path: "/file"},
