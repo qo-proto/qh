@@ -18,7 +18,7 @@ func main() {
 	slog.Info("QH Protocol Server starting")
 
 	// Optionally enable keylog for Wireshark decryption
-	// Run with: go run -tags keylog .\examples\server\
+	// Run with: go run -tags keylog ./examples/server
 	var serverOpts []qh.ServerOption
 	keylogFile, err := os.Create("qh_server_keylog.txt")
 	if err == nil {
