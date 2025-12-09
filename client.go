@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"net/url"
@@ -37,6 +38,7 @@ type Client struct {
 	remoteAddr      *net.UDPAddr
 	maxResponseSize int
 	maxRedirects    int
+	keylogWriter    io.Writer
 }
 
 // ClientOption is a functional option for configuring a Client.
@@ -74,6 +76,12 @@ func NewClient(opts ...ClientOption) *Client {
 	return c
 }
 
+func WithClientKeyLogWriter(w io.Writer) ClientOption {
+	return func(c *Client) {
+		c.keylogWriter = w
+	}
+}
+
 // Connect establishes a connection to a QH server at the specified address.
 // The address should be in "host:port" format.
 //
@@ -81,7 +89,7 @@ func NewClient(opts ...ClientOption) *Client {
 // optionally retrieve the server's public key from a DNS TXT record
 // (at _qotp.<host>) for 0-RTT connection establishment. If no valid DNS key
 // is found, Connect falls back to a standard in-band key exchange handshake.
-func (c *Client) Connect(addr string) error {
+func (c *Client) Connect(addr string, _ io.Writer) error {
 	host, portStr, err := net.SplitHostPort(addr)
 	if err != nil {
 		return fmt.Errorf("invalid address format: %w", err)
@@ -119,7 +127,9 @@ func (c *Client) Connect(addr string) error {
 	}
 
 	// create local listener (auto generates keys)
-	listener, err := qotp.Listen()
+	opts := []qotp.ListenFunc{}
+	c.addKeyLogWriter(&opts)
+	listener, err := qotp.Listen(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
@@ -458,12 +468,14 @@ func (c *Client) reconnect(host string, port int) error {
 	c.Close()
 
 	// Create a new listener for the new connection
-	listener, err := qotp.Listen()
+	opts := []qotp.ListenFunc{}
+	c.addKeyLogWriter(&opts)
+	listener, err := qotp.Listen(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to create new listener for reconnect: %w", err)
 	}
 	c.listener = listener
-	return c.Connect(fmt.Sprintf("%s:%d", host, port))
+	return c.Connect(fmt.Sprintf("%s:%d", host, port), nil)
 }
 
 func (c *Client) handleRedirect(

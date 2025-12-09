@@ -37,7 +37,7 @@ func TestIntegrationAllHTTPMethods(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	tests := []struct {
 		name           string
@@ -90,7 +90,7 @@ func TestIntegrationLargeRequestBody(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	sizes := []int{1024, 10 * 1024, 100 * 1024, 500 * 1024} // 1KB, 10KB, 100KB, 500KB
 	for _, size := range sizes {
@@ -116,7 +116,7 @@ func TestIntegrationLargeResponseBody(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	resp, err := client.GET("127.0.0.1", "/large", nil)
 	require.NoError(t, err)
@@ -138,7 +138,7 @@ func TestIntegrationCompressionNegotiation(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	resp, err := client.GET("127.0.0.1", "/compress", nil)
 	require.NoError(t, err)
@@ -164,7 +164,7 @@ func TestIntegrationHeaderHandling(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	t.Run("Request headers echoed back", func(t *testing.T) {
 		headers := map[string]string{
@@ -205,7 +205,7 @@ func TestIntegrationErrorResponses(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	tests := []struct {
 		name         string
@@ -253,7 +253,7 @@ func TestIntegrationEmptyBody(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	t.Run("GET empty response", func(t *testing.T) {
 		resp, err := client.GET("127.0.0.1", "/empty", nil)
@@ -287,7 +287,7 @@ func TestIntegrationBinaryData(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	headers := map[string]string{"content-type": "application/octet-stream"}
 	resp, err := client.POST("127.0.0.1", "/binary", binaryData, headers)
@@ -308,7 +308,7 @@ func TestIntegrationConnectionReuse(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	connBefore := client.conn
 	initialStreamID := client.streamID.Load()

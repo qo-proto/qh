@@ -99,7 +99,7 @@ func TestInfiniteRedirectLoop(t *testing.T) {
 
 	client := NewClient(WithMaxRedirects(5))
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	_, err := client.GET("127.0.0.1", "/a", nil)
 	require.Error(t, err)
@@ -118,7 +118,7 @@ func TestZeroMaxRedirects(t *testing.T) {
 
 	client := NewClient(WithMaxRedirects(0))
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	_, err := client.GET("127.0.0.1", "/redirect", nil)
 	require.Error(t, err)

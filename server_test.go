@@ -178,7 +178,7 @@ func TestServerRouting(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	t.Run("Route to /hello", func(t *testing.T) {
 		resp, err := client.GET("127.0.0.1", "/hello", nil)
@@ -221,7 +221,7 @@ func TestServerMethodMatching(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	t.Run("GET matches GET handler", func(t *testing.T) {
 		resp, err := client.GET("127.0.0.1", "/api/resource", nil)
@@ -261,7 +261,7 @@ func TestServer404Handling(t *testing.T) {
 
 	client := NewClient()
 	defer client.Close()
-	require.NoError(t, client.Connect(addr))
+	require.NoError(t, client.Connect(addr, nil))
 
 	t.Run("Unregistered path returns 404", func(t *testing.T) {
 		resp, err := client.GET("127.0.0.1", "/does-not-exist", nil)

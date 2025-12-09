@@ -20,12 +20,6 @@ func main() {
 	// Optionally enable keylog for Wireshark decryption
 	// Run with: go run -tags keylog ./examples/server
 	var serverOpts []qh.ServerOption
-	keylogFile, err := os.Create("qh_server_keylog.txt")
-	if err == nil {
-		defer keylogFile.Close()
-		serverOpts = append(serverOpts, qh.WithServerKeyLogWriter(keylogFile))
-		slog.Info("Keylog file created", "path", "qh_server_keylog.txt")
-	}
 
 	srv := qh.NewServer(serverOpts...)
 
@@ -170,7 +164,6 @@ func main() {
 
 	// You can provide a seed for deterministic keys
 	seed := "Start123"
-	//nolint:staticcheck // keyLogWriter parameter deprecated, use WithServerKeyLogWriter instead
 	if err := srv.Listen(addr, nil, seed); err != nil {
 		slog.Error("Failed to start server", "error", err)
 		return
