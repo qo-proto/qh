@@ -379,7 +379,7 @@ func ParseResponse(data []byte) (*Response, error) {
 		return nil, fmt.Errorf("invalid version: %d", version)
 	}
 
-	httpStatusCode := decodeStatusCode(compactStatus)
+	httpStatusCode := DecodeStatusCode(compactStatus)
 
 	headersLen, n, err := ReadUvarint(data, offset)
 	if err != nil {

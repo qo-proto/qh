@@ -81,7 +81,7 @@ func DebugResponse(data []byte) string {
 		firstByte := data[offset]
 		version := firstByte >> versionBitShift
 		statusCompact := firstByte & statusCodeMask
-		statusDecoded := decodeStatusCode(statusCompact)
+		statusDecoded := DecodeStatusCode(statusCompact)
 		writeTableRow(&sb, offset, data[offset:offset+1],
 			fmt.Sprintf("First byte (Version=%d, Status=%d)", version, statusDecoded))
 		offset++

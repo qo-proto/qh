@@ -119,12 +119,14 @@ var statusToCompact = map[int]uint8{
 	505: 55, // QH Version Not Supported
 }
 
-var compactToStatus map[uint8]int // reverse mapping for decoding
+// CompactToStatus is the reverse mapping for decoding compact codes to HTTP status.
+// Exported for external consumers (e.g., Wireshark plugin).
+var CompactToStatus map[uint8]int
 
 func init() {
-	compactToStatus = make(map[uint8]int, len(statusToCompact))
+	CompactToStatus = make(map[uint8]int, len(statusToCompact))
 	for httpCode, compactCode := range statusToCompact {
-		compactToStatus[compactCode] = httpCode
+		CompactToStatus[compactCode] = httpCode
 	}
 }
 
@@ -138,8 +140,8 @@ func encodeStatusCode(httpCode int) uint8 {
 }
 
 // convert compact format to HTTP status code
-func decodeStatusCode(compact uint8) int {
-	if httpCode, exists := compactToStatus[compact]; exists {
+func DecodeStatusCode(compact uint8) int {
+	if httpCode, exists := CompactToStatus[compact]; exists {
 		return httpCode
 	}
 	// Fallback: if the compact code is not in our map, it's an unknown or custom code.
