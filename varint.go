@@ -6,21 +6,21 @@ import (
 )
 
 var (
-	ErrVarintOverflow   = errors.New("varint overflows uint64")
-	ErrVarintIncomplete = errors.New("varint is incomplete (buffer too short)")
+	errVarintOverflow   = errors.New("varint overflows uint64")
+	errVarintIncomplete = errors.New("varint is incomplete (buffer too short)")
 )
 
 func ReadUvarint(buf []byte, offset int) (uint64, int, error) {
 	if offset >= len(buf) {
-		return 0, 0, ErrVarintIncomplete
+		return 0, 0, errVarintIncomplete
 	}
 
 	val, n := binary.Uvarint(buf[offset:])
 	switch {
 	case n == 0:
-		return 0, 0, ErrVarintIncomplete
+		return 0, 0, errVarintIncomplete
 	case n < 0:
-		return 0, 0, ErrVarintOverflow
+		return 0, 0, errVarintOverflow
 	default:
 		return val, n, nil
 	}

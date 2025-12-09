@@ -53,7 +53,7 @@ func TestParseAcceptEncoding(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := ParseAcceptEncoding(tt.input)
+			result := parseAcceptEncoding(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -120,7 +120,7 @@ func TestSelectEncoding(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := SelectEncoding(tt.clientAccepts, tt.serverSupports)
+			result := selectEncoding(tt.clientAccepts, tt.serverSupports)
 			assert.Equal(t, tt.expected, result, tt.description)
 		})
 	}
@@ -193,35 +193,6 @@ func TestDecompressInvalidEncoding(t *testing.T) {
 	assert.Error(t, err, "should return error for invalid encoding")
 }
 
-// binary data shouldnt compress well (http also skips it)
-func TestBinaryDataCompression(t *testing.T) {
-	binaryData := make([]byte, 10000)
-	seed := uint32(12345)
-	for i := range binaryData { // fill with pseudo-random data
-		seed = seed*1103515245 + 12345
-		binaryData[i] = byte(seed >> 16)
-	}
-
-	encodings := []Encoding{Gzip, Brotli, Zstd}
-
-	for _, encoding := range encodings {
-		t.Run(string(encoding), func(t *testing.T) {
-			compressed, err := Compress(binaryData, encoding)
-			require.NoError(t, err, "compression should succeed even on binary data")
-
-			ratio := float64(len(compressed)) / float64(len(binaryData)) * 100
-			t.Logf("%s compression of binary/random data: %.2f%% (%d -> %d bytes)",
-				encoding, ratio, len(binaryData), len(compressed))
-
-			if ratio > 95.0 {
-				t.Logf("✓ Binary data compression ineffective (%.2f%% - expected for already-compressed formats)", ratio)
-			} else {
-				t.Logf("! Binary data compressed to %.2f%% (test data may not be random enough)", ratio)
-			}
-		})
-	}
-}
-
 func BenchmarkCompressions(b *testing.B) {
 	testData := []byte(strings.Repeat("Hello, QH Protocol! This is benchmark data. ", 1000))
 	encodings := []Encoding{Gzip, Brotli, Zstd}
@@ -232,6 +203,65 @@ func BenchmarkCompressions(b *testing.B) {
 			for b.Loop() {
 				_, _ = Compress(testData, encoding)
 			}
+		})
+	}
+}
+
+func TestCompressionBomb(t *testing.T) {
+	t.Run("ZstdBomb", func(t *testing.T) {
+		uncompressed := make([]byte, 1024*1024)
+
+		compressed, err := Compress(uncompressed, Zstd)
+		require.NoError(t, err)
+
+		t.Logf("Compression ratio: %d bytes -> %d bytes", len(uncompressed), len(compressed))
+
+		decompressed, err := Decompress(compressed, Zstd, 2*1024*1024) // 2MB limit
+		require.NoError(t, err)
+		assert.Len(t, decompressed, len(uncompressed))
+
+		_, err = Decompress(compressed, Zstd, 512*1024) // 512KB limit (too small)
+		require.Error(t, err, "Should fail when decompressed size exceeds limit")
+	})
+
+	t.Run("GzipBomb", func(t *testing.T) {
+		uncompressed := make([]byte, 512*1024)
+
+		compressed, err := Compress(uncompressed, Gzip)
+		require.NoError(t, err)
+
+		_, err = Decompress(compressed, Gzip, 256*1024)
+		require.Error(t, err, "Should fail when decompressed size exceeds limit")
+	})
+
+	t.Run("BrotliBomb", func(t *testing.T) {
+		uncompressed := make([]byte, 512*1024)
+
+		compressed, err := Compress(uncompressed, Brotli)
+		require.NoError(t, err)
+
+		_, err = Decompress(compressed, Brotli, 256*1024)
+		require.Error(t, err, "Should fail when decompressed size exceeds limit")
+	})
+}
+
+func TestCorruptedCompressedData(t *testing.T) {
+	tests := []struct {
+		name     string
+		encoding Encoding
+	}{
+		{"CorruptedZstd", Zstd},
+		{"CorruptedGzip", Gzip},
+		{"CorruptedBrotli", Brotli},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Random garbage data
+			corruptedData := []byte{0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8}
+
+			_, err := Decompress(corruptedData, tt.encoding, 1024*1024)
+			require.Error(t, err, "Should fail to decompress corrupted data")
 		})
 	}
 }

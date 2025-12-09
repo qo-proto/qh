@@ -46,7 +46,7 @@ func TestRequestFormat(t *testing.T) {
 				Path:    "/api",
 				Version: 0,
 				Headers: map[string]string{
-					"accept": JSON.HeaderValue(),
+					"accept": "application/json",
 				},
 			},
 		},
@@ -58,7 +58,7 @@ func TestRequestFormat(t *testing.T) {
 				Path:    "/submit",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type": JSON.HeaderValue(),
+					"content-type": "application/json",
 				},
 				Body: []byte(`{"key":"val"}`),
 			},
@@ -120,7 +120,7 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type": TextPlain.HeaderValue(),
+					"content-type": "text/plain",
 				},
 				Body: []byte("Hello"),
 			},
@@ -131,7 +131,7 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 404,
 				Headers: map[string]string{
-					"content-type": TextPlain.HeaderValue(),
+					"content-type": "text/plain",
 				},
 				Body: []byte("Not Found"),
 			},
@@ -142,7 +142,7 @@ func TestResponseFormat(t *testing.T) {
 				Version:    0,
 				StatusCode: 204,
 				Headers: map[string]string{
-					"content-type": Custom.HeaderValue(),
+					"content-type": "custom",
 				},
 				Body: []byte{},
 			},
@@ -193,8 +193,7 @@ func TestParseRequestWithBody(t *testing.T) {
 		Path:    "/submit",
 		Version: 0,
 		Headers: map[string]string{
-			"content-type":   JSON.HeaderValue(),
-			"content-length": "16",
+			"content-type": "application/json",
 		},
 		Body: []byte(`{"name": "test"}`),
 	}
@@ -290,9 +289,8 @@ func TestParseResponseBasic(t *testing.T) {
 		Version:    0,
 		StatusCode: 200,
 		Headers: map[string]string{
-			"content-type":   TextPlain.HeaderValue(),
-			"content-length": "13",
-			"date":           "1758784800",
+			"content-type": "text/plain",
+			"date":         "1758784800",
 		},
 		Body: []byte("Hello, world!"),
 	}
@@ -311,7 +309,7 @@ func TestParseResponseSingleHeader(t *testing.T) {
 		Version:    0,
 		StatusCode: 200,
 		Headers: map[string]string{
-			"content-type": TextPlain.HeaderValue(),
+			"content-type": "text/plain",
 		},
 		Body: []byte("Response body"),
 	}
@@ -363,47 +361,195 @@ func TestMethodString(t *testing.T) {
 	}
 }
 
-func TestIsValidContentType(t *testing.T) {
+func TestPathWithQueryParams(t *testing.T) {
 	tests := []struct {
-		name  string
-		code  int
-		valid bool
+		name string
+		path string
 	}{
-		{"Custom", 0, true},
-		{"TextPlain", 1, true},
-		{"JSON", 2, true},
-		{"HTML", 3, true},
-		{"OctetStream", 4, true},
-		{"MaxValid", 15, true},
-		{"TooHigh", 16, false},
-		{"Invalid99", 99, false},
-		{"Negative", -1, false},
+		{"Simple query", "/api/data?key=value"},
+		{"Multiple params", "/search?q=test&limit=10&offset=0"},
+		{"Special chars", "/api?name=John%20Doe&email=test%40example.com"},
+		{"Empty value", "/api?key="},
+		{"No value", "/api?flag"},
+		{"Fragment", "/page?section=intro#top"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.valid, IsValidContentType(tt.code))
+			req := &Request{
+				Method:  GET,
+				Host:    "example.com",
+				Path:    tt.path,
+				Version: 0,
+				Headers: map[string]string{},
+			}
+
+			data := req.Format()
+			parsed, err := ParseRequest(data)
+			require.NoError(t, err)
+			require.Equal(t, tt.path, parsed.Path, "Query params should be preserved in path")
 		})
 	}
 }
 
-func TestContentTypeHeaderValue(t *testing.T) {
+func TestIsRequestComplete(t *testing.T) {
 	tests := []struct {
-		name        string
-		contentType ContentType
-		expected    string
+		name     string
+		data     []byte
+		complete bool
+		hasError bool
 	}{
-		{"Custom", Custom, "0"},
-		{"TextPlain", TextPlain, "1"},
-		{"JSON", JSON, "2"},
-		{"HTML", HTML, "3"},
-		{"OctetStream", OctetStream, "4"},
+		{
+			name:     "Empty data",
+			data:     []byte{},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Only first byte",
+			data:     []byte{0x00},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "First byte + partial host length varint",
+			data:     []byte{0x00, 0x0B},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "First byte + host length + partial host",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm'},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Complete host, missing path",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm'},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Complete minimal request",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm', 0x01, '/', 0x00, 0x00},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Complete request with extra data",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm', 0x01, '/', 0x00, 0x00, 0xFF, 0xFF},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Request with body length but missing body",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm', 0x01, '/', 0x00, 0x04},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Complete request with body",
+			data:     []byte{0x00, 0x0B, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm', 0x01, '/', 0x00, 0x04, 't', 'e', 's', 't'},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Empty host (invalid)",
+			data:     []byte{0x00, 0x00, 0x01, '/', 0x00, 0x00},
+			complete: false,
+			hasError: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := tt.contentType.HeaderValue()
-			require.Equal(t, tt.expected, actual)
+			complete, err := IsRequestComplete(tt.data)
+			if tt.hasError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tt.complete, complete)
+
+			if complete && !tt.hasError {
+				_, parseErr := ParseRequest(tt.data)
+				require.NoError(t, parseErr, "IsRequestComplete returned true but ParseRequest failed")
+			}
+		})
+	}
+}
+
+func TestIsResponseComplete(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     []byte
+		complete bool
+		hasError bool
+	}{
+		{
+			name:     "Empty data",
+			data:     []byte{},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Only first byte",
+			data:     []byte{0x14}, // Status 200
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "First byte + headers length",
+			data:     []byte{0x14, 0x00},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Complete headers and body length, missing body",
+			data:     []byte{0x14, 0x00, 0x04},
+			complete: false,
+			hasError: false,
+		},
+		{
+			name:     "Complete minimal response (no body)",
+			data:     []byte{0x14, 0x00, 0x00},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Complete response with body",
+			data:     []byte{0x14, 0x00, 0x02, 'O', 'K'},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Complete response with extra data",
+			data:     []byte{0x14, 0x00, 0x02, 'O', 'K', 0xFF, 0xFF},
+			complete: true,
+			hasError: false,
+		},
+		{
+			name:     "Response with body length but partial body",
+			data:     []byte{0x14, 0x00, 0x04, 't', 'e'},
+			complete: false,
+			hasError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			complete, err := IsResponseComplete(tt.data)
+			if tt.hasError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tt.complete, complete)
+
+			if complete && !tt.hasError {
+				_, parseErr := ParseResponse(tt.data)
+				require.NoError(t, parseErr, "IsResponseComplete returned true but ParseResponse failed")
+			}
 		})
 	}
 }
@@ -431,7 +577,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/api/data",
 				Version: 0,
 				Headers: map[string]string{
-					"accept":          AcceptHeader(JSON, TextPlain),
+					"accept":          "application/json,text/plain",
 					"accept-encoding": "gzip, br",
 					"user-agent":      "QH-Client/1.0",
 				},
@@ -446,9 +592,8 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/submit",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
-					"content-length": "15",
-					"authorization":  "Bearer token123",
+					"content-type":  "application/json",
+					"authorization": "Bearer token123",
 				},
 				Body: []byte(`{"name":"test"}`),
 			},
@@ -461,8 +606,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/user/123",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
-					"content-length": "18",
+					"content-type": "application/json",
 				},
 				Body: []byte(`{"name":"updated"}`),
 			},
@@ -475,8 +619,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/user/123",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
-					"content-length": "12",
+					"content-type": "application/json",
 				},
 				Body: []byte(`{"age":"30"}`),
 			},
@@ -500,7 +643,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/api/data",
 				Version: 0,
 				Headers: map[string]string{
-					"accept": AcceptHeader(JSON, TextPlain),
+					"accept": "application/json,text/plain",
 				},
 				Body: []byte{},
 			},
@@ -524,8 +667,7 @@ func TestRequestRoundTrip(t *testing.T) {
 				Path:    "/custom",
 				Version: 0,
 				Headers: map[string]string{
-					"content-type":     TextPlain.HeaderValue(),
-					"content-length":   "5",
+					"content-type":     "text/plain",
 					"x-custom-header":  "custom-value",
 					"x-another-custom": "another-value",
 				},
@@ -563,10 +705,9 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type":   JSON.HeaderValue(),
-					"content-length": "15",
-					"cache-control":  "max-age=3600",
-					"date":           "1758784800",
+					"content-type":  "application/json",
+					"cache-control": "max-age=3600",
+					"date":          "1758784800",
 				},
 				Body: []byte(`{"status":"ok"}`),
 			},
@@ -577,8 +718,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 404,
 				Headers: map[string]string{
-					"content-type":   TextPlain.HeaderValue(),
-					"content-length": "9",
+					"content-type": "text/plain",
 				},
 				Body: []byte("Not Found"),
 			},
@@ -589,7 +729,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 204,
 				Headers: map[string]string{
-					"content-type": TextPlain.HeaderValue(),
+					"content-type": "text/plain",
 				},
 				Body: []byte{},
 			},
@@ -600,8 +740,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type":       JSON.HeaderValue(),
-					"content-length":     "2",
+					"content-type":       "application/json",
 					"x-custom-response":  "custom-value",
 					"x-another-response": "another-value",
 				},
@@ -614,8 +753,7 @@ func TestResponseRoundTrip(t *testing.T) {
 				Version:    0,
 				StatusCode: 200,
 				Headers: map[string]string{
-					"content-type":                 JSON.HeaderValue(),
-					"content-length":               "2",
+					"content-type":                 "application/json",
 					"access-control-allow-origin":  "*",
 					"access-control-allow-methods": "GET, POST, PUT",
 					"access-control-allow-headers": "Content-Type, Authorization",

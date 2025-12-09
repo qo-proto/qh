@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"strconv"
+	"maps"
 
 	"github.com/qo-proto/qotp"
 )
@@ -17,9 +17,13 @@ const (
 	defaultMinCompressionSize = 1024             // 1KB
 )
 
-// handles QH requests
+// Handler is a function type that processes QH requests and returns responses.
+// Handlers are registered with the server to handle specific path and method combinations.
 type Handler func(*Request) *Response
 
+// Server is a QH protocol server that listens for incoming connections
+// and routes requests to registered handlers. It supports automatic
+// response compression and configurable request size limits.
 type Server struct {
 	listener           *qotp.Listener
 	handlers           map[string]map[Method]Handler // path -> method -> handler (method parsed from request first byte)
@@ -28,26 +32,37 @@ type Server struct {
 	minCompressionSize int
 }
 
+// ServerOption is a functional option for configuring a Server.
 type ServerOption func(*Server)
 
+// WithMaxRequestSize sets the maximum allowed request size in bytes.
+// Requests exceeding this limit will receive a 413 Payload Too Large response.
+// Default is 10MB.
 func WithMaxRequestSize(size int) ServerOption {
 	return func(s *Server) {
 		s.maxRequestSize = size
 	}
 }
 
+// WithMinCompressionSize sets the minimum response body size for compression.
+// Responses smaller than this threshold will not be compressed.
+// Default is 1KB.
 func WithMinCompressionSize(size int) ServerOption {
 	return func(s *Server) {
 		s.minCompressionSize = size
 	}
 }
 
+// WithSupportedEncodings sets the compression encodings the server supports.
+// The server will use the first client-preferred encoding that the server
+// also supports. Default is [Zstd, Brotli, Gzip].
 func WithSupportedEncodings(encodings []Encoding) ServerOption {
 	return func(s *Server) {
 		s.supportedEncodings = encodings
 	}
 }
 
+// NewServer creates a new QH server with the specified options.
 func NewServer(opts ...ServerOption) *Server {
 	s := &Server{
 		handlers:           make(map[string]map[Method]Handler),
@@ -176,8 +191,8 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	}
 
 	// Validate and normalize Content-Type for requests with body
-	if (req.Method == POST || req.Method == PUT || req.Method == PATCH) && s.validateContentType(req, stream) != nil {
-		return // error response already sent
+	if req.Method == POST || req.Method == PUT || req.Method == PATCH {
+		s.validateContentType(req)
 	}
 
 	resp := s.routeRequest(req) // execute according handler
@@ -198,23 +213,13 @@ func (s *Server) handleRequest(stream *qotp.Stream, requestData []byte) {
 	slog.Debug("Response sent, stream kept open for reuse")
 }
 
-func (s *Server) validateContentType(req *Request, stream *qotp.Stream) error {
+func (s *Server) validateContentType(req *Request) {
 	contentTypeStr, hasContentType := req.Headers["content-type"]
 
 	if !hasContentType || contentTypeStr == "" {
 		slog.Debug("content-type missing for POST, defaulting to octet-stream")
-		req.Headers["content-type"] = strconv.Itoa(int(OctetStream))
-		return nil
+		req.Headers["content-type"] = "application/octet-stream"
 	}
-
-	contentType, parseErr := strconv.Atoi(contentTypeStr)
-	if parseErr != nil || !IsValidContentType(contentType) {
-		slog.Error("Invalid content-type", "value", contentTypeStr)
-		s.sendErrorResponse(stream, StatusUnsupportedMediaType, "Unsupported Media Type")
-		return fmt.Errorf("invalid content-type: %s", contentTypeStr)
-	}
-
-	return nil
 }
 
 func (s *Server) routeRequest(req *Request) *Response {
@@ -251,8 +256,7 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 	}
 
 	contentTypeStr, ok := resp.Headers["content-type"]
-	contentType, err := strconv.Atoi(contentTypeStr)
-	if ok && err == nil && contentType == int(OctetStream) {
+	if ok && contentTypeStr == "application/octet-stream" {
 		slog.Debug("Skipping compression for binary media", "content_type", "octet-stream")
 		return
 	}
@@ -262,8 +266,8 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 		return
 	}
 
-	acceptedEncodings := ParseAcceptEncoding(acceptEncodingStr)
-	selectedEncoding := SelectEncoding(acceptedEncodings, s.supportedEncodings)
+	acceptedEncodings := parseAcceptEncoding(acceptEncodingStr)
+	selectedEncoding := selectEncoding(acceptedEncodings, s.supportedEncodings)
 
 	if selectedEncoding == "" {
 		slog.Debug("No common encoding between client and server")
@@ -285,7 +289,6 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 
 	resp.Body = compressed
 	resp.Headers["content-encoding"] = string(selectedEncoding)
-	resp.Headers["content-length"] = strconv.Itoa(len(compressed))
 
 	savings := float64(originalSize-len(compressed)) / float64(originalSize) * 100
 	slog.Info("Compressed", "encoding", selectedEncoding,
@@ -293,13 +296,12 @@ func (s *Server) applyCompression(req *Request, resp *Response) {
 		"saved", fmt.Sprintf("%.1f%%", savings))
 }
 
+// NewResponse creates a new Response with the given status code, body, and headers.
+// Any headers provided will override auto-generated headers.
 func NewResponse(statusCode int, body []byte, headers map[string]string) *Response {
 	headerMap := make(map[string]string)
-	headerMap["content-length"] = strconv.Itoa(len(body))
 
-	for key, value := range headers {
-		headerMap[key] = value
-	}
+	maps.Copy(headerMap, headers)
 
 	return &Response{
 		Version:    Version,
@@ -309,17 +311,20 @@ func NewResponse(statusCode int, body []byte, headers map[string]string) *Respon
 	}
 }
 
-// Convenience methods for common response types
+// TextResponse creates a text/plain response with the given status code and body.
+// This is a convenience method for returning plain text responses.
 func TextResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
-		"content-type": strconv.Itoa(int(TextPlain)),
+		"content-type": "text/plain",
 	}
 	return NewResponse(statusCode, []byte(body), headers)
 }
 
+// JSONResponse creates an application/json response with the given status code and body.
+// This is a convenience method for returning JSON responses.
 func JSONResponse(statusCode int, body string) *Response {
 	headers := map[string]string{
-		"content-type": strconv.Itoa(int(JSON)),
+		"content-type": "application/json",
 	}
 	return NewResponse(statusCode, []byte(body), headers)
 }

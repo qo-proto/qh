@@ -118,28 +118,25 @@ A server that receives a request with a major version higher than what it suppor
 
 ### 2.2 Media Types
 
-QH uses a compact numeric encoding for content types instead of traditional MIME type strings. This reduces bandwidth while supporting the most common types needed for Single Page Applications.
+QH uses standard MIME type strings for Content-Type headers, following HTTP conventions. Common MIME types are compressed efficiently through the protocol's static header compression tables.
 
-Content types are encoded as single-digit numeric codes (0-15, using 4 bits) in the wire format. The following content types are defined:
+**Common MIME Types:**
 
-| Code | MIME Type Equivalent     | Description                 |
-| ---- | ------------------------ | --------------------------- |
-| 0    | custom                   | Custom/application-specific |
-| 1    | text/plain               | Plain text                  |
-| 2    | application/json         | JSON data                   |
-| 3    | text/html                | HTML documents              |
-| 4    | application/octet-stream | Binary data                 |
-| 5-15 | (reserved)               | Reserved for future use     |
-
-**Note:** Code 0 (custom) allows applications to define their own content type.
-
-The numeric code is transmitted as an ASCII digit string in the Content-Type header field (e.g., `"2"` for JSON).
+| MIME Type                  | Description     |
+| -------------------------- | --------------- |
+| `application/json`         | JSON data       |
+| `text/html`                | HTML documents  |
+| `text/plain`               | Plain text      |
+| `application/octet-stream` | Binary data     |
+| `text/css`                 | CSS stylesheets |
+| `application/javascript`   | JavaScript code |
+| `image/*`                  | Image formats   |
 
 **Content-Type Header Behavior:**
 
 - Following HTTP conventions, Content-Type is **recommended but not mandatory** for POST requests
-- If missing, the server defaults to code 4 (application/octet-stream)
-- If present, the value must be a valid code (0-15), otherwise the server returns 415 Unsupported Media Type
+- If missing, the server defaults to `application/octet-stream`
+- Any valid MIME type string is accepted
 
 ### 2.3 Content Encoding
 
@@ -252,6 +249,7 @@ Implementations that reject messages due to size constraints SHOULD return:
 - **Varint length prefixes**: All variable-length fields use varint-encoded lengths
 - **Binary-safe**: No reserved separator bytes (all data is binary-safe)
 - **Body**: Optional content (JSON, HTML, binary data, etc.)
+- **No Content-Length header required**: Unlike HTTP/1.1, QH determines body length from the varint prefix in the wire format, not from headers. The `content-length` header is unnecessary and ignored by the protocol.
 
 **Message completeness:**
 

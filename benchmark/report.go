@@ -1,3 +1,4 @@
+// Package
 package benchmark
 
 import (
@@ -26,14 +27,14 @@ func GenerateMultiSectionReport(edgeResults, trafficResults, allResults []Benchm
 	sb.WriteString("  SECTION 1: EDGE CASE ANALYSIS\n")
 	sb.WriteString("  Protocol boundary conditions and stress tests\n")
 	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n\n")
-	sb.WriteString(formatEdgeCaseSection(edgeResults))
+	sb.WriteString(fmtEdgeCaseSection(edgeResults))
 	sb.WriteString("\n\n")
 
 	// Section 2: Real Traffic Analysis
 	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n")
 	sb.WriteString("  SECTION 2: REAL HTTP TRAFFIC ANALYSIS\n")
 	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n\n")
-	sb.WriteString(formatTrafficSection(trafficResults))
+	sb.WriteString(fmtTrafficSection(trafficResults))
 	sb.WriteString("\n\n")
 
 	// Section 3: Combined Results
@@ -41,7 +42,7 @@ func GenerateMultiSectionReport(edgeResults, trafficResults, allResults []Benchm
 	sb.WriteString("  SECTION 3: COMBINED RESULTS\n")
 	sb.WriteString(fmt.Sprintf("  All %d test cases\n", len(allResults)))
 	sb.WriteString("═══════════════════════════════════════════════════════════════════════\n\n")
-	sb.WriteString(formatCombinedSection(allResults))
+	sb.WriteString(fmtCombinedSection(allResults))
 
 	return sb.String()
 }
@@ -61,22 +62,22 @@ func GenerateMultiSectionReportMarkdown(edgeResults, trafficResults, allResults 
 
 	// Section 1: Edge Case Analysis
 	sb.WriteString("## Edge Case Analysis\n\n")
-	sb.WriteString(formatEdgeCaseSectionMarkdown(edgeResults))
+	sb.WriteString(fmtEdgeCaseSectionMarkdown(edgeResults))
 	sb.WriteString("\n\n")
 
 	// Section 2: Real Traffic Analysis
 	sb.WriteString("## Real HTTP Traffic Analysis\n\n")
-	sb.WriteString(formatTrafficSectionMarkdown(trafficResults))
+	sb.WriteString(fmtTrafficSectionMarkdown(trafficResults))
 	sb.WriteString("\n\n")
 
 	// Section 3: Combined Results
 	sb.WriteString("## Combined Results\n\n")
-	sb.WriteString(formatCombinedSectionMarkdown(allResults))
+	sb.WriteString(fmtCombinedSectionMarkdown(allResults))
 
 	return sb.String()
 }
 
-func formatBytes(bytes float64) string {
+func fmtBytes(bytes float64) string {
 	if bytes < 1024 {
 		return fmt.Sprintf("%.0f B", bytes)
 	} else if bytes < 1024*1024 {
@@ -85,7 +86,7 @@ func formatBytes(bytes float64) string {
 	return fmt.Sprintf("%.1f MB", bytes/(1024*1024))
 }
 
-func formatDifference(ratio float64) string {
+func fmtDifference(ratio float64) string {
 	if ratio < 100 {
 		percentLarger := (100.0/ratio - 1.0) * 100.0
 		return fmt.Sprintf("%.1f%% larger", percentLarger)

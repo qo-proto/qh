@@ -1,4 +1,3 @@
-//nolint:gosec // G115: Ignore integer overflow warnings for this file
 package qh
 
 import (
@@ -18,6 +17,9 @@ const (
 	nestedFieldIndent      = "  " // Indentation for nested fields (custom headers, header values)
 )
 
+// DebugRequest returns a human-readable annotated representation of a QH request
+// in wire format. It displays each field with its byte offset, hex values, and
+// decoded description.
 func DebugRequest(data []byte) string {
 	if len(data) == 0 {
 		return "(empty)\n"
@@ -61,6 +63,9 @@ func DebugRequest(data []byte) string {
 	return sb.String()
 }
 
+// DebugResponse returns a human-readable annotated representation of a QH response
+// in wire format. It displays each field with its byte offset, hex values, and
+// decoded description.
 func DebugResponse(data []byte) string {
 	if len(data) == 0 {
 		return "(empty)\n"
@@ -76,7 +81,7 @@ func DebugResponse(data []byte) string {
 		firstByte := data[offset]
 		version := firstByte >> versionBitShift
 		statusCompact := firstByte & statusCodeMask
-		statusDecoded := DecodeStatusCode(statusCompact)
+		statusDecoded := decodeStatusCode(statusCompact)
 		writeTableRow(&sb, offset, data[offset:offset+1],
 			fmt.Sprintf("First byte (Version=%d, Status=%d)", version, statusDecoded))
 		offset++

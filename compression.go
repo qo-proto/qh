@@ -16,8 +16,11 @@ const (
 	defaultBrotliQuality = 4
 )
 
+// Encoding represents a compression encoding type used in Content-Encoding
+// and Accept-Encoding headers.
 type Encoding string
 
+// Supported compression encoding constants.
 const (
 	Gzip   Encoding = "gzip"
 	Brotli Encoding = "br"
@@ -25,7 +28,7 @@ const (
 )
 
 // parse Accept-Encoding header, example: "gzip, br, zstd" -> [gzip, br, zstd]
-func ParseAcceptEncoding(acceptEncoding string) []Encoding {
+func parseAcceptEncoding(acceptEncoding string) []Encoding {
 	if acceptEncoding == "" {
 		return []Encoding{}
 	}
@@ -45,7 +48,7 @@ func ParseAcceptEncoding(acceptEncoding string) []Encoding {
 	return encodings
 }
 
-func SelectEncoding(acceptedEncodings []Encoding, serverSupported []Encoding) Encoding {
+func selectEncoding(acceptedEncodings []Encoding, serverSupported []Encoding) Encoding {
 	for _, clientEnc := range acceptedEncodings {
 		if slices.Contains(serverSupported, clientEnc) {
 			return clientEnc // First match
