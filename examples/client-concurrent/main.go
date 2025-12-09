@@ -35,7 +35,7 @@ func main() {
 	c := qh.NewClient()
 	defer c.Close()
 
-	if err := c.Connect(addr); err != nil {
+	if err := c.Connect(addr, nil); err != nil {
 		slog.Error("Failed to connect", "error", err)
 		return
 	}
