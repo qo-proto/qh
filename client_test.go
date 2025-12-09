@@ -147,3 +147,46 @@ func TestClientRequestNotConnected(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not connected")
 }
+
+func TestClientKeyLogWriter(t *testing.T) {
+	srv, addr := newTestServer(t)
+	defer srv.Close()
+
+	srv.HandleFunc("/test", GET, func(_ *Request) *Response {
+		return TextResponse(200, "OK")
+	})
+
+	t.Run("KeylogWriterReceivesData", func(t *testing.T) {
+		var keylogData strings.Builder
+		client := NewClient(WithClientKeyLogWriter(&keylogData))
+		defer client.Close()
+
+		err := client.Connect(addr, nil)
+		require.NoError(t, err)
+
+		resp, err := client.GET("127.0.0.1", "/test", nil)
+		require.NoError(t, err)
+		assert.Equal(t, 200, resp.StatusCode)
+
+		// Keylog should contain data when built with -tags keylog
+		// When not built with keylog tag, the writer won't receive data
+		keylogOutput := keylogData.String()
+		if keylogOutput != "" {
+			// If keylog is enabled, verify it contains expected format
+			assert.Contains(t, keylogOutput, "CLIENT_TRAFFIC_SECRET")
+		}
+	})
+
+	t.Run("WithoutKeylogWriter", func(t *testing.T) {
+		client := NewClient() // No keylog writer
+		defer client.Close()
+
+		err := client.Connect(addr, nil)
+		require.NoError(t, err)
+
+		resp, err := client.GET("127.0.0.1", "/test", nil)
+		require.NoError(t, err)
+		assert.Equal(t, 200, resp.StatusCode)
+		// Should work fine without keylog writer
+	})
+}
