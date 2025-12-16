@@ -103,7 +103,15 @@ func main() {
 			// HEAD requests have no body and expect headers only.
 			resp, err = c.HEAD(hostname, req.path, nil)
 		default:
-			slog.Error("Unsupported method", "error", errUnsupportedMethod, "method", req.method, "path", req.path)
+			slog.Error(
+				"Unsupported method",
+				"error",
+				errUnsupportedMethod,
+				"method",
+				req.method,
+				"path",
+				req.path,
+			)
 			continue
 		}
 
@@ -126,7 +134,13 @@ func main() {
 		if filename != "" && len(resp.Body) > 0 {
 			// Create directory if it doesn't exist
 			if err := os.MkdirAll("examples/client/downloaded_files", 0o755); err != nil {
-				slog.Error("Failed to create directory", "path", "examples/client/downloaded_files", "error", err)
+				slog.Error(
+					"Failed to create directory",
+					"path",
+					"examples/client/downloaded_files",
+					"error",
+					err,
+				)
 			} else if err := os.WriteFile(filename, resp.Body, 0o600); err != nil {
 				slog.Error("Failed to save file", "path", filename, "error", err)
 			} else {
@@ -144,7 +158,7 @@ func logResponse(method, path string, response *qh.Response) {
 	sb.WriteString(fmt.Sprintf("Version:    %d\n", response.Version))
 	sb.WriteString(fmt.Sprintf("StatusCode: %d\n", response.StatusCode))
 
-	if contentTypeStr, ok := response.Headers["Content-Type"]; ok && contentTypeStr != "" {
+	if contentTypeStr, ok := response.Headers["content-type"]; ok && contentTypeStr != "" {
 		sb.WriteString(fmt.Sprintf("Content:    %s\n", contentTypeStr))
 	}
 

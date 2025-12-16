@@ -22,6 +22,7 @@ const (
 	// Default client configuration values
 	defaultMaxResponseSize = 50 * 1024 * 1024 // 50MB
 	defaultMaxRedirects    = 10
+	DefaultAcceptEncoding  = "zstd, br, gzip"
 
 	x25519KeySize         = 32 // X25519 public key size in bytes
 	maxDNSTXTRecordLength = 80
@@ -149,9 +150,19 @@ func (c *Client) Connect(addr string, _ io.Writer) error {
 		pubKeyBytes, decodeErr := base64.StdEncoding.DecodeString(serverPubKey)
 		switch {
 		case decodeErr != nil:
-			slog.Warn("Failed to decode base64 public key from DNS, falling back to in-band handshake", "error", decodeErr)
+			slog.Warn(
+				"Failed to decode base64 public key from DNS, falling back to in-band handshake",
+				"error",
+				decodeErr,
+			)
 		case len(pubKeyBytes) != x25519KeySize:
-			slog.Warn("Invalid public key length from DNS, expected X25519 key size, falling back to in-band handshake", "expected", x25519KeySize, "got", len(pubKeyBytes))
+			slog.Warn(
+				"Invalid public key length from DNS, expected X25519 key size, falling back to in-band handshake",
+				"expected",
+				x25519KeySize,
+				"got",
+				len(pubKeyBytes),
+			)
 		default:
 			pubKeyHex := hex.EncodeToString(pubKeyBytes)
 			conn, err = listener.DialStringWithCryptoString(ipAddr, pubKeyHex)
@@ -202,7 +213,15 @@ func lookupPubKey(host string) string {
 	record := txtRecords[0]
 
 	if len(record) > maxDNSTXTRecordLength {
-		slog.Warn("DNS TXT record too long, ignoring", "max_length", maxDNSTXTRecordLength, "actual_length", len(record), "host", host)
+		slog.Warn(
+			"DNS TXT record too long, ignoring",
+			"max_length",
+			maxDNSTXTRecordLength,
+			"actual_length",
+			len(record),
+			"host",
+			host,
+		)
 		return ""
 	}
 	parts := strings.Split(record, ";")
@@ -232,7 +251,13 @@ func lookupPubKey(host string) string {
 	}
 
 	if key != "" || version != -1 {
-		slog.Warn("DNS TXT record found but is invalid or has mismatched version", "record", record, "expected_version", qotp.ProtoVersion)
+		slog.Warn(
+			"DNS TXT record found but is invalid or has mismatched version",
+			"record",
+			record,
+			"expected_version",
+			qotp.ProtoVersion,
+		)
 	}
 	return ""
 }
@@ -249,7 +274,7 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 	}
 
 	if _, ok := req.Headers["accept-encoding"]; !ok {
-		req.Headers["accept-encoding"] = "zstd, br, gzip"
+		req.Headers["accept-encoding"] = DefaultAcceptEncoding
 	}
 
 	// Get next available stream ID
@@ -312,7 +337,11 @@ func (c *Client) Request(req *Request, redirectCount int) (*Response, error) {
 
 	// Handle redirects
 	switch resp.StatusCode {
-	case StatusMultipleChoices, StatusMovedPermanently, StatusFound, StatusTemporaryRedirect, StatusPermanentRedirect:
+	case StatusMultipleChoices,
+		StatusMovedPermanently,
+		StatusFound,
+		StatusTemporaryRedirect,
+		StatusPermanentRedirect:
 		return c.handleRedirect(req, resp, redirectCount)
 	}
 
@@ -330,7 +359,11 @@ func (c *Client) GET(host, path string, headers map[string]string) (*Response, e
 
 // POST performs a POST request with the given body to the specified host and path.
 // The Content-Length header is automatically set based on the body size.
-func (c *Client) POST(host, path string, body []byte, headers map[string]string) (*Response, error) {
+func (c *Client) POST(
+	host, path string,
+	body []byte,
+	headers map[string]string,
+) (*Response, error) {
 	return c.do(POST, host, path, headers, body)
 }
 
@@ -342,7 +375,11 @@ func (c *Client) PUT(host, path string, body []byte, headers map[string]string) 
 
 // PATCH performs a PATCH request with the given body to the specified host and path.
 // The Content-Length header is automatically set based on the body size.
-func (c *Client) PATCH(host, path string, body []byte, headers map[string]string) (*Response, error) {
+func (c *Client) PATCH(
+	host, path string,
+	body []byte,
+	headers map[string]string,
+) (*Response, error) {
 	return c.do(PATCH, host, path, headers, body)
 }
 
@@ -370,7 +407,12 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) do(method Method, host, path string, headers map[string]string, body []byte) (*Response, error) {
+func (c *Client) do(
+	method Method,
+	host, path string,
+	headers map[string]string,
+	body []byte,
+) (*Response, error) {
 	if headers == nil {
 		headers = map[string]string{}
 	}
@@ -399,7 +441,13 @@ func (c *Client) decompressResponse(resp *Response) error {
 	}
 
 	originalSize := len(resp.Body)
-	slog.Debug("Decompressing response", "encoding", contentEncoding, "compressed_bytes", originalSize)
+	slog.Debug(
+		"Decompressing response",
+		"encoding",
+		contentEncoding,
+		"compressed_bytes",
+		originalSize,
+	)
 
 	decompressed, err := Decompress(resp.Body, Encoding(contentEncoding), c.maxResponseSize)
 	if err != nil {
@@ -430,7 +478,11 @@ func (c *Client) reconnect(host string, port int) error {
 	return c.Connect(fmt.Sprintf("%s:%d", host, port), nil)
 }
 
-func (c *Client) handleRedirect(req *Request, resp *Response, redirectCount int) (*Response, error) {
+func (c *Client) handleRedirect(
+	req *Request,
+	resp *Response,
+	redirectCount int,
+) (*Response, error) {
 	if redirectCount >= c.maxRedirects {
 		return nil, errors.New("too many redirects")
 	}
@@ -440,7 +492,15 @@ func (c *Client) handleRedirect(req *Request, resp *Response, redirectCount int)
 	// Prioritize custom host/path headers as requested.
 	if host, ok := resp.Headers["host"]; ok {
 		if path, ok := resp.Headers["path"]; ok {
-			slog.Info("Redirecting (custom headers)", "status", resp.StatusCode, "host", host, "path", path)
+			slog.Info(
+				"Redirecting (custom headers)",
+				"status",
+				resp.StatusCode,
+				"host",
+				host,
+				"path",
+				path,
+			)
 			newHostname = host
 			newPath = path
 		}
@@ -462,7 +522,8 @@ func (c *Client) handleRedirect(req *Request, resp *Response, redirectCount int)
 	}
 
 	// Preserve method and body for 307/308; switch to GET for 300/301/302.
-	preserve := resp.StatusCode == StatusTemporaryRedirect || resp.StatusCode == StatusPermanentRedirect
+	preserve := resp.StatusCode == StatusTemporaryRedirect ||
+		resp.StatusCode == StatusPermanentRedirect
 	newMethod := GET
 	var newBody []byte
 	headers := req.Headers

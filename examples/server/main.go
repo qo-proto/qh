@@ -17,6 +17,8 @@ var errServerStart = errors.New("server startup failed")
 func main() {
 	slog.Info("QH Protocol Server starting")
 
+	// Optionally enable keylog for Wireshark decryption
+	// Run with: go run -tags keylog ./examples/server
 	var serverOpts []qh.ServerOption
 
 	srv := qh.NewServer(serverOpts...)

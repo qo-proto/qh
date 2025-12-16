@@ -22,7 +22,7 @@ qh.JSONResponse(200, `{"data": "value"}`)
 
 ## Client
 
-### HTTP Methods
+### QH Methods
 
 ```go
 // GET, HEAD, DELETE - no body

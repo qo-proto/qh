@@ -132,4 +132,4 @@ jobs:
           working-directory: benchmark
 
       - name: Run benchmark suite
-        run: make report
+        run: make run
