@@ -15,11 +15,11 @@ func TestEncodeStatusCode(t *testing.T) {
 }
 
 func TestDecodeStatusCode(t *testing.T) {
-	require.Equal(t, 200, decodeStatusCode(20)) // OK
-	require.Equal(t, 404, decodeStatusCode(44)) // Not Found
-	require.Equal(t, 500, decodeStatusCode(50)) // Internal Server Error
-	require.Equal(t, 302, decodeStatusCode(32)) // Found
-	require.Equal(t, 204, decodeStatusCode(24)) // No Content
+	require.Equal(t, 200, DecodeStatusCode(20)) // OK
+	require.Equal(t, 404, DecodeStatusCode(44)) // Not Found
+	require.Equal(t, 500, DecodeStatusCode(50)) // Internal Server Error
+	require.Equal(t, 302, DecodeStatusCode(32)) // Found
+	require.Equal(t, 204, DecodeStatusCode(24)) // No Content
 }
 
 func TestEncodeStatusCodeFallback(t *testing.T) {
@@ -29,16 +29,16 @@ func TestEncodeStatusCodeFallback(t *testing.T) {
 }
 
 func TestDecodeStatusCodeFallback(t *testing.T) {
-	require.Equal(t, 500, decodeStatusCode(219))
-	require.Equal(t, 500, decodeStatusCode(195))
-	require.Equal(t, 500, decodeStatusCode(100))
+	require.Equal(t, 500, DecodeStatusCode(219))
+	require.Equal(t, 500, DecodeStatusCode(195))
+	require.Equal(t, 500, DecodeStatusCode(100))
 }
 
 func TestRoundTripStatusCodes(t *testing.T) { // catches mapping mistakes
 	for httpCode := range statusToCompact {
 		t.Run(string(rune(httpCode)), func(t *testing.T) {
 			compact := encodeStatusCode(httpCode)
-			decoded := decodeStatusCode(compact)
+			decoded := DecodeStatusCode(compact)
 			require.Equal(t, httpCode, decoded, "Round-trip failed for HTTP code %d", httpCode)
 		})
 	}
