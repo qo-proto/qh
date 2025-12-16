@@ -5,7 +5,7 @@ go 1.25.1
 require (
 	github.com/andybalholm/brotli v1.2.0
 	github.com/klauspost/compress v1.18.0
-	github.com/qo-proto/qotp v0.2.17
+	github.com/qo-proto/qotp v0.2.18
 	github.com/stretchr/testify v1.11.1
 )
 

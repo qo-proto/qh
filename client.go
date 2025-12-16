@@ -165,7 +165,7 @@ func (c *Client) Connect(addr string, _ io.Writer) error {
 			)
 		default:
 			pubKeyHex := hex.EncodeToString(pubKeyBytes)
-			conn, err = listener.DialStringWithCryptoString(ipAddr, pubKeyHex)
+			conn, err = listener.DialWithCryptoString(ipAddr, pubKeyHex)
 		}
 	} else {
 		// In-band key exchange
