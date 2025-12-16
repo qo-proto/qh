@@ -154,7 +154,7 @@ func (c *Client) Connect(addr string, _ io.Writer) error {
 			slog.Warn("Invalid public key length from DNS, expected X25519 key size, falling back to in-band handshake", "expected", x25519KeySize, "got", len(pubKeyBytes))
 		default:
 			pubKeyHex := hex.EncodeToString(pubKeyBytes)
-			conn, err = listener.DialWithCryptoString(ipAddr, pubKeyHex)
+			conn, err = listener.DialStringWithCryptoString(ipAddr, pubKeyHex)
 		}
 	} else {
 		// In-band key exchange

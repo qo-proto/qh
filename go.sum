@@ -19,8 +19,8 @@ github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWE
 github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/qo-proto/qotp v0.2.16 h1:RkgzkqencS+qJfsmNhvR2A3CB3tUAy0U1CqcpYVyazw=
-github.com/qo-proto/qotp v0.2.16/go.mod h1:nVnoXcivvMr4QaigQX4GVq1p+N6QfIvMlY9Fr7D6v98=
+github.com/qo-proto/qotp v0.2.17 h1:WAbWpVAeVhx9fSM9wWuK/NyolpWH1f65hT7+Q/lGAzw=
+github.com/qo-proto/qotp v0.2.17/go.mod h1:nVnoXcivvMr4QaigQX4GVq1p+N6QfIvMlY9Fr7D6v98=
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
