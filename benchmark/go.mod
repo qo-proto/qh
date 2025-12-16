@@ -1,6 +1,6 @@
 module github.com/qo-proto/qh/benchmark
 
-go 1.25
+go 1.25.1
 
 require (
 	github.com/qo-proto/qh v0.0.4
